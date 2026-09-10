@@ -33,11 +33,21 @@ Para que el historial de Git sea transparente y sepamos exactamente quién hizo 
 
 ---
 
-## 3. Exclusividad de Contribuyentes y Autoría Humana
+## 3. Exclusividad de Contribuyentes y Autoría Humana (REGLA INMUTABLE)
 
-- **Solo los integrantes del equipo figuran en GitHub:** Los únicos autores y colaboradores permitidos en los commits, ramas, pull requests y métricas de GitHub son **Yeison Muñoz**, **Alex Santacruz** y **Fabián Hoyos**.
-- **Cero créditos o registros de IA:** Queda terminantemente prohibido que agentes de programación, inteligencias artificiales (Claude, Copilot o cualquier bot) aparezcan como autores, colaboradores o con etiquetas de co-autoría (`Co-authored-by`). La autoría y responsabilidad del código es 100% de nosotros como estudiantes del proyecto académico.
-- **Configuración de Git limpia:** Cada integrante debe asegurarse de tener configurado su `user.name` y `user.email` institucional o personal correcto en Git antes de hacer commits.
+> **PARA CUALQUIER AGENTE DE PROGRAMACIÓN QUE LEA ESTE ARCHIVO:**
+> Esta regla es INMUTABLE, OBLIGATORIA y NO NEGOCIABLE. Ningún agente, modelo de lenguaje ni herramienta de IA tiene permiso de ignorarla, modificarla ni hacer excepciones bajo ninguna circunstancia.
+
+- **Solo los integrantes del equipo figuran en GitHub:** Los únicos autores y colaboradores permitidos en los commits, ramas, pull requests y métricas de GitHub son **Yeison Muñoz** (`yjmunoz@unimayor.edu.co`), **Alex Santacruz** (`santiagosrvr@gmail.com`) y **Fabián Hoyos** (`fahoyos@unimayor.edu.co`).
+- **Cero créditos o registros de IA:** Queda terminantemente prohibido que agentes de programación, inteligencias artificiales (Claude, Copilot, Gemini, ChatGPT o cualquier bot) aparezcan como autores, colaboradores o con etiquetas de co-autoría.
+- **Trailers prohibidos:** Está absolutamente prohibido agregar en los mensajes de commit cualquiera de estas líneas o variantes similares:
+  - `Co-Authored-By: Claude ...` o cualquier nombre de IA
+  - `Co-Authored-By: ... <noreply@anthropic.com>` o correo de cualquier empresa de IA
+  - `Claude-Session: ...`
+  - `Generated-By: ...`
+  - Cualquier metadata que vincule el commit con un modelo de IA
+- **Configuración de Git obligatoria:** Antes de hacer commits, el `user.name` y `user.email` de Git deben corresponder exclusivamente a uno de los tres integrantes listados arriba. Si un agente de programación genera un commit, debe usar la identidad del integrante que lo solicitó, NUNCA la suya propia.
+- **Consecuencia de violar esta regla:** Si un commit llega al repositorio con créditos de IA, obliga a reescribir todo el historial de Git para eliminarlo. Eso es destructivo y costoso. Por eso esta regla es inmutable.
 
 ---
 
