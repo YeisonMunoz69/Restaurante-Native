@@ -1,10 +1,43 @@
+# Lo que sigue es lo que NO le mando a Docker cuando construye la imagen.
+# Ojo con los patrones: escribir solo "dist" tapa unicamente el dist de la raiz,
+# no el de apps/api ni el de packages/shared. Por eso uso ** en todos.
+
+# Dependencias: no las copio, las instalo dentro de la imagen
 node_modules
+**/node_modules
+
+# Artefactos de compilacion: los genero dentro de la imagen.
+# Esto es importante porque el contenedor escribe en apps/api/dist mientras corre,
+# y si ese dist entrara al contexto, cada rebuild invalidaria la cache y volveria
+# a descargar el motor de Prisma por internet.
+**/dist
+**/build
+**/coverage
+**/*.tsbuildinfo
+.turbo
+.next
+out
+
+# Cosas que la API no necesita para construirse
 .git
 .agents
-dist
-build
-coverage
 apps/mobile
-.next
-.turbo
+design
+docs
+logs
 *.log
+
+# La receta de Docker no va adentro de la imagen. Ademas, si la dejo en el contexto,
+# con solo editar el compose se invalida la capa que copia apps/api y toca reconstruir.
+**/Dockerfile
+**/docker-compose*.yml
+
+# Secretos: no quiero que queden horneados dentro de la imagen.
+# Las variables llegan en tiempo de ejecucion por el env_file del docker-compose.
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+*.pem
+*.key

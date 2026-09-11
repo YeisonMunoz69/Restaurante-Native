@@ -1,0 +1,837 @@
+{
+  "info": {
+    "_postman_id": "ef3cefa7-95c0-5b10-a5cf-0959e94afbcd",
+    "name": "El Encanto Campestre - API Sprint 1",
+    "description": "Colección para probar la API de El Encanto Campestre (NestJS) en local.\n\nOrden recomendado: correr la carpeta 00 y luego CU01, CU02 y CU03 en ese orden, porque CU03 usa los tokens que guarda el login del dueño en CU02. También se puede correr completa con el Collection Runner.\n\nRequisitos: API encendida en http://localhost:3000 y el seed cargado en Supabase (usuario admin@encanto.com / Admin123*).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 · Verificar que la API está encendida",
+      "description": "Primer paso de la demo: si esto falla, reviso Docker o npm run start:dev.",
+      "item": [
+        {
+          "name": "API responde en /api/v1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": []
+            },
+            "description": "GET {{baseUrl}} debe responder 200 con el texto Hello World!"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Devuelve Hello World!', () => pm.expect(pm.response.text()).to.eql('Hello World!'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Swagger publica los 4 endpoints de autenticación (CU05)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{docsUrl}}-json",
+            "description": "Es el JSON que Swagger usa para dibujar http://localhost:3000/api/docs"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));",
+                  "const rutas = Object.keys(pm.response.json().paths);",
+                  "['/api/v1/auth/register', '/api/v1/auth/login', '/api/v1/auth/refresh', '/api/v1/auth/logout'].forEach(r => {",
+                  "    pm.test('Swagger documenta ' + r, () => pm.expect(rutas).to.include(r));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CU01 · Registrar cuenta de comensal",
+      "description": "POST /auth/register. Valida con Zod, guarda la contraseña con Argon2id y nunca devuelve el hash.",
+      "item": [
+        {
+          "name": "Registro válido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Invitado Demo\",\n  \"correo\": \"{{correoDemo}}\",\n  \"telefono\": \"3001234567\",\n  \"password\": \"{{passwordDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// genero un correo distinto en cada corrida para que el registro siempre sea nuevo",
+                  "const marca = Date.now();",
+                  "pm.collectionVariables.set('correoDemo', `Demo${marca}@Encanto.com`);",
+                  "pm.collectionVariables.set('passwordDemo', 'Demo12345');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201 Created', () => pm.response.to.have.status(201));",
+                  "const u = pm.response.json();",
+                  "pm.test('Devuelve id, nombre, correo, telefono, rol y createdAt', () => pm.expect(u).to.include.all.keys('id', 'nombre', 'correo', 'telefono', 'rol', 'createdAt'));",
+                  "pm.test('NO devuelve la contraseña ni el hash', () => { pm.expect(u).to.not.have.property('password'); pm.expect(u).to.not.have.property('passwordHash'); });",
+                  "pm.test('El rol por defecto es COMENSAL', () => pm.expect(u.rol).to.eql('COMENSAL'));",
+                  "pm.test('El correo queda en minúsculas', () => pm.expect(u.correo).to.eql(pm.collectionVariables.get('correoDemo').toLowerCase()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro con el mismo correo (FA1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Invitado Demo\",\n  \"correo\": \"{{correoDemo}}\",\n  \"telefono\": \"3001234567\",\n  \"password\": \"{{passwordDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('Mensaje: El correo ya está registrado', () => pm.expect(pm.response.json().message).to.eql('El correo ya está registrado'));",
+                  "pm.test('El error trae el formato uniforme (statusCode, message, timestamp, path)', () => {\n    const j = pm.response.json();\n    pm.expect(j).to.have.all.keys('statusCode', 'message', 'timestamp', 'path');\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Teléfono de 5 dígitos (FA2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Invitado Demo\",\n  \"correo\": \"telefono.malo@encanto.com\",\n  \"telefono\": \"12345\",\n  \"password\": \"Demo12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Explica que el teléfono debe tener 10 dígitos', () => pm.expect(pm.response.json().message).to.include('10 digitos'));",
+                  "pm.test('El error trae el formato uniforme (statusCode, message, timestamp, path)', () => {\n    const j = pm.response.json();\n    pm.expect(j).to.have.all.keys('statusCode', 'message', 'timestamp', 'path');\n});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contraseña de menos de 8 caracteres",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Invitado Demo\",\n  \"correo\": \"clave.corta@encanto.com\",\n  \"telefono\": \"3001234567\",\n  \"password\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Explica el mínimo de 8 caracteres', () => pm.expect(pm.response.json().message).to.include('minimo 8 caracteres'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Correo sin @",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Invitado Demo\",\n  \"correo\": \"correo-sin-arroba\",\n  \"telefono\": \"3001234567\",\n  \"password\": \"Demo12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Explica que el correo no es válido', () => pm.expect(pm.response.json().message).to.include('correo electronico valido'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nombre de 2 letras",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Al\",\n  \"correo\": \"nombre.corto@encanto.com\",\n  \"telefono\": \"3001234567\",\n  \"password\": \"Demo12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Explica el mínimo de 3 letras', () => pm.expect(pm.response.json().message).to.include('al menos 3 caracteres'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CU02 · Iniciar sesión",
+      "description": "POST /auth/login. Compara la contraseña con argon2.verify y entrega un access de 15 min y un refresh de 7 días.",
+      "item": [
+        {
+          "name": "Login del comensal recién registrado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoDemo}}\",\n  \"password\": \"{{passwordDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Entrega accessToken y refreshToken', () => pm.expect(pm.response.json()).to.have.all.keys('accessToken', 'refreshToken'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login del dueño sembrado (admin@encanto.com)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoAdmin}}\",\n  \"password\": \"{{passwordAdmin}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cryptoJs = require('crypto-js');\nfunction leerJwt(token) {\n    // convierto el base64url del JWT a base64 normal y lo decodifico con crypto-js\n    const parte = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');\n    const relleno = parte + '='.repeat((4 - parte.length % 4) % 4);\n    return JSON.parse(cryptoJs.enc.Base64.parse(relleno).toString(cryptoJs.enc.Utf8));\n}",
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json();",
+                  "pm.test('Entrega accessToken y refreshToken', () => pm.expect(t).to.have.all.keys('accessToken', 'refreshToken'));",
+                  "const a = leerJwt(t.accessToken), r = leerJwt(t.refreshToken);",
+                  "pm.test('El token de acceso dura 15 minutos', () => pm.expect(a.exp - a.iat).to.eql(900));",
+                  "pm.test('El token de refresco dura 7 días', () => pm.expect((r.exp - r.iat) / 86400).to.eql(7));",
+                  "pm.test('El token identifica al usuario (sub y correo)', () => pm.expect(a).to.include.keys('sub', 'correo'));",
+                  "// guardo los tokens para usarlos en CU03",
+                  "pm.collectionVariables.set('accessToken', t.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', t.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contraseña incorrecta (FA1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoAdmin}}\",\n  \"password\": \"ClaveEquivocada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('Mensaje genérico: Credenciales inválidas', () => pm.expect(pm.response.json().message).to.eql('Credenciales inválidas'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Correo que no existe (FA1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"nadie@encanto.com\",\n  \"password\": \"ClaveEquivocada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('Mismo mensaje que con la clave mala (no revela qué falló)', () => pm.expect(pm.response.json().message).to.eql('Credenciales inválidas'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contraseña vacía",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoAdmin}}\",\n  \"password\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Pide escribir la contraseña', () => pm.expect(pm.response.json().message).to.include('Ingresa tu contrasena'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CU03 · Renovar la sesión (rotación del token de refresco)",
+      "description": "POST /auth/refresh. Usa los tokens que guardó el login del dueño. Cada renovación cambia el refresh y el anterior deja de servir.",
+      "item": [
+        {
+          "name": "Renovar con el refresh vigente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// espero un poco más de un segundo para que el token nuevo tenga otra fecha de emisión (iat)",
+                  "setTimeout(() => {}, 1100);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK', () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json();",
+                  "const anterior = pm.collectionVariables.get('refreshToken');",
+                  "pm.test('Entrega un par de tokens nuevos', () => pm.expect(t).to.have.all.keys('accessToken', 'refreshToken'));",
+                  "pm.test('El refresh nuevo es distinto al anterior (rotó)', () => pm.expect(t.refreshToken).to.not.eql(anterior));",
+                  "// guardo el viejo para demostrar que ya no sirve y dejo el nuevo como vigente",
+                  "pm.collectionVariables.set('refreshViejo', anterior);",
+                  "pm.collectionVariables.set('refreshToken', t.refreshToken);",
+                  "pm.collectionVariables.set('accessToken', t.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reusar el refresh viejo (FA1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshViejo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401: el refresh viejo ya no sirve', () => pm.response.to.have.status(401));",
+                  "pm.test('Mensaje: Refresh token inválido o expirado', () => pm.expect(pm.response.json().message).to.eql('Refresh token inválido o expirado'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Renovar otra vez con el refresh nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "setTimeout(() => {}, 1100);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200 OK: el refresh nuevo sí funciona', () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json();",
+                  "pm.collectionVariables.set('refreshToken', t.refreshToken);",
+                  "pm.collectionVariables.set('accessToken', t.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh inventado o alterado (FA2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"esto.no.es-un-token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401 Unauthorized', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1"
+    },
+    {
+      "key": "docsUrl",
+      "value": "http://localhost:3000/api/docs"
+    },
+    {
+      "key": "correoAdmin",
+      "value": "admin@encanto.com"
+    },
+    {
+      "key": "passwordAdmin",
+      "value": "Admin123*"
+    },
+    {
+      "key": "correoDemo",
+      "value": ""
+    },
+    {
+      "key": "passwordDemo",
+      "value": "Demo12345"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "refreshViejo",
+      "value": ""
+    }
+  ]
+}

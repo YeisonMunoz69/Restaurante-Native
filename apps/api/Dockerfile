@@ -19,6 +19,12 @@ RUN npm install
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
+# Compilo el paquete compartido aquí adentro.
+# Lo hago porque la API importa @encanto/shared y ese paquete se resuelve por su dist/,
+# que está en el .gitignore. Si dependiera del dist del computador de cada uno, a quien
+# clone el repo de cero no le arrancaría la API. Compilándolo acá la imagen se basta sola.
+RUN npm run build --workspace=@encanto/shared
+
 # Generamos el cliente de Prisma para que esté listo al arrancar
 RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
 

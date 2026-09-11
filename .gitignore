@@ -13,6 +13,11 @@ node_modules/
 *.key
 Estado-actual.md
 
+# Ajustes de Docker propios de cada computador (por ejemplo fijar DNS).
+# Cada uno puede tener el suyo sin pisarle la configuración a los demás.
+docker-compose.override.yml
+**/docker-compose.override.yml
+
 # Compilación y artefactos
 dist/
 build/

@@ -1,20 +1,41 @@
-version: '3.8'
-
 services:
   api:
     build:
       context: ../../
       dockerfile: apps/api/Dockerfile
     container_name: encanto_api_dev
+    # Si el contenedor se cae por un bache de red, que se levante solo
+    restart: unless-stopped
     ports:
       - '3000:3000'
     volumes:
       # Montamos el código fuente de la API y de shared para hot-reload
       - ../../apps/api:/usr/src/app/apps/api
       - ../../packages/shared:/usr/src/app/packages/shared
-      # Ignoramos node_modules local para usar el del contenedor (opcional)
+      # Estas carpetas me las quedo como las trae la imagen, para que lo que haya
+      # en el computador de cada uno no las tape. La importante es el dist de shared:
+      # sin esto, a quien clone el repo de cero le desaparece y la API no arranca.
+      # Ojo: acá NO va apps/api/dist, porque el Nest CLI borra esa carpeta antes de
+      # compilar y contra un punto de montaje eso falla con EBUSY.
       - /usr/src/app/node_modules
+      - /usr/src/app/apps/api/node_modules
+      - /usr/src/app/packages/shared/node_modules
+      - /usr/src/app/packages/shared/dist
     env_file:
       - .env
     environment:
       - NODE_ENV=development
+    # Con esto docker ps me dice si la API está respondiendo de verdad, no solo si el proceso vive.
+    # Le doy 90 segundos de gracia al arrancar porque Nest compila antes de escuchar.
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/api/v1').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
