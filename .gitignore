@@ -23,6 +23,10 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
+
+# Archivos .js compilados que TypeScript puede escupir dentro de src/ si outDir no está bien configurado
+# (hallazgo #9 del Estado-actual.md - jamás deben estar en src/)
+apps/api/src/**/*.js
 .turbo/
 .next/
 out/
