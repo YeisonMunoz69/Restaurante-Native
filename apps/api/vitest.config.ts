@@ -1,10 +1,8 @@
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  // Resolves the path aliases declared in tsconfig.json, including the ones
-  // added by `nest g library`.
-  plugins: [tsconfigPaths()],
+  // Resuelvo los alias de tsconfig.json, incluidos los que genera Nest CLI.
+  resolve: { tsconfigPaths: true },
   oxc: false,
   esbuild: {
     target: 'es2022',
