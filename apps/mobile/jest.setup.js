@@ -1,33 +1,37 @@
 /* eslint-disable no-undef */
 
 // simulacion basica de react-native-keychain para el entorno de pruebas unitarias
-jest.mock('react-native-keychain', () => {
-  const mockStorage = {};
-  return {
-    SECURITY_LEVEL: {
-      SECURE_SOFTWARE: 'SECURE_SOFTWARE',
-      SECURE_HARDWARE: 'SECURE_HARDWARE',
-    },
-    ACCESSIBLE: {
-      WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY',
-    },
-    setGenericPassword: jest.fn((username, password, options) => {
-      const service = options?.service || 'default';
-      mockStorage[service] = { username, password };
-      return Promise.resolve(true);
-    }),
-    getGenericPassword: jest.fn((options) => {
-      const service = options?.service || 'default';
-      const item = mockStorage[service];
-      return Promise.resolve(item || false);
-    }),
-    resetGenericPassword: jest.fn((options) => {
-      const service = options?.service || 'default';
-      delete mockStorage[service];
-      return Promise.resolve(true);
-    }),
-  };
-});
+jest.mock(
+  'react-native-keychain',
+  () => {
+    const mockStorage = {};
+    return {
+      SECURITY_LEVEL: {
+        SECURE_SOFTWARE: 'SECURE_SOFTWARE',
+        SECURE_HARDWARE: 'SECURE_HARDWARE',
+      },
+      ACCESSIBLE: {
+        WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY',
+      },
+      setGenericPassword: jest.fn((username, password, options) => {
+        const service = options?.service || 'default';
+        mockStorage[service] = { username, password };
+        return Promise.resolve(true);
+      }),
+      getGenericPassword: jest.fn(options => {
+        const service = options?.service || 'default';
+        const item = mockStorage[service];
+        return Promise.resolve(item || false);
+      }),
+      resetGenericPassword: jest.fn(options => {
+        const service = options?.service || 'default';
+        delete mockStorage[service];
+        return Promise.resolve(true);
+      }),
+    };
+  },
+  { virtual: true },
+);
 
 // simulacion completa de react-native-safe-area-context con contextos y consumers
 jest.mock('react-native-safe-area-context', () => {

@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'node:crypto';
 import * as argon2 from 'argon2';
 import type { RegisterDto, LoginDto } from '@encanto/shared';
 
@@ -26,7 +27,9 @@ export class AuthService {
     }
 
     // Hashear contraseña con argon2id
-    const passwordHash = await argon2.hash(registerDto.password, { type: argon2.argon2id });
+    const passwordHash = await argon2.hash(registerDto.password, {
+      type: argon2.argon2id,
+    });
 
     // Crear usuario en BD
     const newUser = await this.prisma.user.create({
@@ -64,19 +67,31 @@ export class AuthService {
     }
 
     // Verificar contraseña con argon2id
-    const isPasswordValid = await argon2.verify(user.passwordHash, loginDto.password);
+    const isPasswordValid = await argon2.verify(
+      user.passwordHash,
+      loginDto.password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const payload = { sub: user.id, correo: user.correo };
+    const sessionId = randomUUID();
+    const payload = {
+      sub: user.id,
+      correo: user.correo,
+      rol: user.rol,
+      sid: sessionId,
+    };
     const tokens = await this.generateTokens(payload);
 
     // Guardar hash del refresh token en tokens_refresco
-    const tokenHash = await argon2.hash(tokens.refreshToken, { type: argon2.argon2id });
-    
+    const tokenHash = await argon2.hash(tokens.refreshToken, {
+      type: argon2.argon2id,
+    });
+
     await this.prisma.refreshToken.create({
       data: {
+        id: sessionId,
         usuarioId: user.id,
         tokenHash,
         dispositivo: 'web',
@@ -91,7 +106,7 @@ export class AuthService {
     try {
       const secret = this.configService.get<string>('JWT_REFRESH_SECRET');
       const payload = this.jwtService.verify(refreshToken, { secret });
-      
+
       // Buscar registros activos (no revocados, no expirados) para el usuario
       const storedTokens = await this.prisma.refreshToken.findMany({
         where: {
@@ -120,16 +135,47 @@ export class AuthService {
       }
 
       // Generar nuevos tokens y actualizar la fila (rotación)
-      const newTokens = await this.generateTokens({ sub: payload.sub, correo: payload.correo });
-      const newHash = await argon2.hash(newTokens.refreshToken, { type: argon2.argon2id });
+      if (payload.sid && payload.sid !== stored.id) {
+        throw new UnauthorizedException(
+          'La sesión del refresh token no coincide',
+        );
+      }
 
-      await this.prisma.refreshToken.update({
-        where: { id: stored.id },
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { id: true, correo: true, rol: true, activo: true },
+      });
+
+      if (!user || !user.activo) {
+        throw new UnauthorizedException('La cuenta no está activa');
+      }
+
+      const newTokens = await this.generateTokens({
+        sub: user.id,
+        correo: user.correo,
+        rol: user.rol,
+        sid: stored.id,
+      });
+      const newHash = await argon2.hash(newTokens.refreshToken, {
+        type: argon2.argon2id,
+      });
+
+      const rotacion = await this.prisma.refreshToken.updateMany({
+        where: {
+          id: stored.id,
+          tokenHash: stored.tokenHash,
+          revocadoEn: null,
+          expiraEn: { gt: new Date() },
+        },
         data: {
           tokenHash: newHash,
           expiraEn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         },
       });
+
+      if (rotacion.count !== 1) {
+        throw new UnauthorizedException('El refresh token ya fue utilizado');
+      }
 
       return newTokens;
     } catch (error) {
@@ -138,10 +184,10 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string) {
-    // Revoca todos los refresh tokens activos del usuario
+  async logout(userId: string, sessionId: string) {
+    // Revoco la sesión indicada por el token de acceso y dejo las demás intactas.
     await this.prisma.refreshToken.updateMany({
-      where: { usuarioId: userId, revocadoEn: null },
+      where: { id: sessionId, usuarioId: userId, revocadoEn: null },
       data: { revocadoEn: new Date() },
     });
     return { message: 'Sesión cerrada correctamente' };
@@ -154,7 +200,8 @@ export class AuthService {
     // Emito un Refresh Token rotatorio
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRATION') || '7d') as any,
+      expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRATION') ||
+        '7d') as any,
     });
 
     return {

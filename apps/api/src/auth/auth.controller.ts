@@ -1,9 +1,32 @@
-import { Controller, Post, Body, UsePipes, HttpCode, HttpStatus, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UsePipes,
+  HttpCode,
+  HttpStatus,
+  Req,
+  Get,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service.js';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+} from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 import { RegisterSchema, LoginSchema } from '@encanto/shared';
 import type { RegisterDto, LoginDto } from '@encanto/shared';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
+import {
+  JwtAuthGuard,
+  type AuthenticatedRequest,
+} from '../common/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
+import { Roles } from '../common/decorators/roles.decorator.js';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -56,12 +79,35 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refrescar tokens' })
-  @ApiBody({ schema: { type: 'object', properties: { refreshToken: { type: 'string' } } } })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { refreshToken: { type: 'string' } },
+    },
+  })
   @ApiResponse({ status: 200, description: 'Nuevos tokens generados' })
-  @ApiResponse({ status: 401, description: 'Refresh token inválido o expirado' })
+  @ApiResponse({
+    status: 401,
+    description: 'Refresh token inválido o expirado',
+  })
   async refresh(@Body('refreshToken') refreshToken: string) {
     // Invalido el token anterior (implícito al requerir uno válido y emitir otro)
     return this.authService.refresh(refreshToken);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Consultar el usuario de la sesión actual' })
+  @ApiResponse({ status: 200, description: 'Datos del usuario autenticado' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.COMENSAL, Role.STAFF, Role.ADMIN)
+  // Devuelvo solo los datos publicos asociados al token validado.
+  getCurrentUser(@Req() req: AuthenticatedRequest) {
+    return {
+      id: req.user.sub,
+      correo: req.user.correo,
+      rol: req.user.rol,
+    };
   }
 
   @Post('logout')
@@ -69,10 +115,9 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Cerrar sesión' })
   @ApiResponse({ status: 200, description: 'Sesión cerrada correctamente' })
-  async logout(@Req() req: any) {
-    // Extraigo el ID del usuario desde el token (en un entorno real usaría un Guard)
-    const userId = req.user?.['sub'] || 'unknown';
-    // Invalido el refresh token del dispositivo
-    return this.authService.logout(userId);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.COMENSAL, Role.STAFF, Role.ADMIN)
+  async logout(@Req() req: AuthenticatedRequest) {
+    return this.authService.logout(req.user.sub, req.user.sid);
   }
 }

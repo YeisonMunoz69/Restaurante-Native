@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   Switch,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { LoginSchema, RegisterSchema } from '@encanto/shared';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -20,25 +22,45 @@ import {
   ShieldCheck,
   User,
   LogOut,
-  LogIn,
 } from 'lucide-react-native';
 
 // pantalla de ajustes con gestion de tema, idioma y estado de autenticacion segura
 export const SettingsScreen: React.FC = () => {
   const { t } = useTranslation();
-  const { isDark, toggleTheme, colors, typography, spacing, radii } = useTheme();
-  const { user, isAuthenticated, isLoading, login, logout } = useAuth();
+  const { isDark, toggleTheme, colors, typography, spacing, radii } =
+    useTheme();
+  const { user, isAuthenticated, isLoading, login, register, logout } =
+    useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formMode, setFormMode] = useState<'login' | 'register'>('login');
+  const [nombre, setNombre] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [password, setPassword] = useState('');
 
-  // funcion para probar el inicio de sesion de forma directa desde la interfaz
-  const handleTestLogin = async (correo: string, password: string) => {
+  // Valido los campos con el mismo esquema compartido por la API.
+  const handleSubmit = async () => {
     try {
       setErrorMessage(null);
-      await login({ correo, password });
+      if (formMode === 'register') {
+        const data = RegisterSchema.parse({
+          nombre,
+          correo,
+          telefono,
+          password,
+        });
+        await register(data);
+      } else {
+        const credentials = LoginSchema.parse({ correo, password });
+        await login(credentials);
+      }
     } catch (error: any) {
-      console.error('Error al iniciar sesion:', error);
+      const validationMessage = error?.issues?.[0]?.message;
+      const serverMessage = error?.response?.data?.message;
       setErrorMessage(
-        error?.response?.data?.message || 'No fue posible conectar con el servidor.'
+        validationMessage ||
+          (typeof serverMessage === 'string' ? serverMessage : null) ||
+          t('auth.requestError'),
       );
     }
   };
@@ -57,7 +79,7 @@ export const SettingsScreen: React.FC = () => {
         </Text>
       </View>
 
-      {/* seccion de cuenta y seguridad con Keychain */}
+      {/* Presento el estado de cuenta y el formulario de autenticacion. */}
       <View
         style={[
           styles.seccion,
@@ -101,10 +123,7 @@ export const SettingsScreen: React.FC = () => {
 
               <View style={{ marginLeft: spacing.m, flex: 1 }}>
                 <Text
-                  style={[
-                    typography.tituloM,
-                    { color: colors.texto.primario },
-                  ]}
+                  style={[typography.tituloM, { color: colors.texto.primario }]}
                 >
                   {user.correo}
                 </Text>
@@ -130,7 +149,7 @@ export const SettingsScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* indicador de proteccion por hardware */}
+            {/* Informo que las credenciales quedan en el almacenamiento seguro. */}
             <View
               style={[
                 styles.alertaSegura,
@@ -217,20 +236,100 @@ export const SettingsScreen: React.FC = () => {
                   },
                 ]}
               >
-                <Text
-                  style={[
-                    typography.pie,
-                    { color: colors.estado.error },
-                  ]}
-                >
+                <Text style={[typography.pie, { color: colors.estado.error }]}>
                   {errorMessage}
                 </Text>
               </View>
             )}
 
-            {/* botones de acceso rapido para pruebas con datos sembrados */}
+            {formMode === 'register' && (
+              <TextInput
+                accessibilityLabel={t('auth.name')}
+                value={nombre}
+                onChangeText={setNombre}
+                placeholder={t('auth.name')}
+                placeholderTextColor={colors.texto.secundario}
+                autoCapitalize="words"
+                style={[
+                  styles.campo,
+                  typography.cuerpoM,
+                  {
+                    color: colors.texto.primario,
+                    borderColor: colors.superficie.borde,
+                    borderRadius: radii.m,
+                    marginBottom: spacing.s,
+                  },
+                ]}
+              />
+            )}
+            <TextInput
+              accessibilityLabel={t('auth.email')}
+              value={correo}
+              onChangeText={setCorreo}
+              placeholder={t('auth.email')}
+              placeholderTextColor={colors.texto.secundario}
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              style={[
+                styles.campo,
+                typography.cuerpoM,
+                {
+                  color: colors.texto.primario,
+                  borderColor: colors.superficie.borde,
+                  borderRadius: radii.m,
+                  marginBottom: spacing.s,
+                },
+              ]}
+            />
+            {formMode === 'register' && (
+              <TextInput
+                accessibilityLabel={t('auth.phone')}
+                value={telefono}
+                onChangeText={setTelefono}
+                placeholder={t('auth.phone')}
+                placeholderTextColor={colors.texto.secundario}
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+                style={[
+                  styles.campo,
+                  typography.cuerpoM,
+                  {
+                    color: colors.texto.primario,
+                    borderColor: colors.superficie.borde,
+                    borderRadius: radii.m,
+                    marginBottom: spacing.s,
+                  },
+                ]}
+              />
+            )}
+            <TextInput
+              accessibilityLabel={t('auth.password')}
+              value={password}
+              onChangeText={setPassword}
+              placeholder={t('auth.password')}
+              placeholderTextColor={colors.texto.secundario}
+              autoCapitalize="none"
+              secureTextEntry
+              textContentType={
+                formMode === 'register' ? 'newPassword' : 'password'
+              }
+              style={[
+                styles.campo,
+                typography.cuerpoM,
+                {
+                  color: colors.texto.primario,
+                  borderColor: colors.superficie.borde,
+                  borderRadius: radii.m,
+                  marginBottom: spacing.m,
+                },
+              ]}
+            />
+
             <TouchableOpacity
-              onPress={() => handleTestLogin('comensal@encanto.com', 'Comensal123*')}
+              testID="auth-submit"
+              onPress={handleSubmit}
               disabled={isLoading}
               style={[
                 styles.botonAccion,
@@ -238,49 +337,35 @@ export const SettingsScreen: React.FC = () => {
                   backgroundColor: colors.marca.primario,
                   borderRadius: radii.m,
                   padding: spacing.m,
-                  marginBottom: spacing.s,
                 },
               ]}
             >
               {isLoading ? (
                 <ActivityIndicator size="small" color={colors.texto.inverso} />
               ) : (
-                <>
-                  <LogIn size={18} color={colors.texto.inverso} />
-                  <Text
-                    style={[
-                      typography.etiqueta,
-                      { color: colors.texto.inverso, marginLeft: spacing.s },
-                    ]}
-                  >
-                    {t('auth.loginComensal')}
-                  </Text>
-                </>
+                <Text
+                  style={[typography.etiqueta, { color: colors.texto.inverso }]}
+                >
+                  {t(formMode === 'login' ? 'auth.login' : 'auth.register')}
+                </Text>
               )}
             </TouchableOpacity>
-
             <TouchableOpacity
-              onPress={() => handleTestLogin('admin@encanto.com', 'Admin123*')}
+              testID="auth-toggle-mode"
+              accessibilityRole="button"
+              onPress={() => {
+                setErrorMessage(null);
+                setFormMode(formMode === 'login' ? 'register' : 'login');
+              }}
               disabled={isLoading}
-              style={[
-                styles.botonAccion,
-                {
-                  backgroundColor: colors.superficie.fondo,
-                  borderColor: colors.superficie.borde,
-                  borderWidth: 1,
-                  borderRadius: radii.m,
-                  padding: spacing.m,
-                },
-              ]}
+              style={{ alignItems: 'center', paddingTop: spacing.m }}
             >
-              <LogIn size={18} color={colors.texto.primario} />
-              <Text
-                style={[
-                  typography.etiqueta,
-                  { color: colors.texto.primario, marginLeft: spacing.s },
-                ]}
-              >
-                {t('auth.loginAdmin')}
+              <Text style={[typography.pie, { color: colors.marca.primario }]}>
+                {t(
+                  formMode === 'login'
+                    ? 'auth.needAccount'
+                    : 'auth.haveAccount',
+                )}
               </Text>
             </TouchableOpacity>
           </View>
@@ -491,5 +576,11 @@ const styles = StyleSheet.create({
   },
   errorContenedor: {
     borderWidth: 1,
+  },
+  campo: {
+    borderWidth: 1,
+    minHeight: 48,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
 });
