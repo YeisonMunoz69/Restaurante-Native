@@ -5,8 +5,8 @@ services:
     build:
       context: ../../
       dockerfile: apps/api/Dockerfile.vps
-    image: encanto-api:staging
-    container_name: encanto_vps_staging_api
+    image: ${API_IMAGE_NAME:-encanto-api:staging}
+    container_name: ${API_CONTAINER_NAME:-encanto_vps_staging_api}
     restart: unless-stopped
     init: true
     stop_grace_period: 20s
@@ -46,7 +46,7 @@ services:
       context: ../../
       dockerfile: apps/api/Dockerfile.vps
       target: build
-    image: encanto-api-migrate:staging
+    image: ${API_MIGRATION_IMAGE_NAME:-encanto-api-migrate:staging}
     env_file:
       - ${API_RUNTIME_ENV_FILE:-.env.vps}
     environment:
