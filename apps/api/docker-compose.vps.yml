@@ -1,0 +1,60 @@
+name: encanto-vps-staging
+
+services:
+  api:
+    build:
+      context: ../../
+      dockerfile: apps/api/Dockerfile.vps
+    image: encanto-api:staging
+    container_name: encanto_vps_staging_api
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 20s
+    env_file:
+      - ${API_RUNTIME_ENV_FILE:-.env.vps}
+    environment:
+      APP_ENV: staging
+      NODE_ENV: production
+      PORT: '3000'
+      SWAGGER_ENABLED: 'false'
+    ports:
+      - '127.0.0.1:${API_HOST_PORT:-3000}:3000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/v1/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  migrate:
+    profiles:
+      - tools
+    build:
+      context: ../../
+      dockerfile: apps/api/Dockerfile.vps
+      target: build
+    image: encanto-api-migrate:staging
+    env_file:
+      - ${API_RUNTIME_ENV_FILE:-.env.vps}
+    environment:
+      APP_ENV: staging
+      NODE_ENV: production
+    entrypoint: ['npx']
+    command:
+      - prisma
+      - migrate
+      - deploy
+      - --schema=apps/api/prisma/schema.prisma
