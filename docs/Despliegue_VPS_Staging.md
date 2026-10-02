@@ -74,39 +74,60 @@ Mantengo el acceso SSH abierto durante cualquier ajuste del firewall y compruebo
 
 ## 3. Obtener el código sin filtrar secretos
 
-1. Desde PowerShell, compruebo que la rama y los commits que quiero subir están en Git. Para publicar la rama de staging en GitHub:
+1. Desde PowerShell, publico la rama de trabajo. Este push publica únicamente el código versionado; no incluye `apps/api/.env` ni `apps/api/.env.vps`:
 
    ```powershell
    git status --short --branch
    git push -u origin yeison/vps-staging-deploy
    ```
 
-   No pego la salida de `git remote -v` si la URL tuviera un token. Si el remoto no se llama `origin`, reemplazo ese nombre por el remoto que ya tenga configurado. Este push publica únicamente el código versionado; no incluye `apps/api/.env` ni `apps/api/.env.vps`.
+2. Compruebo en PowerShell si el remoto ya tiene `dev`:
 
-2. En la terminal SSH de la VPS, reviso si la ruta destino existe antes de usarla. La guía del equipo usa `~/projects`; clono la rama publicada en una carpeta nueva:
-
-   ```bash
-   mkdir -p ~/projects
-   cd ~/projects
-   git clone --single-branch --branch yeison/vps-staging-deploy URL_SSH_DEL_REPOSITORIO Restaurante-Native
-   cd Restaurante-Native
-   git status --short --branch
-   git rev-parse --short HEAD
+   ```powershell
+   git fetch origin
+   git branch -r --list origin/dev
    ```
 
-   Sustituyo `URL_SSH_DEL_REPOSITORIO` por la URL SSH de GitHub. Si la carpeta `Restaurante-Native` ya existe, no la sobrescribo: compruebo su rama y estado con `git status --short --branch` y coordino antes de actualizarla.
+   Si `origin/dev` no aparece, el equipo debe decidir qué versión inicial integrar allí. Solo si aprueba el contenido actual de `yeison/vps-staging-deploy`, puedo crear la rama inicial desde ella; no la creo desde un `main` local desactualizado:
 
-3. Si ya tengo el clon en la VPS, actualizo únicamente la rama publicada y con un árbol limpio:
+   ```powershell
+   git switch yeison/vps-staging-deploy
+   git pull --ff-only origin yeison/vps-staging-deploy
+   git switch -c dev
+   git push -u origin dev
+   ```
+
+   Si GitHub impide ese push, creo `dev` desde GitHub a partir de la rama aprobada o pido al responsable que lo haga. Si `dev` ya existía o fue creada desde otra base, abro el Pull Request `yeison/vps-staging-deploy` → `dev` y espero los checks. Después, las nuevas funcionalidades entran mediante Pull Request desde `yeison/<funcionalidad>` hacia `dev`; `main` queda reservado para promover versiones ya validadas. Esta VPS nunca se despliega desde `main`.
+
+3. En la terminal SSH, el destino de este equipo ya es `~/projects/equipo-7`. Verifico que siga vacío:
+
+   ```bash
+   cd ~/projects/equipo-7
+   pwd
+   find . -mindepth 1 -maxdepth 1 -print -quit
+   ```
+
+   Si el último comando no imprime nada, clono la rama `dev`. Reemplazo `ORGANIZACION/REPOSITORIO` con los datos de GitHub → **Code → SSH**. Si el repositorio es privado, la VPS necesita antes una llave SSH de solo lectura autorizada en GitHub; nunca comparto la llave privada:
+
+   ```bash
+   git clone --single-branch --branch dev git@github.com:ORGANIZACION/REPOSITORIO.git .
+   git status --short --branch
+   git log -1 --oneline
+   ```
+
+   Si `find` muestra contenido, no clono encima: identifico primero su procedencia y coordino qué hacer.
+
+4. Si ya tengo el clon en la VPS, actualizo únicamente `dev` y con un árbol limpio:
 
    ```bash
    git status --short --branch
    git fetch origin
-   git switch yeison/vps-staging-deploy
-   git pull --ff-only origin yeison/vps-staging-deploy
+   git switch dev
+   git pull --ff-only origin dev
    git rev-parse --short HEAD
    ```
 
-   No hago commits desde la VPS. Anoto el hash que desplegué en el registro del equipo. Para `main`, espero la aprobación e integración normal del equipo.
+   No hago commits desde la VPS. Anoto el hash que desplegué en el registro del equipo. `main` se promueve con aprobación y no se despliega en esta primera VPS.
 
 ## 4. Crear el archivo de variables en el servidor
 
@@ -283,8 +304,8 @@ Sigo el proxy que ya usa la VPS compartida. No instalo Caddy ni sobrescribo un s
 
    ```bash
    git fetch origin
-   git switch yeison/vps-staging-deploy
-   git pull --ff-only origin yeison/vps-staging-deploy
+   git switch dev
+   git pull --ff-only origin dev
    git log -5 --oneline
    ```
 
@@ -313,15 +334,24 @@ Sigo el proxy que ya usa la VPS compartida. No instalo Caddy ni sobrescribo un s
 - **HTTPS no emite certificado:** verifico DNS público, puertos 80/443 en los dos firewalls, `sudo nginx -t` y `sudo journalctl -u nginx --since '15 minutes ago'`. No abro el puerto asignado como alternativa.
 - **La app móvil no conecta al VPS:** el build móvil actualmente está configurado para desarrollo local/emulador. Antes de distribuir una app conectada a la nube, se debe integrar en una tarea separada la URL HTTPS del API en la configuración de build móvil; no se debe incrustar una URL HTTP ni editar secretos dentro del código.
 
-## 10. Despliegue continuo desde GitHub
+## 10. CI/CD desde GitHub
 
-El workflow actual `.github/workflows/ci.yml` ejecuta instalación, pruebas y builds; **todavía no despliega**. Primero publico la rama de staging con `git push` y actualizo la VPS manualmente siguiendo las secciones anteriores. Solo automatizo el despliegue después de que ese flujo manual pase conectado a Supabase.
+El flujo acordado para esta primera VPS es:
 
-Para activar CD más adelante, agrego un job de despliegue que dependa del job de verificación y se ejecute solo al integrar el cambio aprobado en `main` o al dispararlo manualmente. Creo un Environment de GitHub llamado `staging`, limito qué ramas pueden usarlo y, si el plan del repositorio lo permite, exijo aprobación antes de liberar los secretos del job. Uso concurrencia para que dos despliegues no ejecuten migraciones al mismo tiempo.
+```text
+yeison/<funcionalidad> → Pull Request a dev → CI (pruebas y builds)
+                                      ↓ merge aprobado
+                              push a dev → CD a VPS de desarrollo (pendiente)
+dev validada → Pull Request a main → promoción estable; no despliega a esta VPS
+```
 
-Guardo en los secretos del Environment solo la conexión SSH de despliegue: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` y `VPS_KNOWN_HOSTS`. Verifico por un canal confiable la huella del host antes de confiar en ella. Guardo como variables no secretas la ruta del repositorio, el nombre del proyecto Compose y el puerto/nombres asignados al equipo. La llave pertenece a un usuario de despliegue dedicado; no uso SSH como `root`. Si requiere Docker, permito mediante `sudoers` ejecutar únicamente un script fijo, revisado y propiedad de root, no comandos arbitrarios enviados por el workflow.
+`.github/workflows/ci.yml` limita las ejecuciones automáticas: en `push` solo corre para `dev`; en `pull_request` solo para Pull Requests cuyo destino sea `dev`; `workflow_dispatch` permite ejecutar la verificación manualmente. El workflow ejecuta pruebas y builds, pero **todavía no despliega**. Hasta probar el procedimiento manual completo contra la base de datos de staging, el despliegue sigue siendo manual.
 
-El archivo `apps/api/.env.vps` y las credenciales de Supabase permanecen en la VPS, con permisos `600`; **no los subo a GitHub Actions**. El workflow se conecta por SSH, actualiza el commit aprobado, construye, ejecuta migraciones y espera `/api/v1/health`. El deploy solo se considera exitoso si el endpoint confirma la base de datos y devuelve HTTP 200.
+Cuando el despliegue manual esté validado, añado un job `deploy` que dependa de `verify` y se ejecute únicamente para un `push` a `dev`. Lo protejo con un GitHub Environment llamado `vps-dev`, una regla de rama que permita solo `dev` y concurrencia de un solo despliegue para que dos procesos no apliquen migraciones simultáneamente. `main` no debe ser disparador del despliegue de esta VPS.
+
+Guardo el acceso SSH como secretos del Environment (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`) y verifico por un canal confiable la huella SSH de la VPS antes de confiar en ella. La ruta del checkout, el nombre Compose y el puerto asignado pueden ser variables no secretas. Uso una cuenta de despliegue dedicada, no `root`; si requiere Docker, permito mediante `sudoers` ejecutar únicamente un script fijo, revisado y propiedad de root, no comandos arbitrarios enviados por el workflow. Fijo cada acción externa a una versión revisada y, cuando sea posible, a su SHA completo.
+
+El clon privado de GitHub en la VPS también necesita acceso de solo lectura al repositorio (por ejemplo, una deploy key separada). Esta credencial no es la misma que la llave con la que GitHub Actions entra a la VPS. El archivo `apps/api/.env.vps` y las credenciales de Supabase permanecen en la VPS, con permisos `600`; **no los subo a GitHub Actions**. El job SSH actualiza `dev`, construye, ejecuta `prisma migrate deploy` y espera `/api/v1/health`. El deploy solo se considera exitoso si el endpoint confirma la base de datos y devuelve HTTP 200.
 
 Antes de usar un runner hospedado por GitHub, confirmo que la política de red de la VPS permite el acceso SSH desde ese runner sin abrir puertos innecesarios. Si la red no lo permite, no abro PostgreSQL ni la API al público como solución rápida; acordamos una ruta privada y revisamos con cuidado cualquier runner propio, porque ese runner ejecuta código del repositorio en el servidor.
 
@@ -335,5 +365,6 @@ Antes de usar un runner hospedado por GitHub, confirmo que la política de red d
 - [ ] Migraciones aplicadas con `prisma migrate deploy`.
 - [ ] Contenedor queda `healthy`; `/api/v1/health` devuelve API y DB conectadas.
 - [ ] Acceso privado por túnel SSH o público exclusivamente por HTTPS/Nginx.
-- [ ] Commit desplegado anotado y procedimiento de actualización probado.
+- [ ] `dev` creada en GitHub; CI verde en un Pull Request cuyo destino sea `dev`.
+- [ ] Procedimiento manual desde el clon de `dev` probado antes de activar CD.
 - [ ] URL del cliente móvil se agenda para la tarea de configuración del build cuando se defina el dominio.
