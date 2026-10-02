@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npm run build --workspace=@encanto/shared
+
+      - name: Test API
+        run: npm run test --workspace=api
+
+      - name: Build API
+        run: npm run build --workspace=api
+
+      - name: Test mobile app
+        run: npm run test --workspace=@encanto/mobile

@@ -14,20 +14,19 @@ Para conocer nuestras normas de desarrollo, formato de commits y convenciones de
 - **Alex Santacruz** (Líder backend API y autenticación)
 - **Fabián Hoyos** (Líder de infraestructura, datos y seguridad)
 
-> *Nota de autoría:* Los únicos colaboradores y autores acreditados de este proyecto son los tres integrantes mencionados. No se admiten inteligencias artificiales, bots ni agentes automatizados como colaboradores o co-autores en los registros de Git ni en GitHub.
+> _Nota de autoría:_ Los únicos colaboradores y autores acreditados de este proyecto son los tres integrantes mencionados. No se admiten inteligencias artificiales, bots ni agentes automatizados como colaboradores o co-autores en los registros de Git ni en GitHub.
 
 ---
 
-## Estado del Proyecto (Sprint 1 Completado al 100%)
+## Estado del proyecto — corte 2 de octubre de 2026
 
-Cerramos el primer ciclo de desarrollo con todos los objetivos alcanzados y probados:
+El Sprint 1 no está cerrado al 100%: 43 de sus 51 puntos están verificados localmente; el workspace web aún es un placeholder (3 puntos parciales) y el VPS real/HTTPS sigue pendiente (5 puntos parciales). El perfil Docker de staging y la guía están preparados, pero no se ha afirmado un despliegue externo. El detalle verificable está en [Plan_de_Sprints.md](docs/Plan_de_Sprints.md) y [Backlog_Jira.md](docs/Backlog_Jira.md).
 
-- **Infraestructura Monorepo:** Configuración de npm workspaces, linters, formateadores y paquete `@encanto/shared`.
-- **Móvil (React Native 0.87):** Proyecto bare con Nueva Arquitectura y Hermes, navegación con 5 pestañas (Carta, Reservas, Noticias, Próximamente y Ajustes), tokens de diseño para modo claro y oscuro sin colores fijos, e internacionalización (i18n) en español.
-- **Seguridad y Sesión en Móvil:** Almacenamiento seguro del refresh token en hardware mediante `react-native-keychain` (Android Keystore), access token en memoria RAM para mínima superficie de ataque, e interceptor de Axios con renovación silenciosa ante respuestas HTTP 401.
-- **Backend API (NestJS):** Inicialización modular con TypeScript, Swagger interactivo en `/api/docs`, contenedor Docker de desarrollo local y hot-reload.
-- **Base de Datos y Modelado:** Esquema relacional en Prisma con 18 tablas en Supabase PostgreSQL, políticas de seguridad RLS y script de siembra (seed) con información real del restaurante en Timbío.
-- **Autenticación y Autorización:** Hasheo de contraseñas con Argon2id, emisión de JWT de acceso y refresco rotativo, y control de acceso basado en roles con `RolesGuard`.
+- **Móvil:** React Native bare 0.87, Nueva Arquitectura, Hermes, cinco pestañas, tema e i18n. Ajustes permite iniciar sesión y registrar una cuenta; el token de refresco queda en almacenamiento seguro y el access token en memoria.
+- **API:** NestJS con Swagger en desarrollo, manejo centralizado de excepciones, Prisma, migraciones, seed, Docker de desarrollo y endpoint de salud que consulta PostgreSQL.
+- **Seguridad:** Argon2id, access/refresh JWT, rotación con control de concurrencia, logout limitado a la sesión del dispositivo y guards de JWT/roles. Los endpoints administrativos de los módulos funcionales deben declarar sus permisos cuando esos módulos se integren.
+- **CI:** GitHub Actions instala desde el lockfile, compila `shared` y API y ejecuta sus pruebas y las de móvil.
+- **VPS:** Configuración local de staging lista; para activar HTTPS faltan el host y, si se publica, el dominio y acceso manual mediante KeePass. El procedimiento está en [Despliegue_VPS_Staging.md](docs/Despliegue_VPS_Staging.md).
 
 ---
 
@@ -54,9 +53,11 @@ Restaurante-Native/
 │   │   │   ├── auth/       # Módulo de autenticación (Argon2id, JWT, login, refresh, logout)
 │   │   │   ├── common/     # Guards de roles (RolesGuard), filtros de error y pipes Zod
 │   │   │   └── prisma/     # Servicio de conexión a Supabase PostgreSQL
-│   │   ├── Dockerfile      # Imagen de desarrollo optimizada sobre Node 22 Alpine
-│   │   └── docker-compose.yml # Orquestador local del servicio api
-│   └── web/                # Aplicación web de aterrizaje y soporte de enlaces profundos
+│   │   ├── Dockerfile      # Imagen de desarrollo local sobre Node 22 Alpine
+│   │   ├── Dockerfile.vps  # Imagen compilada para staging en VPS
+│   │   ├── docker-compose.yml      # Orquestador local con hot-reload
+│   │   └── docker-compose.vps.yml  # Orquestador de staging, puerto privado por defecto
+│   └── web/                # Placeholder; la aplicación web se desarrolla en Sprint 4
 ├── packages/
 │   └── shared/             # Código compartido entre apps (esquemas Zod, DTOs y formateadores)
 ├── design/                 # Sistema de diseño, tokens JSON/CSS y maquetas HTML
@@ -70,7 +71,7 @@ Restaurante-Native/
 
 ### 1. Requisitos previos
 
-- **Node.js:** Versión 20 LTS o 22 LTS y npm 10+.
+- **Node.js:** Node 22.22.3 o superior dentro de la línea 22.x, con npm 10+. La CLI de Nest instalada por el monorepo requiere una versión reciente de Node 22; la imagen y CI usan Node 22. La tabla oficial de versiones de Node.js lista la línea 22 como LTS y publica sus parches actuales: [releases de Node.js](https://nodejs.org/en/about/previous-releases).
 - **Java JDK:** OpenJDK 17 (necesario para compilar la aplicación Android).
 - **Android SDK:** Con API 34 o 35 y herramientas de plataforma (`adb`).
 - **Docker Desktop:** Para correr el contenedor de la API en local.
@@ -93,6 +94,7 @@ cp .env.example apps/api/.env
 ```
 
 Configura en tu `.env` las credenciales de base de datos de Supabase y los secretos criptográficos de JWT.
+Para VPS no reutilices esta configuración: consulta la plantilla `apps/api/.env.vps.example` y la guía manual.
 
 ---
 
@@ -110,14 +112,19 @@ docker compose -f apps/api/docker-compose.yml up -d
 docker logs -f encanto_api_dev
 ```
 
-* **API REST:** `http://localhost:3000/api/v1`
-* **Documentación interactiva (Swagger UI):** `http://localhost:3000/api/docs`
+- **API REST:** `http://localhost:3000/api/v1`
+- **Documentación interactiva (Swagger UI):** `http://localhost:3000/api/docs`
+- **Estado de API y base de datos:** `http://localhost:3000/api/v1/health`
 
 Para detener el contenedor:
 
 ```bash
 docker compose -f apps/api/docker-compose.yml down
 ```
+
+### Preparar el despliegue manual de staging en VPS
+
+El perfil separado compila la API, no monta el código local, separa la herramienta de migraciones, desactiva Swagger y publica el puerto solo en `127.0.0.1`. No abras el 3000 en el firewall. Para túnel SSH, HTTPS/Caddy, migraciones, actualizaciones y diagnóstico, sigue [la guía detallada de despliegue](docs/Despliegue_VPS_Staging.md). No existe aún un VPS desplegado/verificado desde este repositorio.
 
 ---
 
@@ -149,7 +156,7 @@ Si usas el emulador oficial de Android Studio, simplemente inicia el emulador y 
 npm run android --workspace=@encanto/mobile
 ```
 
-*Nota para emulador:* El emulador accede al backend de tu máquina a través de la IP especial `http://10.0.2.2:3000/api/v1`, la cual ya está configurada por defecto en la app móvil.
+_Nota para emulador:_ El emulador accede al backend de tu máquina a través de la IP especial `http://10.0.2.2:3000/api/v1`, la cual ya está configurada por defecto en la app móvil.
 
 ---
 
@@ -158,9 +165,11 @@ npm run android --workspace=@encanto/mobile
 Para ejecutar las suites de pruebas de todo el proyecto:
 
 ```bash
-# Pruebas del Backend (RolesGuard, AppController en Vitest)
+# Pruebas del Backend (Vitest)
 npm test --workspace=api
 
 # Pruebas de la App Móvil (almacenamiento Keychain, interceptor y renderizado en Jest)
 npm test --workspace=@encanto/mobile
 ```
+
+El flujo completo y reproducible también corre en GitHub Actions al abrir un PR o enviar cambios.

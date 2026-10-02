@@ -2,7 +2,9 @@
 
 ### App móvil — El Encanto Campestre
 
-**Versión:** 0.2 · **Actualizado:** 20 de agosto de 2026 · Complementa a `Sprint0_Analisis_y_Diseno.md`
+**Versión:** 0.2 · **Plan base:** 20 de agosto de 2026 · **Corte de estado:** 2 de octubre de 2026 · Complementa a `Sprint0_Analisis_y_Diseno.md`
+
+**Estados:** `[x]` verificado en el repositorio o en pruebas locales; `[~]` preparado parcialmente, con una aceptación externa pendiente; `[ ]` pendiente.
 
 ---
 
@@ -65,36 +67,25 @@ gantt
 
 ## 3. Sprint 1 — Cimientos · 28 ago al 10 sep
 
-**Objetivo.** Los tres proyectos ejecutándose de extremo a extremo, con un usuario capaz de registrarse e iniciar sesión.
+**Objetivo.** Monorepo y API repetibles, app móvil base y un usuario capaz de registrarse e iniciar sesión.
 
 |  Estado   | Tarea                                                                                    | Requisitos       |  Pts   | Responsable |
 | :-------: | ---------------------------------------------------------------------------------------- | ---------------- | :----: | ----------- |
-|    [x]    | Monorepo, convenciones de commits, packages/shared (Zod) y CI mínima                     | RNF-14           |   3    | Yeison      |
+|    [~]    | Monorepo, convenciones de commits, packages/shared (Zod) y CI mínima                     | RNF-14           |   3    | Yeison      |
 |    [x]    | React Native 0.87 bare con Nueva Arquitectura, TypeScript y navegación de 5 tabs         | §13.1            |   8    | Yeison      |
 |    [x]    | i18n con `i18next` y archivos de recursos desde el primer commit                         | RNF-03, ADR-009  |   3    | Yeison      |
-<<<<<<< HEAD
-|    [ ]    | NestJS en contenedor Docker, Swagger en `/api/docs` y manejo centralizado de excepciones | RNF-12, ADR-008  |   5    | Alex        |
-|    [ ]    | Esquema de Prisma completo (18 entidades) y primera migración en Supabase                | §9               |   8    | Fabián      |
-|    [ ]    | Datos de siembra (seed): restaurante, zonas, mesas, categorías, platos y calendario      | —                |   3    | Fabián      |
-|    [ ]    | Registro, inicio de sesión, refresco y cierre de sesión con Argon2id                     | RF-AUT01, 03, 04 |   8    | Alex        |
-|    [ ]    | Token de refresco en Keystore (`react-native-keychain`) e interceptor de renovación      | RNF-06           |   5    | Yeison      |
-|    [ ]    | `RolesGuard` y protección de rutas por rol en backend                                    | RNF-08           |   3    | Fabián      |
-=======
 |    [x]    | NestJS en contenedor Docker, Swagger en `/api/docs` y manejo centralizado de excepciones | RNF-12, ADR-008  |   5    | Alex        |
-|    [ ]    | Esquema de Prisma completo (18 entidades) y primera migración en Supabase                | §9               |   8    | Fabián      |
-|    [ ]    | Datos de siembra (seed): restaurante, zonas, mesas, categorías, platos y calendario      | —                |   3    | Fabián      |
-|    [x]    | Registro, inicio de sesión, refresco y cierre de sesión con Argon2id                     | RF-AUT01, 03, 04 |   8    | Alex        |
-|    [ ]    | NestJS en contenedor Docker, Swagger en `/api/docs` y manejo centralizado de excepciones | RNF-12, ADR-008  |   5    | Alex        |
 |    [x]    | Esquema de Prisma completo (18 entidades) y primera migración en Supabase                | §9               |   8    | Fabián      |
 |    [x]    | Datos de siembra (seed): restaurante, zonas, mesas, categorías, platos y calendario      | —                |   3    | Fabián      |
-|    [ ]    | Registro, inicio de sesión, refresco y cierre de sesión con Argon2id                     | RF-AUT01, 03, 04 |   8    | Alex        |
-|    [ ]    | Token de refresco en Keystore (`react-native-keychain`) e interceptor de renovación      | RNF-06           |   5    | Yeison      |
+|    [x]    | Registro, inicio, registro móvil, refresco rotatorio y cierre de sesión con Argon2id     | RF-AUT01, 03, 04 |   8    | Alex        |
+|    [x]    | Token de refresco en Keystore (`react-native-keychain`) e interceptor de renovación      | RNF-06           |   5    | Yeison      |
 |    [x]    | `RolesGuard` y protección de rutas por rol en backend                                    | RNF-08           |   3    | Fabián      |
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
-|    [ ]    | Despliegue del contenedor en la VPS con HTTPS                                            | ADR-008          |   5    | Alex        |
+|    [~]    | Imagen VPS y guía manual listas; despliegue real y HTTPS del host pendientes             | ADR-008          |   5    | Alex        |
 | **Total** |                                                                                          |                  | **51** |             |
 
-**Si hay que recortar:** el despliegue en VPS puede correrse al Sprint 2, siempre que quede antes de que existan tareas programadas.
+**Corte de ejecución:** 43/51 puntos están completos y verificados localmente; 3 puntos del monorepo/web y 5 puntos del despliegue están parciales. El primero requiere crear el workspace web real (planeado para Sprint 4); el segundo requiere el host, el dominio (si será público) y acceso manual a KeePass. No marco el Sprint 1 como 100% cerrado hasta validar ambas aceptaciones.
+
+**Pendiente externo:** el despliegue se ejecuta manualmente cuando el equipo reciba el VPS. La guía está en `docs/Despliegue_VPS_Staging.md`; el perfil Compose de VPS no reemplaza el Compose de desarrollo.
 
 **Riesgos.** La configuración del entorno nativo de Android suele consumir más de lo previsto: conviene resolverla en los primeros tres días y documentarla. Prisma con Supabase requiere distinguir la cadena agrupada de la directa para migraciones.
 

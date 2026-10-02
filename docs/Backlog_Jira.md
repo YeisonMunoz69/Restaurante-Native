@@ -6,6 +6,8 @@
 
 Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
+**Corte de estado:** 2 de octubre de 2026. Uso `[x]` para criterios comprobados, `[~]` para una historia con aceptación pendiente y `[ ]` para trabajo no iniciado. Los puntos del resumen siguen siendo estimaciones originales, no puntos aceptados automáticamente.
+
 ---
 
 ## Resumen
@@ -30,7 +32,7 @@ Monorepo, proyectos base, esquema de datos, contenedor y despliegue. Es la base 
 
 _7 historias · 35 puntos_
 
-### [x] Configurar monorepo, convenciones y estructura de proyectos
+### [~] Configurar monorepo, convenciones y estructura de proyectos
 
 `Sprint 1` · `3 pts` · `High` · `infra`
 
@@ -38,10 +40,11 @@ Dejar el repositorio listo para que los tres proyectos convivan y el equipo trab
 
 **Criterios de aceptación**
 
-- [x] El monorepo contiene apps/mobile, apps/api, apps/web y packages/shared
-- [x] Estan configurados linting y formateo automatico en los tres proyectos
+- [x] El monorepo contiene apps/mobile, apps/api, la carpeta reservada apps/web y packages/shared
+- [~] Lint y formato están disponibles para API/móvil; `apps/web` aún es un placeholder con README y se implementa en Sprint 4
 - [x] El README explica como levantar cada proyecto desde cero
 - [x] Existe .env.example documentado, y .env esta ignorado por git
+- [x] CI ejecuta instalación limpia, build/test API y pruebas móviles
 
 ### [x] Inicializar la app React Native con navegacion de cinco destinos
 
@@ -70,33 +73,20 @@ Cumplir la condicion del cliente de que ningun texto de interfaz este escrito en
 - [x] Existe una verificacion o convencion documentada para detectar literales antes de integrar
 - [x] Los formatos de moneda (COP sin decimales) y fecha (dd/mm/aaaa) estan centralizados en utilidades
 
-<<<<<<< HEAD
-### Inicializar la API NestJS en contenedor
-=======
 ### [x] Inicializar la API NestJS en contenedor
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
 
 `Sprint 1` · `5 pts` · `Highest` · `backend,infra` · `RNF-12, ADR-008`
 
-Que el backend corra igual en la maquina de cualquier integrante y en la VPS.
+Que el backend corra de forma repetible en el entorno local de desarrollo.
 
 **Criterios de aceptación**
 
-<<<<<<< HEAD
-- El proyecto NestJS arranca con Dockerfile y docker-compose
-- Swagger expone la especificacion en /api/docs
-- Existe un filtro global de excepciones con respuesta uniforme
-- El prefijo de rutas es /api/v1
-
-### Definir el esquema de Prisma y aplicar la primera migracion
-=======
 - [x] El proyecto NestJS arranca con Dockerfile y docker-compose
 - [x] Swagger expone la especificacion en /api/docs
 - [x] Existe un filtro global de excepciones con respuesta uniforme
 - [x] El prefijo de rutas es /api/v1
 
 ### [x] Definir el esquema de Prisma y aplicar la primera migracion
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
 
 `Sprint 1` · `8 pts` · `Highest` · `backend,datos` · `Sprint0 §9`
 
@@ -104,15 +94,6 @@ Llevar el modelo de datos del documento de diseno a una base real.
 
 **Criterios de aceptación**
 
-<<<<<<< HEAD
-- El esquema incluye todas las entidades de Sprint0 §9.1
-- Las enumeraciones de estado, rol y tipo de notificacion estan declaradas
-- La migracion se aplica sobre Supabase y queda versionada en el repositorio
-- Estan creados los indices frecuentes de §9.3
-- RLS queda habilitado con negacion por defecto en todas las tablas
-
-### Cargar datos de siembra realistas
-=======
 - [x] El esquema incluye todas las entidades de Sprint0 §9.1
 - [x] Las enumeraciones de estado, rol y tipo de notificacion estan declaradas
 - [x] La migracion se aplica sobre Supabase y queda versionada en el repositorio
@@ -120,7 +101,6 @@ Llevar el modelo de datos del documento de diseno a una base real.
 - [x] RLS queda habilitado con negacion por defecto en todas las tablas
 
 ### [x] Cargar datos de siembra realistas
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
 
 `Sprint 1` · `3 pts` · `Medium` · `backend,datos`
 
@@ -128,19 +108,12 @@ Poder probar la aplicacion con contenido verosimil desde el primer dia.
 
 **Criterios de aceptación**
 
-<<<<<<< HEAD
-- Existen restaurante, zonas y mesas con capacidades reales
-- Hay al menos 15 platos con nombre, descripcion y precio verosimiles
-- El calendario tiene marcados los proximos fines de semana y festivos
-- Existen las tres cuentas de prueba: comensal, staff y dueno
-=======
 - [x] Existen restaurante, zonas y mesas con capacidades reales
 - [x] Hay al menos 15 platos con nombre, descripcion y precio verosimiles
 - [x] El calendario tiene marcados los proximos fines de semana y festivos
 - [x] Existen las tres cuentas de prueba: comensal, staff y dueno
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
 
-### Desplegar el contenedor del backend en la VPS
+### [~] Preparar y desplegar el contenedor del backend en la VPS
 
 `Sprint 1` · `5 pts` · `High` · `infra` · `ADR-008`
 
@@ -148,10 +121,12 @@ Tener un entorno de produccion desde temprano, no al final del semestre.
 
 **Criterios de aceptación**
 
-- La imagen se construye y se ejecuta en la VPS
-- El dominio responde por HTTPS
-- Las variables de entorno de produccion estan configuradas fuera del repositorio
-- El procedimiento de despliegue queda documentado
+- [ ] La imagen se construye y ejecuta en el host reservado
+- [ ] El dominio responde por HTTPS (cuando el equipo tenga dominio; modo privado se valida por túnel SSH)
+- [x] La plantilla mantiene las variables fuera del repositorio y el archivo real está ignorado
+- [x] El procedimiento manual de staging queda documentado en `docs/Despliegue_VPS_Staging.md`
+- [x] Existe un perfil Compose de staging sin bind mounts, con loopback, healthcheck de DB y Swagger desactivado
+- [ ] La imagen de staging se construye y verifica en el host reservado
 
 ---
 
@@ -161,11 +136,7 @@ Registro, inicio de sesión, sesión persistente, verificación de correo y recu
 
 _3 historias · 18 puntos_
 
-<<<<<<< HEAD
-### Implementar registro, inicio de sesion, refresco y cierre de sesion
-=======
 ### [x] Implementar registro, inicio de sesion, refresco y cierre de sesion
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
 
 `Sprint 1` · `8 pts` · `Highest` · `backend,movil` · `RF-AUT01, RF-AUT03, RF-AUT04`
 
@@ -173,21 +144,13 @@ Que una persona pueda crear su cuenta y entrar a la aplicacion.
 
 **Criterios de aceptación**
 
-<<<<<<< HEAD
-- El registro pide nombre, correo, telefono y contrasena, y valida en linea
-- Las contrasenas se almacenan con Argon2id
-- El inicio de sesion emite un token de acceso corto y un token de refresco rotatorio
-- El cierre de sesion invalida el token de refresco de ese dispositivo
-- El error de credenciales no revela cual de los dos campos fallo
-=======
-- [x] El registro pide nombre, correo, telefono y contrasena, y valida en linea
+- [x] El registro pide nombre, correo, telefono y valida con el esquema compartido antes de enviar
 - [x] Las contrasenas se almacenan con Argon2id
 - [x] El inicio de sesion emite un token de acceso corto y un token de refresco rotatorio
 - [x] El cierre de sesion invalida el token de refresco de ese dispositivo
 - [x] El error de credenciales no revela cual de los dos campos fallo
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
 
-### Guardar el token de refresco de forma segura y renovar la sesion sin friccion
+### [x] Guardar el token de refresco de forma segura y renovar la sesion sin friccion
 
 `Sprint 1` · `5 pts` · `High` · `movil` · `RNF-06, RF-AUT08`
 
@@ -195,16 +158,16 @@ Que la sesion sobreviva al cierre de la aplicacion sin exponer credenciales.
 
 **Criterios de aceptación**
 
-- El token de refresco se guarda en Keystore mediante react-native-keychain
-- Un interceptor renueva el token de acceso de forma transparente al recibir 401
-- Si el refresco falla, la aplicacion vuelve al inicio de sesion sin perder el contexto
-- El comensal puede navegar carta y noticias sin sesion iniciada
+- [x] El token de refresco se guarda en Keystore mediante react-native-keychain
+- [x] Un interceptor renueva el token de acceso de forma transparente al recibir 401
+- [x] Si el refresco falla, la aplicacion vuelve al inicio de sesion sin perder el contexto
+- [x] El comensal puede navegar carta y noticias sin sesion iniciada
 
 ### Implementar verificacion de correo y recuperacion de contrasena
 
 `Sprint 5` · `5 pts` · `Medium` · `backend,movil` · `RF-AUT02, RF-AUT05`
 
-Cerrar los flujos de cuenta que quedaron pendientes del Sprint 1.
+Agregar verificación de correo y recuperación de contraseña, fuera del alcance del Sprint 1.
 
 **Criterios de aceptación**
 
@@ -746,11 +709,7 @@ Guardias por rol, segundo factor TOTP sobre acciones sensibles y bitacora de acc
 
 _2 historias · 11 puntos_
 
-<<<<<<< HEAD
-### Proteger los endpoints con guardia de roles
-=======
 ### [x] Proteger los endpoints con guardia de roles
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
 
 `Sprint 1` · `3 pts` · `High` · `backend` · `RNF-08, ADR-006`
 
@@ -758,17 +717,12 @@ Que la autorizacion viva en el servidor y no dependa de la interfaz.
 
 **Criterios de aceptación**
 
-<<<<<<< HEAD
-- Existe RolesGuard aplicable por endpoint
-- Los roles COMENSAL, STAFF y ADMIN estan diferenciados
-- Un usuario sin rol suficiente recibe 403, aunque la pantalla estuviera visible
-- Hay una prueba que verifica el rechazo por rol insuficiente
-=======
 - [x] Existe RolesGuard aplicable por endpoint
 - [x] Los roles COMENSAL, STAFF y ADMIN estan diferenciados
 - [x] Un usuario sin rol suficiente recibe 403, aunque la pantalla estuviera visible
 - [x] Hay una prueba que verifica el rechazo por rol insuficiente
->>>>>>> f2c0a5dba4217c491da1bc680c58b04601e165bb
+
+La guardia y su rechazo 403 están probados. A medida que se incorporen módulos funcionales en los sprints siguientes, cada endpoint administrativo debe declarar explícitamente sus roles permitidos; el módulo de menú aún no está cerrado.
 
 ### Implementar TOTP y proteger las acciones sensibles
 
