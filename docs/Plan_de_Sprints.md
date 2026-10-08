@@ -2,7 +2,7 @@
 
 ### App móvil — El Encanto Campestre
 
-**Versión:** 0.2 · **Plan base:** 20 de agosto de 2026 · **Corte de estado:** 2 de octubre de 2026 · Complementa a `Sprint0_Analisis_y_Diseno.md`
+**Versión:** 0.2 · **Plan base:** 20 de agosto de 2026 · **Corte de estado:** 8 de octubre de 2026 · Complementa a `Sprint0_Analisis_y_Diseno.md`
 
 **Estados:** `[x]` verificado en el repositorio o en pruebas locales; `[~]` preparado parcialmente, con una aceptación externa pendiente; `[ ]` pendiente.
 
@@ -80,12 +80,12 @@ gantt
 |    [x]    | Registro, inicio, registro móvil, refresco rotatorio y cierre de sesión con Argon2id     | RF-AUT01, 03, 04 |   8    | Alex        |
 |    [x]    | Token de refresco en Keystore (`react-native-keychain`) e interceptor de renovación      | RNF-06           |   5    | Yeison      |
 |    [x]    | `RolesGuard` y protección de rutas por rol en backend                                    | RNF-08           |   3    | Fabián      |
-|    [~]    | Imagen VPS y guía manual listas; despliegue real y HTTPS del host pendientes             | ADR-008          |   5    | Alex        |
+|    [~]    | Imagen VPS y CI/CD preparados; despliegue dev y salud remota HTTP/DB pendientes          | ADR-008          |   5    | Alex        |
 | **Total** |                                                                                          |                  | **51** |             |
 
-**Corte de ejecución:** 43/51 puntos están completos y verificados localmente; 3 puntos del monorepo/web y 5 puntos del despliegue están parciales. El primero requiere crear el workspace web real (planeado para Sprint 4); el segundo requiere el host, el dominio (si será público) y acceso manual a KeePass. No marco el Sprint 1 como 100% cerrado hasta validar ambas aceptaciones.
+**Corte de ejecución:** Conservamos el corte de 43/51 puntos verificados localmente; no damos por cerrados los 3 puntos parciales del monorepo/web ni los 5 del despliegue. Falta crear el workspace web real (planeado para Sprint 4) y comprobar el CI/CD remoto. Ya conocemos la VPS y el dominio: según la terminal recibida, la carpeta del equipo está vacía y Nginx apunta al ejemplo de 8083. Preparamos nuestra API en 8084, sujeto a comprobar que siga libre y a la asignación de Classroom. La existencia del certificado no demuestra que nuestra API responda por HTTPS.
 
-**Pendiente externo:** el despliegue se ejecuta manualmente cuando el equipo reciba el VPS. La guía está en `docs/Despliegue_VPS_Staging.md`; el perfil Compose de VPS no reemplaza el Compose de desarrollo.
+**Pendiente externo:** publicar la preparación en `dev`, completar el clon/variables y los secretos SSH, validar migraciones y salud remota. También debemos confirmar la rotación de Supabase y revisar la alerta crítica de dependencia de API descrita en `docs/Flujo_Equipo_Dev.md`. La guía está en `docs/Despliegue_VPS_Staging.md`; el perfil Compose de VPS no reemplaza el Compose de desarrollo. El reparto de trabajo y los pasos de entrega de los compañeros están en `docs/Flujo_Equipo_Dev.md`.
 
 **Riesgos.** La configuración del entorno nativo de Android suele consumir más de lo previsto: conviene resolverla en los primeros tres días y documentarla. Prisma con Supabase requiere distinguir la cadena agrupada de la directa para migraciones.
 

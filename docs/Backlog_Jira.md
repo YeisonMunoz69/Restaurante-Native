@@ -6,7 +6,7 @@
 
 Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
-**Corte de estado:** 2 de octubre de 2026. Uso `[x]` para criterios comprobados, `[~]` para una historia con aceptación pendiente y `[ ]` para trabajo no iniciado. Los puntos del resumen siguen siendo estimaciones originales, no puntos aceptados automáticamente.
+**Corte de estado:** 8 de octubre de 2026. Uso `[x]` para criterios comprobados, `[~]` para una historia con aceptación pendiente y `[ ]` para trabajo no iniciado. Los puntos del resumen siguen siendo estimaciones originales, no puntos aceptados automáticamente.
 
 ---
 
@@ -44,7 +44,7 @@ Dejar el repositorio listo para que los tres proyectos convivan y el equipo trab
 - [~] Lint y formato están disponibles para API/móvil; `apps/web` aún es un placeholder con README y se implementa en Sprint 4
 - [x] El README explica como levantar cada proyecto desde cero
 - [x] Existe .env.example documentado, y .env esta ignorado por git
-- [x] CI ejecuta instalación limpia, build/test API y pruebas móviles
+- [~] CI/CD de `dev` preparado con instalación limpia, lint/build/test y Docker; pendiente publicar los ajustes y validar una ejecución completa en GitHub
 
 ### [x] Inicializar la app React Native con navegacion de cinco destinos
 
@@ -117,16 +117,17 @@ Poder probar la aplicacion con contenido verosimil desde el primer dia.
 
 `Sprint 1` · `5 pts` · `High` · `infra` · `ADR-008`
 
-Tener un entorno de produccion desde temprano, no al final del semestre.
+Tener un entorno de desarrollo compartido en esta VPS. Reservamos producción y `main` para otro servidor.
 
 **Criterios de aceptación**
 
 - [ ] La imagen se construye y ejecuta en el host reservado
-- [ ] El dominio responde por HTTPS (cuando el equipo tenga dominio; modo privado se valida por túnel SSH)
+- [ ] Nuestra API responde por HTTPS en equipo-7-elev-d-dev.apolobyte.online; el sitio SSL existente aún apunta al ejemplo
 - [x] La plantilla mantiene las variables fuera del repositorio y el archivo real está ignorado
 - [x] El procedimiento manual de staging queda documentado en `docs/Despliegue_VPS_Staging.md`
 - [x] Existe un perfil Compose de staging sin bind mounts, con loopback, healthcheck de DB y Swagger desactivado
 - [ ] La imagen de staging se construye y verifica en el host reservado
+- [ ] Un push a dev que pase los filtros despliega por SSH y deja API/PostgreSQL saludables; main queda fuera
 
 ---
 

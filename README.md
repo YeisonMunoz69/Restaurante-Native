@@ -18,15 +18,17 @@ Para conocer nuestras normas de desarrollo, formato de commits y convenciones de
 
 ---
 
-## Estado del proyecto — corte 2 de octubre de 2026
+## Estado del proyecto — corte 8 de octubre de 2026
 
 El Sprint 1 no está cerrado al 100%: 43 de sus 51 puntos están verificados localmente; el workspace web aún es un placeholder (3 puntos parciales) y el VPS real/HTTPS sigue pendiente (5 puntos parciales). El perfil Docker de staging y la guía están preparados, pero no se ha afirmado un despliegue externo. El detalle verificable está en [Plan_de_Sprints.md](docs/Plan_de_Sprints.md) y [Backlog_Jira.md](docs/Backlog_Jira.md).
 
 - **Móvil:** React Native bare 0.87, Nueva Arquitectura, Hermes, cinco pestañas, tema e i18n. Ajustes permite iniciar sesión y registrar una cuenta; el token de refresco queda en almacenamiento seguro y el access token en memoria.
 - **API:** NestJS con Swagger en desarrollo, manejo centralizado de excepciones, Prisma, migraciones, seed, Docker de desarrollo y endpoint de salud que consulta PostgreSQL.
 - **Seguridad:** Argon2id, access/refresh JWT, rotación con control de concurrencia, logout limitado a la sesión del dispositivo y guards de JWT/roles. Los endpoints administrativos de los módulos funcionales deben declarar sus permisos cuando esos módulos se integren.
-- **CI:** GitHub Actions instala desde el lockfile, compila `shared` y API y ejecuta sus pruebas y las de móvil.
-- **VPS:** Configuración local de staging lista; para activar HTTPS faltan el host y, si se publica, el dominio y acceso manual mediante KeePass. El procedimiento está en [Despliegue_VPS_Staging.md](docs/Despliegue_VPS_Staging.md).
+- **CI/CD:** Preparamos verificaciones para Pull Requests a `dev` y despliegue por SSH después de un push a `dev` que pase los filtros. Corregimos las dependencias nativas de Linux omitidas en el lockfile. Falta publicar esta preparación y comprobar una ejecución completa en GitHub y la VPS; `main` no activa este despliegue.
+- **VPS:** Ya conocemos el servidor y la configuración Nginx/SSL de `equipo-7-elev-d-dev.apolobyte.online`. La carpeta del equipo está vacía según la salida SSH recibida. Preparamos el puerto 8084, que debemos volver a comprobar antes de arrancar; el proxy actual apunta al ejemplo de 8083. El procedimiento está en [Despliegue_VPS_Staging.md](docs/Despliegue_VPS_Staging.md).
+
+Para repartir el trabajo de los sprints y entregar cambios a `dev`, usamos [Flujo_Equipo_Dev.md](docs/Flujo_Equipo_Dev.md). Todavía no damos por validado el despliegue remoto ni la conexión real a Supabase en esa VPS.
 
 ---
 
@@ -81,7 +83,7 @@ Restaurante-Native/
 Desde la raíz del repositorio ejecuta:
 
 ```bash
-npm install
+npm ci
 ```
 
 ### 3. Configuración de variables de entorno
@@ -124,7 +126,7 @@ docker compose -f apps/api/docker-compose.yml down
 
 ### Preparar el despliegue manual de staging en VPS
 
-El perfil separado compila la API, no monta el código local, separa la herramienta de migraciones, desactiva Swagger y publica el puerto solo en `127.0.0.1`. No abras el 3000 en el firewall. Para túnel SSH, HTTPS/Caddy, migraciones, actualizaciones y diagnóstico, sigue [la guía detallada de despliegue](docs/Despliegue_VPS_Staging.md). No existe aún un VPS desplegado/verificado desde este repositorio.
+El perfil separado compila la API, no monta el código local, separa la herramienta de migraciones, desactiva Swagger y publica el puerto solo en `127.0.0.1`. No abrimos el 3000 en el firewall. Para clonar, completar variables, configurar Nginx/HTTPS y activar GitHub Actions por SSH, seguimos [la guía detallada de despliegue](docs/Despliegue_VPS_Staging.md). No hemos verificado aún esta API desplegada en la VPS.
 
 ---
 
@@ -172,4 +174,11 @@ npm test --workspace=api
 npm test --workspace=@encanto/mobile
 ```
 
-El flujo completo y reproducible también corre en GitHub Actions al abrir un PR o enviar cambios.
+Antes de las pruebas compilamos `shared` y generamos el cliente Prisma:
+
+```bash
+npm run build --workspace=@encanto/shared
+npx prisma generate --schema=apps/api/prisma/schema.prisma
+```
+
+El flujo configurado en GitHub Actions se activa con Pull Requests dirigidos a `dev` y pushes a `dev`. Los Pull Requests solo verifican; un push aprobado por los filtros despliega al servidor de desarrollo una vez completada su preparación.
