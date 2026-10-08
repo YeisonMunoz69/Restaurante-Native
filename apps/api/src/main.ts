@@ -1,10 +1,15 @@
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
+import { configureLanding } from './landing/landing.assets.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Muestro nuestra página temporal sin cambiar las rutas de la API.
+  configureLanding(app);
 
   // Configuro el prefijo global para todas las rutas
   app.setGlobalPrefix('api/v1');
