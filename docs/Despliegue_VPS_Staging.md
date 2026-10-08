@@ -106,7 +106,7 @@ API_URL=https://equipo-7-elev-d-dev.apolobyte.online/api/v1
 
 Completamos `DATABASE_URL`, `DIRECT_URL` y los dos secretos JWT consultando KeePass. La contraseña de Supabase expuesta en el diagnostico anterior debe estar rotada antes de usar esa conexion. No compartimos el archivo ni copiamos sus valores al chat.
 
-Antes de publicar la API revisamos tambien las [alertas de dependencias pendientes](Flujo_Equipo_Dev.md#6-pendientes-de-seguridad-antes-de-dar-el-despliegue-por-listo). La imagen compilo, pero npm reporto una alerta critica de `proxy-addr`; no damos por resuelta esa alerta con el arreglo de CI.
+Revisamos tambien el [alcance de la comprobacion de seguridad](Flujo_Equipo_Dev.md#6-pendientes-de-seguridad-antes-de-dar-el-despliegue-por-listo). Corregimos la alerta de `proxy-addr` con 2.0.8; la auditoria de dependencias de ejecucion de API/shared y la etapa runtime de Docker reportaron cero vulnerabilidades en esta comprobacion. Las alertas de movil/herramientas siguen separadas y pendientes.
 
 Para runtime podemos usar el pooler de sesion con puerto 5432 y TLS. Para migraciones usamos la conexion directa o el pooler de sesion compatible; no usamos el pooler transaccional 6543. Verificamos que ambas cadenas apunten al proyecto de prueba correspondiente y que los caracteres especiales de la contraseña esten codificados para URL.
 
