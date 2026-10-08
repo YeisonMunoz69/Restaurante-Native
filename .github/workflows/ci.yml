@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD dev
 
 on:
   push:
@@ -34,6 +34,16 @@ jobs:
       - name: Build shared package
         run: npm run build --workspace=@encanto/shared
 
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=apps/api/prisma/schema.prisma
+        env:
+          # Uso valores de prueba: generar el cliente no conecta a la base de datos.
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+          DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+
+      - name: Lint API
+        run: npm run lint --workspace=api
+
       - name: Test API
         run: npm run test --workspace=api
 
@@ -42,3 +52,45 @@ jobs:
 
       - name: Test mobile app
         run: npm run test --workspace=@encanto/mobile
+
+      - name: Check deployment script
+        run: bash -n scripts/deploy-vps.sh
+
+      - name: Build VPS image
+        run: docker build -f apps/api/Dockerfile.vps -t encanto-api:ci .
+
+  deploy:
+    name: Deploy dev to VPS
+    needs: verify
+    # Solo despliego dev; los Pull Requests ejecutan las verificaciones.
+    if: github.ref == 'refs/heads/dev' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    concurrency:
+      group: vps-equipo-7-dev
+      cancel-in-progress: false
+
+    steps:
+      - name: Deploy using SSH as in the course guide
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          DEPLOY_BRANCH: ${{ secrets.MAIN_BRANCH }}
+          DEPLOY_SHA: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          envs: DEPLOY_BRANCH,DEPLOY_SHA
+          command_timeout: 30m
+          script_stop: true
+          script: |
+            set -eu
+            test "$DEPLOY_BRANCH" = dev
+            cd /root/projects/equipo-7
+            test -z "$(git status --porcelain)"
+            git fetch origin "$DEPLOY_BRANCH"
+            git checkout "$DEPLOY_BRANCH"
+            git pull --ff-only origin "$DEPLOY_BRANCH"
+            bash scripts/deploy-vps.sh "$DEPLOY_SHA"
