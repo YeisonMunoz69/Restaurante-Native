@@ -1,14 +1,14 @@
 # Trabajo del equipo sobre dev
 
-## 1. Qué compartimos y qué falta activar
+## 1. Qué compartimos y qué verificamos
 
 Trabajamos en el computador de cada integrante y usamos la VPS como destino de prueba compartido. No necesitamos programar dentro del clon del servidor: una modificación sin commit allí detiene el despliegue para evitar perderla.
 
 Nuestro flujo es: rama personal → Pull Request a `dev` → filtros → integración a `dev` → despliegue por SSH. También configuramos el despliegue para un push directo a `dev`, pero preferimos el Pull Request para revisar el trabajo. Reservamos `main` para la futura VPS de producción; no desplegamos esa rama en este servidor.
 
-Antes de usarlo, Yeison completa la [guía de despliegue](Despliegue_VPS_Staging.md): publica los commits, crea `dev` si no existe, clona en `/root/projects/equipo-7`, completa las variables privadas, configura los secretos SSH y cambia el proxy del sitio del equipo. Cerramos esa preparación solo cuando Actions y la salud HTTP/PostgreSQL pasen en la VPS.
+El 8 de octubre verificamos el despliegue manual: migraciones sin pendientes, contenedor saludable en `127.0.0.1:8084` y salud HTTPS con `status: ok` y `database: connected`, según las salidas SSH compartidas. Después pasó el intento 3 de [CI/CD dev, ejecución 37829822767](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37829822767), sobre `db937f1`. Ya podemos entregar funcionalidades mediante PR a `dev`; seguimos comprobando cada despliegue nuevo. La [guía de despliegue](Despliegue_VPS_Staging.md) queda como referencia para volver a preparar un servidor.
 
-No compartimos `.env`, llaves privadas, contraseñas ni tokens. Consultamos KeePass; debemos confirmar la rotación de la contraseña de Supabase antes del primer despliegue.
+No compartimos `.env`, llaves privadas, contraseñas ni tokens. Consultamos KeePass. Sigue pendiente confirmar la rotación de las credenciales expuestas; que el despliegue funcione no demuestra que se hayan rotado.
 
 ## 2. Preparar nuestra máquina
 
@@ -73,6 +73,8 @@ Tomamos las responsabilidades del [plan de sprints](Plan_de_Sprints.md). Esta ta
 Antes de duplicar la carta y la galería, revisamos los commits `34e17b9` y `5b2d5cd` de `yeison/inicio-sprint-2`. También existe `5ec3d22` con una migración a Expo que necesita revisión separada: no la integramos automáticamente en esta preparación del despliegue. Que esos avances existan en una rama no significa que estén entregados en `dev` ni aceptados de extremo a extremo.
 
 Acordamos primero entre Alex y Fabián las rutas, DTOs y responsabilidades del menú para no implementar dos veces el mismo CRUD. Compartimos validaciones/tipos en `packages/shared` cuando corresponda. Cada cambio de esquema incluye su migración versionada y una explicación del efecto en los datos; en la VPS usamos `migrate deploy`, nunca `migrate reset` ni `db push`.
+
+Dividimos la primera entrega en [encargos concretos de Sprint 2](Encargos_Sprint2.md): Alex empieza por la API pública del menú y Fabián por el calendario. Todavía no damos por terminados administración de carta, carga de fotos, pantallas móviles ni reservas.
 
 Para cerrar una historia comprobamos su criterio de aceptación real: pantallas conectadas, permisos administrativos y pruebas. Actualizamos el plan/backlog con la evidencia, no solo porque un archivo compile.
 
