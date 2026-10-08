@@ -22,5 +22,7 @@ import { RolesGuard } from '../common/guards/roles.guard.js';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, RolesGuard],
+  // Comparto JWT configurado y las guardias para proteger nuestros módulos de negocio.
+  exports: [JwtModule, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}
