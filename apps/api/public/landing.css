@@ -1,0 +1,348 @@
+/* Conservamos los verdes y tonos cálidos que usamos en el restaurante. */
+:root {
+  color-scheme: light;
+  --paper: #f6f5ef;
+  --forest: #4a5d3a;
+  --ink: #293723;
+  --muted: #5f6355;
+  --clay: #a2632e;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+a {
+  color: inherit;
+}
+.page {
+  max-width: 1400px;
+  margin: auto;
+  min-height: 100svh;
+  padding: 0 6%;
+  display: flex;
+  flex-direction: column;
+}
+.header {
+  min-height: 126px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid #daddcf;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  text-decoration: none;
+  font:
+    23px/1.05 Georgia,
+    serif;
+}
+.brand-mark {
+  width: 43px;
+  height: 43px;
+  color: var(--forest);
+}
+.brand-subtitle {
+  display: block;
+  margin-top: 6px;
+  font:
+    10px/1.2 'Segoe UI',
+    system-ui,
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.26em;
+}
+.brand:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 8px;
+  border-radius: 3px;
+}
+.location {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.location span {
+  display: inline-block;
+  margin-left: 18px;
+  color: var(--forest);
+  font-size: 18px;
+}
+.hero {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: 3%;
+  padding: 68px 0 75px;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.17em;
+  margin: 0 0 27px;
+  color: var(--forest);
+}
+.status-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--forest);
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px #e6eadc;
+}
+h1 {
+  margin: 0 0 28px;
+  font:
+    400 clamp(48px, 5.7vw, 80px)/1.03 Georgia,
+    'Times New Roman',
+    serif;
+  letter-spacing: -0.045em;
+}
+h1 em {
+  font-weight: 400;
+  color: var(--forest);
+}
+.ellipsis {
+  color: var(--clay);
+}
+.intro {
+  font-size: 19px;
+  line-height: 1.5;
+  margin: 0 0 17px;
+}
+.description {
+  max-width: 390px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.85;
+}
+.coming {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 33px;
+  font-size: 12px;
+  color: var(--forest);
+}
+.coming-line {
+  width: 32px;
+  height: 1px;
+  background: var(--clay);
+}
+.scene {
+  align-self: center;
+  min-width: 0;
+}
+.construction {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.scene-disc {
+  fill: #eceee2;
+}
+.sun {
+  fill: #e0be79;
+}
+.birds {
+  fill: none;
+  stroke: #879077;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.hill-back {
+  fill: #d8dec9;
+}
+.hill-front {
+  fill: #c6d0b5;
+}
+.ground-shadow {
+  fill: #dde0d2;
+}
+.brick {
+  fill: #c68d69;
+}
+.brick:nth-child(3n + 2) {
+  fill: #b87b56;
+}
+.brick:nth-child(4n) {
+  fill: #d29c7b;
+}
+.baseline {
+  fill: none;
+  stroke: #c9cebd;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.scene-caption {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+}
+.scene-caption span {
+  color: var(--clay);
+  margin-right: 12px;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  border-top: 1px solid #daddcf;
+  padding: 25px 0 29px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.footer-note {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Dejamos el muro terminado como base; solo animamos si no se pidió reducir movimiento. */
+@media (prefers-reduced-motion: no-preference) {
+  .brick {
+    animation: place-brick 8s ease-in-out infinite both;
+  }
+  .brick-1 {
+    animation-delay: 0s;
+  }
+  .brick-2 {
+    animation-delay: 0.2s;
+  }
+  .brick-3 {
+    animation-delay: 0.4s;
+  }
+  .brick-4 {
+    animation-delay: 0.6s;
+  }
+  .brick-5 {
+    animation-delay: 0.8s;
+  }
+  .brick-6 {
+    animation-delay: 1s;
+  }
+  .brick-7 {
+    animation-delay: 1.2s;
+  }
+  .brick-8 {
+    animation-delay: 1.4s;
+  }
+  .brick-9 {
+    animation-delay: 1.6s;
+  }
+  .brick-10 {
+    animation-delay: 1.8s;
+  }
+  .brick-11 {
+    animation-delay: 2s;
+  }
+  .brick-12 {
+    animation-delay: 2.2s;
+  }
+  .trowel {
+    animation: lay-mortar 2s ease-in-out infinite;
+    transform-origin: 0 15px;
+  }
+}
+@keyframes place-brick {
+  0%,
+  3% {
+    opacity: 0;
+    transform: translateY(-70px);
+  }
+  11%,
+  84% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  92%,
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+@keyframes lay-mortar {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-12deg);
+  }
+  50% {
+    transform: translate(17px, 8px) rotate(12deg);
+  }
+}
+@media (max-width: 760px) {
+  .page {
+    padding: 0 7%;
+  }
+  .header {
+    min-height: 99px;
+  }
+  .brand {
+    font-size: 20px;
+    gap: 9px;
+  }
+  .brand-mark {
+    width: 35px;
+    height: 35px;
+  }
+  .location {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .location span {
+    margin-left: 5px;
+  }
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 45px 0 37px;
+  }
+  .eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: clamp(42px, 10vw, 70px);
+    margin-bottom: 25px;
+  }
+  .intro {
+    font-size: 17px;
+  }
+  .desktop-break {
+    display: none;
+  }
+  .description {
+    font-size: 13px;
+    max-width: 430px;
+  }
+  .coming {
+    margin-top: 24px;
+  }
+  .scene {
+    width: min(100%, 420px);
+    justify-self: center;
+  }
+  .footer {
+    font-size: 10px;
+    flex-direction: column;
+    gap: 7px;
+    padding: 19px 0;
+  }
+}

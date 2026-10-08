@@ -35,6 +35,7 @@ COPY --from=runtime-dependencies --chown=node:node /usr/src/app/node_modules ./n
 COPY --from=build --chown=node:node /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build --chown=node:node /usr/src/app/apps/api/package.json ./apps/api/package.json
 COPY --from=build --chown=node:node /usr/src/app/apps/api/dist ./apps/api/dist
+COPY --from=build --chown=node:node /usr/src/app/apps/api/public ./apps/api/public
 COPY --from=build --chown=node:node /usr/src/app/apps/api/prisma ./apps/api/prisma
 COPY --from=build --chown=node:node /usr/src/app/packages/shared/package.json ./packages/shared/package.json
 COPY --from=build --chown=node:node /usr/src/app/packages/shared/dist ./packages/shared/dist

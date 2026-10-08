@@ -290,3 +290,11 @@ docker compose --env-file apps/api/.env.vps -p elev-d-e-7-dev -f apps/api/docker
 ```
 
 Si debemos volver al codigo anterior, lo hacemos con un revert revisado que entre a `dev`. Las migraciones de base de datos no se revierten automaticamente con el codigo.
+
+## 11. Resultado comprobado y página temporal
+
+El 8 de octubre recibimos las salidas de la VPS: `migrate deploy` encontró dos migraciones sin pendientes, `elev-d-e-7-api` quedó saludable en `127.0.0.1:8084` y `/api/v1/health` respondió con PostgreSQL conectado tanto por loopback como por HTTPS. El intento 3 de [CI/CD dev, ejecución 37829822767](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37829822767) también terminó correctamente sobre `db937f1`. Conservamos las instrucciones anteriores para nuevas máquinas; ya no describen tareas sin hacer en esta VPS.
+
+Preparamos una [landing temporal](Landing_Temporal.md) dentro de la misma API. Al integrar su rama a `dev`, el workflow copia `apps/api/public` a la imagen y sirve la página en `/`. No agregamos otro contenedor, migraciones, secretos ni cambios de Nginx: el proxy existente ya lleva las peticiones a la API. Conservamos `/api/v1/health` para el healthcheck.
+
+Después de integrar verificamos en el navegador `https://equipo-7-elev-d-dev.apolobyte.online/` y repetimos la salud HTTPS. No damos por publicada la landing solo porque haya pasado su prueba local.
