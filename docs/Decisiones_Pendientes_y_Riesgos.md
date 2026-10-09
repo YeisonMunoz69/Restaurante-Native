@@ -2,9 +2,9 @@
 
 ### App móvil — El Encanto Campestre
 
-**Versión:** 0.3 · **Actualizado:** 20 de agosto de 2026
+**Versión:** 0.4 · **Actualizado:** 9 de octubre de 2026
 
-Registro de lo acordado. Las filas con `⬜` siguen abiertas; el resto está cerrado y no hace falta volver sobre ellas.
+Registramos lo acordado y lo distinguimos de lo implementado. Las filas con `⬜` siguen abiertas. Actualizamos ramas, revisión y pendientes ya resueltos en los requisitos, sin cambiar por nuestra cuenta las reglas del cliente. El reparto vigente está en [Tareas_Alex.md](Tareas_Alex.md).
 
 ---
 
@@ -76,43 +76,43 @@ Reserva confirmada · el dueño copia el ticket y lo pega en el grupo de cocina
 
 ## C · Técnicas
 
-| #       | Tema                   | Decisión                                                                                                                                                                                                     |
-| ------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| C-1     | Despliegue del backend | VPS. Se contenedoriza desde el inicio para que local y producción se comporten igual                                                                                                                         |
-| C-2     | Mapas                  | MapLibre                                                                                                                                                                                                     |
-| C-3     | Correo                 | Resend, nivel gratuito                                                                                                                                                                                       |
-| C-4     | Postgres desde Prisma  | Cadena agrupada para la app, directa para migraciones. Ambas en `.env.example`                                                                                                                               |
-| C-5     | Repositorio            | Monorepo por módulos: `apps/mobile`, `apps/api`, `apps/web`, `packages/shared`                                                                                                                               |
-| C-6     | Tipos compartidos      | Paquete común con esquemas de Zod, usados como validación en ambos extremos                                                                                                                                  |
-| C-7     | Imágenes               | Hasta 10 fotos por plato. Compresión sin pérdida perceptible para ahorrar espacio                                                                                                                            |
-| C-8     | Procesamiento          | `sharp` en el backend, al momento de la carga                                                                                                                                                                |
-| C-9     | Zona horaria           | UTC en base de datos, presentación en `America/Bogota`                                                                                                                                                       |
-| C-10    | Identificadores        | UUID v7 si la versión de PostgreSQL de Supabase lo admite                                                                                                                                                    |
-| C-11    | API                    | Prefijo `/api/v1` desde el inicio                                                                                                                                                                            |
-| C-12    | Ramas                  | `main` protegida · `develop` de integración · `feature/*`                                                                                                                                                    |
-| C-13    | Firma de la app        | Almacén de claves propio, generado en Sprint 1 y resguardado                                                                                                                                                 |
-| C-14    | Distribución           | Firebase App Distribution. Alternativa: APK alojada en la web del restaurante, que de todos modos hay que construir para las vistas previas de WhatsApp                                                      |
-| C-15    | Plataformas            | Solo Android                                                                                                                                                                                                 |
-| C-16    | Persistencia local     | MMKV                                                                                                                                                                                                         |
-| C-17    | Sin conexión           | Solo lectura en caché                                                                                                                                                                                        |
-| C-18    | Errores en el cliente  | Límite de error global más estados de error por consulta                                                                                                                                                     |
-| C-19    | Reporte de fallos      | Sentry gratuito desde Sprint 2                                                                                                                                                                               |
-| C-20 ⬜ | Pruebas                | La respuesta quedó ambigua: pide unitarias de disponibilidad y estados más integración, pero añade "sin necesidad de automatizadas". Conviene aclarar si se escriben y se corren a mano, o si no se escriben |
-| C-21    | Secretos               | En `.env`, fuera del control de versiones                                                                                                                                                                    |
+| #    | Tema                   | Decisión                                                                                                                                                                                                                                        |
+| ---- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C-1  | Despliegue del backend | VPS. Se contenedoriza desde el inicio para que local y producción se comporten igual                                                                                                                                                            |
+| C-2  | Mapas                  | MapLibre                                                                                                                                                                                                                                        |
+| C-3  | Correo                 | Resend, nivel gratuito                                                                                                                                                                                                                          |
+| C-4  | Postgres desde Prisma  | Credenciales solo en archivos privados ignorados. Las plantillas llevan ejemplos sin claves. En esta VPS verificamos pooler de sesión 5432 con SSL para ejecución y migraciones; no usamos 6543 para migrar                                     |
+| C-5  | Repositorio            | Monorepo por módulos: `apps/mobile`, `apps/api`, `apps/web`, `packages/shared`                                                                                                                                                                  |
+| C-6  | Tipos compartidos      | Paquete común con esquemas de Zod, usados como validación en ambos extremos                                                                                                                                                                     |
+| C-7  | Imágenes               | Hasta 10 fotos por plato. Compresión sin pérdida perceptible para ahorrar espacio                                                                                                                                                               |
+| C-8  | Procesamiento          | `sharp` en el backend, al momento de la carga                                                                                                                                                                                                   |
+| C-9  | Zona horaria           | UTC en base de datos, presentación en `America/Bogota`                                                                                                                                                                                          |
+| C-10 | Identificadores        | UUID v7 si la versión de PostgreSQL de Supabase lo admite                                                                                                                                                                                       |
+| C-11 | API                    | Prefijo `/api/v1` desde el inicio                                                                                                                                                                                                               |
+| C-12 | Ramas                  | `dev` integra el trabajo y despliega en la VPS de desarrollo al pasar CI. `main` se reserva para otra VPS de producción. Ramas personales `alex/...`, `fabian/...`, `yeison/...`; no usamos `develop`. La protección de rama se verifica aparte |
+| C-13 | Firma de la app        | Almacén de claves propio, generado en Sprint 1 y resguardado                                                                                                                                                                                    |
+| C-14 | Distribución           | Firebase App Distribution. Alternativa: APK alojada en la web del restaurante, que de todos modos hay que construir para las vistas previas de WhatsApp                                                                                         |
+| C-15 | Plataformas            | Solo Android                                                                                                                                                                                                                                    |
+| C-16 | Persistencia local     | MMKV                                                                                                                                                                                                                                            |
+| C-17 | Sin conexión           | Solo lectura en caché                                                                                                                                                                                                                           |
+| C-18 | Errores en el cliente  | Límite de error global más estados de error por consulta                                                                                                                                                                                        |
+| C-19 | Reporte de fallos      | Sentry gratuito desde Sprint 2                                                                                                                                                                                                                  |
+| C-20 | Pruebas                | Ya ejecutamos pruebas automatizadas de API/móvil en CI. Las acompañamos con aceptación de interfaz y pruebas de integración aisladas cuando corresponda; no sustituimos ninguna por una afirmación sin evidencia                                |
+| C-21 | Secretos               | En `.env`, fuera del control de versiones                                                                                                                                                                                                       |
 
 ---
 
 ## D · Equipo
 
-| #   | Tema                       | Decisión                                          |
-| --- | -------------------------- | ------------------------------------------------- |
-| D-1 | Integrantes                | Tres personas, ~26 h/semana en conjunto           |
-| D-2 | Responsabilidades          | Rotación, sin especialización fija por capa       |
-| D-3 | Herramientas               | GitHub y Jira                                     |
-| D-4 | Commits                    | Conventional Commits · `feature/<id>-descripcion` |
-| D-5 | Revisión de código         | No se aplica en este proyecto                     |
-| D-6 | Evidencias                 | Todo queda en Jira; sin carpeta aparte            |
-| D-7 | Semanas de menor capacidad | No aplica                                         |
+| #   | Tema                       | Decisión                                                                                       |
+| --- | -------------------------- | ---------------------------------------------------------------------------------------------- |
+| D-1 | Integrantes                | Tres personas, ~26 h/semana en conjunto                                                        |
+| D-2 | Responsabilidades          | Rotación, sin especialización fija por capa                                                    |
+| D-3 | Herramientas               | GitHub y Jira                                                                                  |
+| D-4 | Commits                    | Prefijo personal y descripción en minúsculas, como `alex/implementa-api-menu`, según Reglas.md |
+| D-5 | Revisión de código         | PR hacia `dev`, revisión y filtros antes de integrar; después verificamos el despliegue        |
+| D-6 | Evidencias                 | Todo queda en Jira; sin carpeta aparte                                                         |
+| D-7 | Semanas de menor capacidad | No aplica                                                                                      |
 
 ---
 
@@ -142,7 +142,7 @@ Bloque completado y archivado en la carpeta `design/`.
 
 | #       | Tema                            | Decisión                                                                                                                                                              |
 | ------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| G-1     | Estados vacíos                  | Se llenan con noticias, menú, información del restaurante y ubicación                                                                                                 |
+| G-1     | Estados vacíos                  | Explicamos que no hay contenido y ofrecemos una acción útil. Podemos enlazar información real; no inventamos platos/noticias para ocultar vacío o fallo de red        |
 | G-2     | Estados de carga                | Esqueleto de contenido                                                                                                                                                |
 | G-3     | Sin conexión                    | Se reintenta; el pedido en curso se guarda hasta recuperar red, o se descarta                                                                                         |
 | G-4     | Sesión expirada                 | Aviso de confirmación antes de que caduque, si la persona está dentro de la app                                                                                       |
@@ -164,19 +164,22 @@ Bloque completado y archivado en la carpeta `design/`.
 
 ## H · Pendientes que faltan por cerrar
 
-Nada de esto bloquea empezar a programar, pero sí conviene resolverlo antes del Sprint 3.
+Podemos avanzar con carta y calendario. Las diferencias de reglas de reserva sí deben resolverse antes de A07; no copiamos el seed como si fuera un acuerdo nuevo del cliente.
 
-| #      | Pregunta                                                                                   | Por qué importa                                                           |
-| ------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| H-1 ⬜ | ¿El pedido de platos es obligatorio solo desde 8 personas, u opcional para grupos menores? | Cambia si el flujo de reserva tiene tres pasos o cuatro                   |
-| H-2 ⬜ | ¿El comprobante de pago se sube en la app o solo se envía por WhatsApp?                    | Si se sube, hace falta almacenamiento y una vista en el panel del dueño   |
-| H-3 ⬜ | ¿Qué pasa si el dueño rechaza una reserva? ¿Se notifica, se puede corregir y reenviar?     | Es una transición de estado que hoy no existe en el modelo                |
-| H-4 ⬜ | ¿Cuánto tiempo espera una reserva sin comprobante antes de expirar?                        | Sin esto, las solicitudes sin pago se acumulan en el panel                |
-| H-5 ⬜ | ¿La adición de platos tras la confirmación se hace en la app o por WhatsApp?               | Define si el pedido es editable después de aprobado                       |
-| H-6 ⬜ | ¿Las noticias generan notificación push?                                                   | Afecta el módulo de notificaciones del Sprint 5                           |
-| H-7 ⬜ | ¿El calendario anual se marca día por día o por reglas (todos los domingos, festivos)?     | Marcar 365 días a mano es inviable; por reglas es más trabajo de interfaz |
-| H-8 ✅ | Bloque F completo                                                                          | ✅ Resuelto y cerrado en la carpeta `design/`                             |
-| H-9 ⬜ | C-20, G-9, G-10, G-14                                                                      | Ver notas en sus filas                                                    |
+| #       | Pregunta                                                                                               | Por qué importa                                                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| H-1 ✅  | Pedido opcional por debajo de ocho personas; obligatorio desde ocho                                    | Lo recogemos de B-7 y requisitos; lo validamos también en servidor                                                                     |
+| H-2 ✅  | Comprobante por WhatsApp y pago externo, no carga en la app                                            | Conservamos el flujo acordado; no construimos una pasarela                                                                             |
+| H-3 ⬜  | Rechazo con motivo ya definido y `RECHAZADA` existe en Prisma; falta acordar si hay corrección/reenvío | No inventamos esa acción. Las notificaciones siguen en Sprint 5                                                                        |
+| H-4 ⬜  | ¿Cuánto tiempo espera una reserva sin comprobante antes de expirar?                                    | Sin esto, las solicitudes sin pago se acumulan en el panel                                                                             |
+| H-5 ⬜  | ¿La adición de platos tras la confirmación se hace en la app o por WhatsApp?                           | Define si el pedido es editable después de aprobado                                                                                    |
+| H-6 ⬜  | ¿Las noticias generan notificación push?                                                               | Afecta el módulo de notificaciones del Sprint 5                                                                                        |
+| H-7 ✅  | Reglas semanales y excepciones por fecha, según modelos y Sprint 2                                     | Fabián lo publicó en PR #2; faltan integración y panel móvil. Esto no afirma que genere automáticamente todos los festivos             |
+| H-8 ✅  | Bloque F completo                                                                                      | ✅ Resuelto y cerrado en la carpeta `design/`                                                                                          |
+| H-9 ⬜  | G-9, G-10, G-14                                                                                        | Ícono, identificador definitivo y teclado; C-20 ya describe las pruebas existentes                                                     |
+| H-10 ⬜ | B-5 dice tres meses y B-6 una hora; Prisma/seed usan 60 días y 120 minutos                             | Confirmamos valores y significado de meses/corte de las 13:00 antes de implementar reservas; después alineamos configuración y pruebas |
+| H-11 ⬜ | B-1 distingue duraciones de 90/120 minutos, pero Restaurant guarda una sola duración                   | Acordamos representación configurable; no añadimos columnas por suposición                                                             |
+| H-12 ⬜ | ¿La cancelación exactamente a 60 minutos está permitida?                                               | Dejamos el mismo límite en API/móvil y lo probamos a 59/60/61 minutos                                                                  |
 
 ---
 
@@ -185,7 +188,7 @@ Nada de esto bloquea empezar a programar, pero sí conviene resolverlo antes del
 Seis puntos del documento de Sprint 0 quedaron desactualizados con esta ronda. Se listan para no perderlos de vista.
 
 1. **La reserva ahora incluye pedido de platos.** Deja de ser "mesa para N personas" y pasa a ser reserva con ticket y total. Aparecen entidades nuevas: pedido, línea de pedido y ticket.
-2. **La confirmación es manual y depende de un pago externo.** El estado `PENDIENTE` deja de ser excepcional y se vuelve el estado inicial de toda reserva. Hay que sumar el rechazo por parte del dueño.
+2. **La confirmación es manual y depende de un pago externo.** El estado inicial es `SOLICITADA`, no `PENDIENTE`. Prisma ya incluye `RECHAZADA` y `EXPIRADA`; falta implementar el flujo y alinear `EXPIRADA` en el enum compartido.
 3. **WhatsApp vuelve al flujo operativo**, como canal de comprobante y coordinación de la zona VIP. No gestiona la reserva, pero sí la habilita.
 4. **La disponibilidad se simplifica.** Con aforo por franja en lugar de asignación mesa a mesa, la restricción de exclusión en la base de datos pierde protagonismo y el Sprint 3 se descarga bastante.
 5. **Entra un módulo de noticias** que no estaba previsto, más una pantalla de "Próximamente".

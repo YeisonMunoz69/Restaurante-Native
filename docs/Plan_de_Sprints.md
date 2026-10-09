@@ -2,9 +2,11 @@
 
 ### App móvil — El Encanto Campestre
 
-**Versión:** 0.2 · **Plan base:** 20 de agosto de 2026 · **Corte de estado:** 8 de octubre de 2026 · Complementa a `Sprint0_Analisis_y_Diseno.md`
+**Versión:** 0.3 · **Plan base:** 20 de agosto de 2026 · **Corte de estado:** 9 de octubre de 2026 · Complementa a `Sprint0_Analisis_y_Diseno.md`
 
-**Estados:** `[x]` verificado en el repositorio o en pruebas locales; `[~]` preparado parcialmente, con una aceptación externa pendiente; `[ ]` pendiente.
+**Estados:** `[x]` con evidencia de entrega indicada; `[~]` parcial o publicado sin integrar/aceptar; `[ ]` pendiente en `dev`. No confundimos código en otra rama con una historia terminada.
+
+**Recuperación desde el 9 de octubre:** conservamos las fechas originales para hacer visible el atraso. Priorizamos carta/calendario y después reservas antes de abrir más trabajo de Sprint 4. Encargamos a Alex las entregas API+móvil de [Tareas_Alex.md](Tareas_Alex.md); Yeison revisa e integra, y Fabián atiende revisión/correcciones de su calendario ya publicado. No cambiamos retrospectivamente los estimados ni damos por hecha la capacidad para terminar todo.
 
 ---
 
@@ -56,10 +58,10 @@ gantt
 |  [x]   | Fichas de diseño y tokens (`tokens.json`, `tokens.css`)                                   | Alex        |
 |  [x]   | Biblioteca de componentes (29 componentes en 7 lotes)                                     | Fabián      |
 |  [x]   | Wireframes y 5 pantallas clave de alta fidelidad (`P-01`, `P-02`, `P-07`, `P-09`, `P-22`) | Yeison      |
-|  [ ]   | Monorepo creado en disco y estructura base de carpetas                                    | Alex        |
+|  [x]   | Monorepo creado en disco y estructura base de carpetas                                    | Alex        |
 |  [ ]   | Tablero de Jira configurado con el backlog cargado (`Backlog_Jira.csv`)                   | Yeison      |
 |  [ ]   | Entorno de desarrollo nativo verificado en las tres máquinas                              | Equipo      |
-|  [ ]   | Proyecto de Supabase creado y VPS aprovisionada                                           | Fabián      |
+|  [x]   | Proyecto de Supabase creado y VPS aprovisionada                                           | Fabián      |
 
 **Cierre.** Cualquier integrante ejecuta `npm run android` sobre un proyecto vacío y se conecta a la API local.
 
@@ -73,7 +75,7 @@ gantt
 | :-------: | ---------------------------------------------------------------------------------------- | ---------------- | :----: | ----------- |
 |    [~]    | Monorepo, convenciones de commits, packages/shared (Zod) y CI mínima                     | RNF-14           |   3    | Yeison      |
 |    [x]    | React Native 0.87 bare con Nueva Arquitectura, TypeScript y navegación de 5 tabs         | §13.1            |   8    | Yeison      |
-|    [x]    | i18n con `i18next` y archivos de recursos desde el primer commit                         | RNF-03, ADR-009  |   3    | Yeison      |
+|    [~]    | i18n configurado; falta retirar literales y contenido de muestra de pantallas            | RNF-03, ADR-009  |   3    | Alex        |
 |    [x]    | NestJS en contenedor Docker, Swagger en `/api/docs` y manejo centralizado de excepciones | RNF-12, ADR-008  |   5    | Alex        |
 |    [x]    | Esquema de Prisma completo (18 entidades) y primera migración en Supabase                | §9               |   8    | Fabián      |
 |    [x]    | Datos de siembra (seed): restaurante, zonas, mesas, categorías, platos y calendario      | —                |   3    | Fabián      |
@@ -83,9 +85,9 @@ gantt
 |    [x]    | Imagen VPS, migraciones, salud remota HTTP/DB y CI/CD dev verificados                    | ADR-008          |   5    | Alex        |
 | **Total** |                                                                                          |                  | **51** |             |
 
-**Corte de ejecución del 8 de octubre:** Sumamos los 5 puntos del despliegue al corte anterior: 48/51 verificados. Las salidas SSH recibidas confirman migraciones sin pendientes, API saludable en loopback 8084 y salud HTTPS con PostgreSQL conectado. El intento 3 de [CI/CD dev, ejecución 37829822767](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37829822767) terminó correctamente sobre `db937f1`. No cerramos los 3 puntos parciales del monorepo/web: la landing temporal dentro de Nest no sustituye el workspace web de Sprint 4.
+**Evidencia y pendientes del corte:** las salidas SSH recibidas confirman migraciones sin pendientes, API saludable en loopback 8084 y salud HTTPS con PostgreSQL conectado. Después pasó [CI/CD dev, ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598), con la landing integrada en `0e27cb4`. El corte anterior registró 48/51 puntos; no lo presentamos como aceptación definitiva: al revisar pantallas encontramos literales y datos de muestra pendientes de A00/A02. El workspace web sigue siendo un placeholder previsto para Sprint 4; la landing no lo reemplaza. Los estados detallados pesan más que un porcentaje global.
 
-**Pendiente externo:** confirmar la rotación de Supabase y secretos JWT expuestos; no la damos por hecha. Corregimos la alerta de `proxy-addr` de la API; las alertas móviles/herramientas están descritas en `docs/Flujo_Equipo_Dev.md`. La guía está en `docs/Despliegue_VPS_Staging.md`; el perfil Compose de VPS no reemplaza el Compose de desarrollo. Dejamos el reparto inicial en `docs/Encargos_Sprint2.md`; seguimos entregando los sprints 2 y 3 por partes.
+**Pendiente externo:** confirmar la rotación de Supabase y secretos JWT expuestos; no la damos por hecha. Corregimos la alerta de `proxy-addr` de la API; las alertas móviles/herramientas están descritas en [Flujo_Equipo_Dev.md](Flujo_Equipo_Dev.md). La [guía de despliegue](Despliegue_VPS_Staging.md) distingue preparación inicial y operación diaria. El reparto vigente y sus pruebas de interfaz están en [Tareas_Alex.md](Tareas_Alex.md).
 
 **Riesgos.** La configuración del entorno nativo de Android suele consumir más de lo previsto: conviene resolverla en los primeros tres días y documentarla. Prisma con Supabase requiere distinguir la cadena agrupada de la directa para migraciones.
 
@@ -99,20 +101,22 @@ gantt
 
 **Objetivo.** Que el comensal vea la carta real del próximo día de atención y que el dueño pueda mantenerla.
 
-|  Estado   | Tarea                                                                                 | Requisitos         |  Pts   | Responsable |
-| :-------: | ------------------------------------------------------------------------------------- | ------------------ | :----: | ----------- |
-|    [ ]    | Carta por categorías con lista virtualizada en React Native                           | RF-MEN01, RF-MEN06 |   8    | Yeison      |
-|    [ ]    | Pantalla de inicio con los platos del próximo día de atención                         | RF-MEN02           |   5    | Yeison      |
-|    [ ]    | Detalle de plato con galería de hasta 10 fotos                                        | RF-MEN03           |   5    | Yeison      |
-|    [ ]    | API de menú: categorías, platos, etiquetas y disponibilidad                           | RF-MEN01–06        |   5    | Alex        |
-|    [ ]    | Administración de categorías y platos en backend y móvil                              | RF-ADM01, 02, 04   |   8    | Fabián      |
-|    [ ]    | Carga de fotos: compresión con `sharp`, Supabase Storage y variante para vista previa | RF-ADM02, C-7      |   8    | Alex        |
-|    [ ]    | Disponibilidad de platos por fecha: administración y consulta                         | RF-ADM03, ADR-010  |   8    | Fabián      |
-|    [ ]    | Calendario de atención: reglas semanales y excepciones por fecha                      | RF-ADM06, HU-05    |   8    | Fabián      |
-|    [ ]    | Pruebas de disponibilidad de plato por fecha                                          | RNF-12             |   3    | Alex        |
-| **Total** |                                                                                       |                    | **58** |             |
+|  Estado   | Tarea                                                                                 | Requisitos         |  Pts   | Responsable   |
+| :-------: | ------------------------------------------------------------------------------------- | ------------------ | :----: | ------------- |
+|    [ ]    | Carta por categorías con lista virtualizada en React Native                           | RF-MEN01, RF-MEN06 |   8    | Alex          |
+|    [ ]    | Pantalla de inicio con los platos del próximo día de atención                         | RF-MEN02           |   5    | Alex          |
+|    [ ]    | Detalle de plato con galería de hasta 10 fotos                                        | RF-MEN03           |   5    | Alex          |
+|    [ ]    | API de menú: categorías, platos, etiquetas y disponibilidad                           | RF-MEN01–06        |   5    | Alex          |
+|    [ ]    | Administración de categorías y platos en backend y móvil                              | RF-ADM01, 02, 04   |   8    | Alex          |
+|    [ ]    | Carga de fotos: compresión con `sharp`, Supabase Storage y variante para vista previa | RF-ADM02, C-7      |   8    | Alex          |
+|    [ ]    | Disponibilidad de platos por fecha: administración y consulta                         | RF-ADM03, ADR-010  |   8    | Alex          |
+|    [~]    | Calendario: backend publicado en PR #2; faltan integración y panel móvil              | RF-ADM06, HU-05    |   8    | Fabián / Alex |
+|    [ ]    | Pruebas de disponibilidad de plato por fecha                                          | RNF-12             |   3    | Alex          |
+| **Total** |                                                                                       |                    | **58** |               |
 
-**Si hay que recortar:** búsqueda, filtros, favoritos y caché sin conexión ya están fuera de este sprint (van al 5). Si aun así excede, el calendario de atención puede pasar al inicio del Sprint 3, donde de todos modos se consume.
+**Situación real:** [Fabián publicó el PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2) desde `fabian/calendario-atencion` (`76805a4` al revisar). No está integrado en este corte ni incluye interfaz móvil. Revisamos sus pruebas antes de aceptar el backend; Alex implementa el panel A05 después de la integración. Los avances de carta/detalle en `yeison/inicio-sprint-2` se revisan para reutilizarlos, sin incorporar automáticamente la migración a Expo.
+
+**Si hay que recortar:** búsqueda, filtros, favoritos y caché sin conexión siguen en Sprint 5. No posponemos la integración del calendario que ya está publicado: la necesitamos para validar reservas. Seguimos A00–A06 de la guía de Alex.
 
 **Nota técnica.** Generar aquí la variante de 1200×630 px por debajo de 600 KB evita rehacer el flujo de carga en el Sprint 4.
 
@@ -130,17 +134,19 @@ gantt
 | :-------: | ---------------------------------------------------------------------------- | -------------------------- | :----: | ----------- |
 |    [ ]    | Cálculo de franjas a partir del calendario, la duración y la granularidad    | RF-RES01, 02, 17           |   8    | Alex        |
 |    [ ]    | Validación de aforo en transacción serializable                              | RF-RES02, ADR-005          |   5    | Alex        |
-|    [ ]    | Flujo de reserva en cuatro pasos: fecha, franja, pedido opcional, resumen    | RF-RES03–06                |   13   | Yeison      |
-|    [ ]    | Cálculo del total y generación del ticket copiable                           | RF-RES05, RF-RES18         |   5    | Yeison      |
-|    [ ]    | Pantalla de solicitud enviada con instrucciones de pago y acción de WhatsApp | RF-RES07                   |   3    | Yeison      |
-|    [ ]    | Bandeja de solicitudes con aprobación y rechazo con motivo                   | RF-RES09, RF-ADM08, 11, 12 |   8    | Fabián      |
-|    [ ]    | Máquina de estados con validación de transiciones                            | §9.4                       |   5    | Fabián      |
-|    [ ]    | Mis reservas, detalle y cancelación                                          | RF-RES11, RF-RES12         |   5    | Yeison      |
-|    [ ]    | Agenda del día y marcado de llegada                                          | RF-ADM09, RF-ADM10         |   5    | Fabián      |
+|    [ ]    | Flujo de reserva en cuatro pasos: fecha, franja, pedido opcional, resumen    | RF-RES03–06                |   13   | Alex        |
+|    [ ]    | Cálculo del total y generación del ticket copiable                           | RF-RES05, RF-RES18         |   5    | Alex        |
+|    [ ]    | Pantalla de solicitud enviada con instrucciones de pago y acción de WhatsApp | RF-RES07                   |   3    | Alex        |
+|    [ ]    | Bandeja de solicitudes con aprobación y rechazo con motivo                   | RF-RES09, RF-ADM08, 11, 12 |   8    | Alex        |
+|    [ ]    | Máquina de estados con validación de transiciones                            | §9.4                       |   5    | Alex        |
+|    [ ]    | Mis reservas, detalle y cancelación                                          | RF-RES11, RF-RES12         |   5    | Alex        |
+|    [ ]    | Agenda del día y marcado de llegada                                          | RF-ADM09, RF-ADM10         |   5    | Alex        |
 |    [ ]    | Pruebas de aforo y de transiciones de estado                                 | RNF-12                     |   5    | Alex        |
 | **Total** |                                                                              |                            | **62** |             |
 
-**Si hay que recortar:** la agenda del día puede pasar al Sprint 5 sin romper el flujo, y la cancelación puede diferirse una semana. Conviene decidirlo en la planificación, no a mitad del sprint.
+**Situación real:** en `dev` no hay módulo funcional de reservas y el botón móvil de nueva reserva no tiene acción. Alex trabaja A07–A09 con revisión de Yeison. Antes de A07 cerramos las diferencias de anticipación/duración entre acuerdos y Prisma/seed, y alineamos `EXPIRADA` en shared. No resolvemos esas diferencias por suposición.
+
+**Si hay que recortar:** podemos proponer diferir la agenda, pero lo acordamos explícitamente antes de quitar criterios. No damos por entregadas notificaciones, expiración automática ni inasistencia: siguen en Sprint 5.
 
 **Riesgos.** La generación asistida tiende a producir verificaciones de aforo en memoria que fallan bajo concurrencia: revisar de forma explícita que la lectura y la inserción ocurran en la misma transacción con aislamiento serializable. Y el paso de pedido debe filtrar por la fecha elegida, no por la del día actual: es un error fácil y conviene cubrirlo con una prueba.
 
