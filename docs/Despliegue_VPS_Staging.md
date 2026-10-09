@@ -2,7 +2,11 @@
 
 ## 1. Donde quedamos y que seguimos del docente
 
-El 8 de octubre de 2026 comprobamos, con la salida de la terminal SSH, que la VPS tiene Ubuntu 24.04, Docker, Docker Compose, Nginx y Certbot. La carpeta `/root/projects/equipo-7` estaba vacia. El sitio habilitado `apolobyte-e-7` ya tiene configuracion SSL para `equipo-7-elev-d-dev.apolobyte.online` y apunta al puerto 8083, ocupado por el ejemplo `ci-frontend`. Esa configuracion no demuestra todavia que nuestra API responda por HTTPS.
+**Corte del 9 de octubre de 2026:** esta VPS ya está preparada y `dev` desplegada con la landing en `0e27cb4`. La última aceptación registrada pasó [CI/CD, ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598), y salud HTTPS respondió con base conectada. No repetimos esa prueba remota por actualizar documentación.
+
+Tenemos Ubuntu 24.04, Docker/Compose, Nginx y Certbot. El clon está en `/root/projects/equipo-7`; el sitio `apolobyte-e-7` atiende `equipo-7-elev-d-dev.apolobyte.online` y envía a `127.0.0.1:8084`, que Docker lleva al puerto 3000 de la API. El 8083 era el ejemplo inicial, no nuestro puerto vigente.
+
+Para trabajar ahora seguimos la sección 10 y [Flujo_Equipo_Dev.md](Flujo_Equipo_Dev.md), sin volver a clonar, crear ramas base ni configurar Nginx. Las secciones 2–9 conservan el procedimiento de preparación para un servidor nuevo; no son tareas pendientes de esta VPS. La landing no sustituye el cliente Android ni el workspace Next.js de Sprint 4.
 
 Seguimos estas guias:
 
@@ -15,43 +19,42 @@ Seguimos estas guias:
 
 Mantuvimos Docker Compose con `--env-file`, nombres propios del equipo, Nginx como proxy, Certbot para HTTPS y `appleboy/ssh-action@v1.0.0` con los secretos `SSH_*` del ejemplo. Adaptamos lo necesario a nuestro proyecto:
 
-| Ejemplo del docente | Nuestro repositorio |
-| --- | --- |
-| Rama de ejemplo main | dev; main corresponde a otra VPS |
-| Carpeta de ejemplo | /root/projects/equipo-7 |
-| Frontend web y backend de ejemplo | API NestJS; la app React Native se ejecuta en el dispositivo |
-| docker-compose.yml junto al ejemplo | apps/api/docker-compose.vps.yml dentro del monorepo |
-| Variables en .env | apps/api/.env.vps, ignorado por Git |
-| Compilacion remota con npm | Compilacion dentro de Docker, migraciones y arranque con Compose |
-| Puerto asignado ocupado | 8084 como siguiente libre, segun la indicacion de la tabla |
-| Nuevo sitio Nginx | Reutilizamos el sitio y certificado existentes del equipo |
+| Ejemplo del docente                 | Nuestro repositorio                                              |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| Rama de ejemplo main                | dev; main corresponde a otra VPS                                 |
+| Carpeta de ejemplo                  | /root/projects/equipo-7                                          |
+| Frontend web y backend de ejemplo   | API NestJS; la app React Native se ejecuta en el dispositivo     |
+| docker-compose.yml junto al ejemplo | apps/api/docker-compose.vps.yml dentro del monorepo              |
+| Variables en .env                   | apps/api/.env.vps, ignorado por Git                              |
+| Compilacion remota con npm          | Compilacion dentro de Docker, migraciones y arranque con Compose |
+| Puerto asignado ocupado             | 8084 como siguiente libre, segun la indicacion de la tabla       |
+| Nuevo sitio Nginx                   | Reutilizamos el sitio y certificado existentes del equipo        |
 
 La asignacion de Classroom tiene prioridad sobre la tabla de Notion. Si nos dieron otro puerto, cambiamos `API_HOST_PORT` y `proxy_pass` al mismo numero antes de arrancar. No detenemos los contenedores de otros equipos.
 
-En la comprobacion local del 8 de octubre pasaron la instalacion limpia en Linux, el lint de API sin advertencias ni errores, 14 pruebas de API, 9 pruebas moviles y las compilaciones de shared/API. Construimos las imagenes de API y migraciones; Prisma y Argon2 cargaron correctamente, la imagen de API corrio como usuario no root y no incluyo los archivos privados de entorno. Tambien validamos Compose con la plantilla, la sintaxis del workflow/script y los rechazos del script cuando falta el archivo privado o cambia el commit. Estas pruebas no conectaron a Supabase ni ejecutaron migraciones reales; la aceptacion remota sigue pendiente.
+En la comprobacion local inicial del 8 de octubre pasaron instalación limpia en Linux, lint, 14 pruebas de API, 9 móviles y compilaciones de shared/API. Después, con la landing, pasaron 21 de API y 9 móviles. Construimos las imágenes y comprobamos usuario no root y exclusión de archivos privados. Esas pruebas locales no conectaron a Supabase: la aceptación remota posterior, diferenciada de los mocks, queda registrada en la sección 11.
 
-## 2. Publicar el codigo y crear dev
+## 2. Publicar cambios: dev ya existe
 
-Ejecutamos este bloque en PowerShell del computador, desde la raiz del repositorio:
+Para un cambio nuevo partimos de un árbol limpio en el computador. Conservamos cualquier trabajo previo en su rama; no usamos estos comandos para descartarlo. Ejemplo de Alex:
 
 ```powershell
 cd C:\Users\yjmg1\Desktop\Restaurante-Native
-git switch yeison/vps-staging-deploy
-git status --short --branch
-git push -u origin yeison/vps-staging-deploy
-git ls-remote --heads origin dev
+git fetch origin
+git switch dev
+git pull --ff-only origin dev
+git switch -c alex/nombre-de-la-funcionalidad
 ```
 
-Si el ultimo comando no devuelve ninguna rama, creamos la base de dev desde la funcionalidad de despliegue ya preparada:
+Implementamos y probamos la entrega siguiendo el flujo del equipo. Con autorización del integrante publicamos **su rama**, no recreamos `dev` ni forzamos un push:
 
 ```powershell
-git branch dev yeison/vps-staging-deploy
-git push -u origin dev
+git push -u origin alex/nombre-de-la-funcionalidad
 ```
 
-Estos comandos dejan nuestra rama de trabajo actual en `yeison/vps-staging-deploy`. Si `dev` ya existe en GitHub, no la recreamos ni forzamos el push: abrimos un Pull Request desde nuestra rama hacia `dev`.
+Abrimos un Pull Request con base `dev`, esperamos filtros y revisión. El PR solo verifica; su integración produce el push a `dev` que despliega. `main` no participa. Los commits, identidad y permisos siguen Reglas.md.
 
-El primer push de `dev` inicia el workflow. Si la VPS todavia no tiene el clon, variables o secretos SSH, el job de despliegue fallara por esa preparacion pendiente. Terminamos las secciones siguientes y despues usamos **Re-run all jobs** en esa ejecucion. No necesitamos agregar el workflow a `main` para repetir una ejecucion ya creada.
+Si preparamos otro servidor, completamos clon, variables y secretos SSH antes de intentar el despliegue. Si falla una ejecución por preparación, corregimos ese paso y repetimos el job sobre el commit vigente, sin agregar el workflow a `main`.
 
 ## 3. Clonar desde la terminal SSH de VS Code
 
@@ -155,7 +158,7 @@ curl --fail --show-error http://127.0.0.1:8084/api/v1/health
 Esperamos un contenedor `healthy` y la respuesta:
 
 ```json
-{"status":"ok","database":"connected"}
+{ "status": "ok", "database": "connected" }
 ```
 
 El healthcheck consulta HTTP y PostgreSQL. El script termina con error si el servicio no queda sano en cuatro minutos. No imprimimos `docker compose config` completo porque incluye variables privadas; usamos `config --quiet`.
@@ -227,14 +230,14 @@ La copiamos directamente a GitHub, incluyendo las lineas de inicio y fin. No peg
 
 Abrimos **Settings → Secrets and variables → Actions → New repository secret** en `YeisonMunoz69/Restaurante-Native`. Usamos los mismos nombres del ejemplo:
 
-| Secreto | Valor que colocamos |
-| --- | --- |
-| SSH_HOST | Host de esta VPS de desarrollo, consultado en KeePass |
-| SSH_USER | root |
-| SSH_PRIVATE_KEY | Contenido completo de id_restaurante_dev |
-| SSH_PORT | 22 |
-| SSH_PASSPHRASE | Passphrase elegida; si la llave no tiene, dejamos este secreto sin definir |
-| MAIN_BRANCH | dev |
+| Secreto         | Valor que colocamos                                                        |
+| --------------- | -------------------------------------------------------------------------- |
+| SSH_HOST        | Host de esta VPS de desarrollo, consultado en KeePass                      |
+| SSH_USER        | root                                                                       |
+| SSH_PRIVATE_KEY | Contenido completo de id_restaurante_dev                                   |
+| SSH_PORT        | 22                                                                         |
+| SSH_PASSPHRASE  | Passphrase elegida; si la llave no tiene, dejamos este secreto sin definir |
+| MAIN_BRANCH     | dev                                                                        |
 
 Conservamos el nombre `MAIN_BRANCH` del ejemplo por correspondencia con la guia; su valor debe ser exactamente `dev`. El workflow comprueba ese valor antes de actualizar el repositorio.
 
@@ -295,6 +298,25 @@ Si debemos volver al codigo anterior, lo hacemos con un revert revisado que entr
 
 El 8 de octubre recibimos las salidas de la VPS: `migrate deploy` encontró dos migraciones sin pendientes, `elev-d-e-7-api` quedó saludable en `127.0.0.1:8084` y `/api/v1/health` respondió con PostgreSQL conectado tanto por loopback como por HTTPS. El intento 3 de [CI/CD dev, ejecución 37829822767](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37829822767) también terminó correctamente sobre `db937f1`. Conservamos las instrucciones anteriores para nuevas máquinas; ya no describen tareas sin hacer en esta VPS.
 
-Preparamos una [landing temporal](Landing_Temporal.md) dentro de la misma API. Al integrar su rama a `dev`, el workflow copia `apps/api/public` a la imagen y sirve la página en `/`. No agregamos otro contenedor, migraciones, secretos ni cambios de Nginx: el proxy existente ya lleva las peticiones a la API. Conservamos `/api/v1/health` para el healthcheck.
+La landing ya quedó integrada en `dev` mediante PR #1, commit `0e27cb4`. Pasó [CI/CD, ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598), incluyendo despliegue. Comprobamos raíz, CSS e icono con HTTP 200, salud HTTPS con PostgreSQL conectado, redirección HTTP a HTTPS y respuesta 401 de `/api/v1/auth/me` sin sesión. No usamos esos resultados como prueba de funcionalidades de carta/reservas todavía pendientes.
 
-Después de integrar verificamos en el navegador `https://equipo-7-elev-d-dev.apolobyte.online/` y repetimos la salud HTTPS. No damos por publicada la landing solo porque haya pasado su prueba local.
+## 12. Mantener la landing sin otra guía duplicada
+
+Servimos «En construcción…» desde la misma API, sin otro contenedor, migraciones, secretos ni cambio de Nginx. El muro de doce ladrillos usa SVG/CSS, sin JavaScript ni recursos externos, y respeta movimiento reducido.
+
+- Textos y dibujo: `apps/api/public/index.html`.
+- Colores y animación: `apps/api/public/landing.css`.
+- Icono: `apps/api/public/favicon.svg`.
+- Registro de estáticos: `apps/api/src/landing/landing.assets.ts`, con rutas válidas desde `src` y `dist`.
+- Empaquetado: `apps/api/Dockerfile.vps` copia únicamente `public` a la imagen de ejecución. Nunca publicamos la raíz del repositorio ni archivos de entorno.
+
+`landing.assets.spec.ts` comprueba HTML/CSS/icono, API existente, errores de ruta y rechazo de archivos privados con Prisma simulado. Una prueba de salud simulada no demuestra conexión a Supabase. En la aceptación previa pasaron 21 pruebas API y 9 móviles, build de imagen y revisión visual a 1280, 390 y 320 píxeles; no repetimos esas comprobaciones en esta limpieza documental.
+
+Para modificarla usamos los filtros de CI de la sección 9 y el mismo PR a `dev`. Con nuestra API local ya configurada abrimos `http://localhost:3000/`. Después del despliegue comprobamos:
+
+```powershell
+Invoke-WebRequest https://equipo-7-elev-d-dev.apolobyte.online/ | Select-Object StatusCode
+Invoke-RestMethod https://equipo-7-elev-d-dev.apolobyte.online/api/v1/health
+```
+
+Conservamos `/api/v1` y `/api/v1/health`; las rutas desconocidas no devuelven la portada. Esta landing no cierra historias de carta, reservas ni web/SSR.
