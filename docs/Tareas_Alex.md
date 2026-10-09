@@ -42,7 +42,7 @@ Entregamos una unidad por PR; si una unidad crece, separamos contrato/API e inte
 
 ### A00. Configuración móvil y contratos antes de conectar pantallas
 
-- Revisamos `apps/mobile/src/config/api.config.ts`: Android usa hoy `10.0.2.2:3000/api/v1`, que sirve para el emulador, no para un teléfono contra la VPS. Definimos un mecanismo sencillo y documentado para elegir local o `https://equipo-7-elev-d-dev.apolobyte.online/api/v1`; evitamos duplicar URL en servicios. No prometemos que el `API_URL` del servidor cambie la app: no lo hace.
+- Revisamos `apps/mobile/src/config/api.config.ts`: Android usa hoy `10.0.2.2:3000/api/v1`, que sirve para el emulador, no para un teléfono contra la VPS. Definimos un mecanismo sencillo y documentado para elegir local o `https://encanto-campestre-dev.apolobyte.online/api/v1`; evitamos duplicar URL en servicios. No prometemos que el `API_URL` del servidor cambie la app: no lo hace.
 - Para teléfono por USB, usamos `localhost` con `adb reverse`; para emulador, `10.0.2.2`. La URL pública no es una contraseña; las credenciales de Supabase y JWT nunca van en el bundle móvil.
 - Conservamos interceptor, refresh coordinado, Keychain y cinco pestañas. Retiramos literales de interfaz pendientes hacia i18n, sin mover a recursos los datos reales que devuelve la API. Eliminamos contenido de muestra al conectar cada módulo, no lo usamos como respuesta de emergencia si falla la red.
 - Acordamos restaurante activo sin UUID fijo en componentes, contratos compartidos, fechas civiles `YYYY-MM-DD`, paginación y representación de `Decimal`/COP. Documentamos cómo obtiene el cliente ese restaurante: no suponemos un endpoint inexistente.

@@ -83,7 +83,7 @@ Para cerrar una historia comprobamos su criterio de aceptación real: pantallas 
 Después de integrar revisamos **Actions → CI/CD dev**: deben pasar `Build and test` y `Deploy dev to VPS`. Luego comprobamos:
 
 ```powershell
-Invoke-RestMethod https://equipo-7-elev-d-dev.apolobyte.online/api/v1/health
+Invoke-RestMethod https://encanto-campestre-dev.apolobyte.online/api/v1/health
 ```
 
 Esperamos `status: ok` y `database: connected`. La salud demuestra que la API y PostgreSQL responden; no reemplaza las pruebas funcionales del módulo que acabamos de entregar.

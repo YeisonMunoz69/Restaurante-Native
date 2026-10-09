@@ -18,7 +18,7 @@ Revisamos `dev` en `0e27cb4`. No confundimos una maqueta, una rama publicada o u
 | Calendario          | Fabián publicó el backend en [PR #2 hacia dev](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2); sigue sin integrar en este corte y no incluye panel móvil |
 | Web/SSR y noticias  | `apps/web` sigue reservado para Sprint 4; el muro móvil actual no consume noticias reales                                                                             |
 
-La última aceptación de despliegue registrada pasó [CI/CD dev, ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598). La página está en [nuestro dominio dev](https://equipo-7-elev-d-dev.apolobyte.online/) y la API expone [salud HTTPS](https://equipo-7-elev-d-dev.apolobyte.online/api/v1/health). Ese resultado no prueba módulos todavía pendientes ni sustituye revisar cada despliegue nuevo.
+La última aceptación de despliegue registrada pasó [CI/CD dev, ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598). El [nuevo dominio dev](https://encanto-campestre-dev.apolobyte.online/) y su [salud HTTPS](https://encanto-campestre-dev.apolobyte.online/api/v1/health) respondieron el 9 de octubre. Ese resultado no prueba módulos todavía pendientes ni sustituye revisar cada despliegue nuevo.
 
 ## Dónde consultamos cada cosa
 
@@ -26,6 +26,7 @@ La última aceptación de despliegue registrada pasó [CI/CD dev, ejecución 378
 - [Tareas de Alex](docs/Tareas_Alex.md): reparto actualizado, entregas pequeñas, dependencias y pruebas de interfaz.
 - [Flujo del equipo](docs/Flujo_Equipo_Dev.md): ramas personales, PR a `dev`, revisión y entrega sin acceso SSH.
 - [Despliegue y diagnóstico](docs/Despliegue_VPS_Staging.md): preparación de servidor nuevo, trabajo diario y mantenimiento de la landing.
+- [Resumen de CI/CD](docs/Resumen_CI_CD_Dev.md): explicación breve del recorrido desde el PR hasta la VPS.
 - [Requisitos](docs/Requisitos_del_Sistema.md), [análisis y ADR](docs/Sprint0_Analisis_y_Diseno.md) y [decisiones](docs/Decisiones_Pendientes_y_Riesgos.md): comportamiento acordado y diferencias por resolver.
 - [Backlog](docs/Backlog_Jira.md): criterios de aceptación; el CSV conserva el importable original, no un avance sincronizado.
 - [Diseño](design/README.md): tokens, componentes y pantallas de referencia.
@@ -127,7 +128,7 @@ adb reverse tcp:8081 tcp:8081
 adb reverse tcp:3000 tcp:3000
 ```
 
-Para consultar la VPS necesitamos elegir `https://equipo-7-elev-d-dev.apolobyte.online/api/v1` en el cliente. El mecanismo documentado de selección local/dev y su prueba Android son la tarea A00 de Alex; no afirmamos que ya existe. El `API_URL` privado del servidor no modifica el bundle móvil. No incluimos secretos de Supabase/JWT en la app.
+Para consultar la VPS necesitamos elegir `https://encanto-campestre-dev.apolobyte.online/api/v1` en el cliente. El mecanismo documentado de selección local/dev y su prueba Android son la tarea A00 de Alex; no afirmamos que ya existe. El `API_URL` privado del servidor no modifica el bundle móvil. No incluimos secretos de Supabase/JWT en la app.
 
 ## Pruebas antes de entregar
 
