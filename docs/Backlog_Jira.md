@@ -1,5 +1,7 @@
 # Backlog para Jira — El Encanto Campestre
 
+**Reparto vigente del 15 de octubre:** sustituimos la concentración en Alex por los bloques y dependencias de [Encargos_Equipo.md](Encargos_Equipo.md). Sprint 2 tiene tres historias por persona; Sprint 3, tres por persona y EC-40 de integración coordinada por Yeison. Conservamos criterios, puntos, fechas y entregas existentes; las referencias posteriores al reparto anterior no son el encargo actual.
+
 ### Épicas, historias y criterios de aceptación
 
 **Versión:** 0.1 · **Generado:** 20 de agosto de 2026

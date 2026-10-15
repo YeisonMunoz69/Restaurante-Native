@@ -1,5 +1,7 @@
 # Entregas pendientes de Alex: carta y reservas
 
+**Reparto vigente del 15 de octubre:** este catálogo ya no es una lista completa a cargo de Alex. Aplicamos [Encargos_Equipo.md](Encargos_Equipo.md): Alex EC-22/23/24 y luego EC-33/35/38; Fabián EC-25/28/29 y luego EC-31/32/34; Yeison EC-26/27/30 y luego EC-37/36/39, coordinando EC-40 al final. Conservamos las fichas como referencia compartida. A01/A04/A05 las lleva Fabián; A03/A06 y operación administrativa, Yeison. Las menciones posteriores al reparto anterior son históricas; el prompt vigente está en Encargos_Equipo.md, no encargamos toda la API y el móvil a Alex.
+
 **Actualización de integración, 15 de octubre:** el backend de calendario de Fabián se incorpora a la base del equipo mediante su PR #2; verificamos el resultado publicado en `dev` y Actions antes de comenzar A05. El reparto detallado A00–A09 se conserva. Si ya tenemos avances, primero los publicamos y contrastamos sus criterios; no repetimos implementaciones ni marcamos historias completas por tener solo archivos locales. Usamos el procedimiento y los prompts actualizados de [Encargos_Equipo.md](Encargos_Equipo.md).
 
 **Corte: 9 de octubre de 2026.** Revisamos `dev` en `0e27cb4`. Este documento reemplaza el reparto inicial de Sprint 2: encargamos a Alex las entregas siguientes de backend y móvil, por partes. No significa que ya estén implementadas ni cambia el alcance académico acordado.
@@ -23,11 +25,11 @@ Leemos primero [Reglas](../Reglas.md), [requisitos](Requisitos_del_Sistema.md), 
 
 ## 2. Cómo repartimos el trabajo desde ahora
 
-Alex lleva las entregas A00–A09, incluyendo su interfaz Android y sus pruebas. Yeison revisa integración, diseño, recuperación del trabajo móvil anterior y aceptación; no modifica las mismas pantallas en paralelo sin coordinar. Fabián conserva la autoría y las correcciones de su calendario: primero revisamos e integramos su PR por separado. No le pedimos a Alex rehacerlo.
+Distribuimos las fichas según Encargos_Equipo.md: Alex usa A00/A02 y el flujo del comensal; Fabián A01/A04/A05 y motor/total; Yeison A03/A06, estados/administración y pruebas integradas. Cada responsable cubre API, móvil y pruebas de sus historias, coordinando archivos comunes.
 
 No necesitamos SSH para avanzar. Abrimos PR a `dev`, esperamos revisión y `Build and test`; después de integrar, verificamos `Deploy dev to VPS`. No publicamos ramas, integramos PR ni modificamos secretos por iniciativa del agente: el integrante autoriza esas acciones. `main` queda fuera. Seguimos [el flujo del equipo](Flujo_Equipo_Dev.md).
 
-Entregamos una unidad por PR; si una unidad crece, separamos contrato/API e interfaz en dos PR dependientes y no cerramos la historia hasta conectar ambos. **Empezamos solo por A00 y A01**, no por toda esta lista a la vez.
+Entregamos una unidad por PR; si crece, separamos contrato/API e interfaz y no cerramos la historia hasta conectar ambos. Alex comienza por configuración/carta, Fabián por contrato de menú y Yeison por administración cuando esté acordado el contrato.
 
 | Orden | Entrega                                                  | Dependencia                                | Resultado que buscamos                                           |
 | ----- | -------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------- |
@@ -92,7 +94,7 @@ Proponemos `GET /api/v1/menu/categorias`, `/menu/platos`, `/menu/platos/:id` y `
 
 ### A05. Panel móvil del calendario que ya hizo Fabián
 
-Después de integrar el PR #2 leemos `docs/Calendario_Atencion.md` y sus esquemas. En esa propuesta ya existen estas rutas con `restauranteId`:
+El PR #2 ya está integrado. Fabián lleva el panel y la aceptación completa de EC-29; leemos `docs/Calendario_Atencion.md` y sus esquemas. Existen estas rutas con `restauranteId`:
 
 - Públicas: `GET /calendario/dia?fecha=YYYY-MM-DD` y `GET /calendario/proximo?desde=YYYY-MM-DD`, bajo `/api/v1`.
 - ADMIN: `GET /admin/calendario/reglas`, `PUT /admin/calendario/reglas/:diaSemana`, `GET /admin/calendario/excepciones?fecha=...`, `PUT`/`DELETE /admin/calendario/excepciones/:fecha`.
@@ -188,4 +190,4 @@ Actualizamos estado en [plan](Plan_de_Sprints.md) y [backlog](Backlog_Jira.md) c
 
 ## 7. Prompt para empezar sin dispersarnos
 
-> Trabajamos en Restaurante-Native desde dev actualizado. Lee Reglas.md y docs/Tareas_Alex.md completos; después revisa los archivos que corresponden a A00 y A01. Conserva cambios locales y verifica si ya existen avances antes de duplicarlos. En esta sesión trabaja solo en A00 y A01, por entregas pequeñas, con contratos y pruebas; no implementes todavía reservas, noticias ni Expo. No rehagas el calendario de Fabián: verifica el estado del PR #2 y coordina su integración con Yeison. Explica antes cualquier dependencia o cambio de esquema necesario. No leas ni publiques secretos, no cambies configuración de Git y no ejecutes escrituras sobre Supabase compartido. Usa ramas/commits alex/nombre-de-la-funcionalidad con la identidad humana de Reglas.md. No hagas push ni merge sin mi autorización. Distingue lo probado por HTTP de lo visto en Android y deja claramente los bloqueos o decisiones pendientes.
+Usamos el prompt actualizado de Alex en [Encargos_Equipo.md](Encargos_Equipo.md); sustituye el anterior que concentraba API y móvil en Alex. No duplicamos menú/calendario de Fabián ni administración/fotos de Yeison. Conservamos los criterios técnicos de estas fichas.
