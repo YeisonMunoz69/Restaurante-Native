@@ -107,3 +107,15 @@ async function guardarSesionSegura(refreshToken) {
 2. **¿Formato de commit correcto?** Nombre + lo que hice (`yeison/...`, `alex/...`, `fabian/...`).
 3. **¿Código comentado con lenguaje humano?** Sí, explicando qué hace cada parte.
 4. **¿Pasa limpio a `main`?** Solo cuando backend, frontend y base de datos estén coordinados y sin errores.
+
+---
+
+## 7. Ajustes de alcance y sincronización de requisitos
+
+Podemos corregir, dividir, sustituir o aplazar tareas durante el desarrollo cuando el equipo acuerde el motivo. El backlog y los sprints admiten esos ajustes; las tareas originales no nos obligan a implementar una solución que ya decidimos cambiar. Cada actividad debe tener una persona responsable, aunque reciba apoyo de los demás.
+
+Antes de dar por cerrado un cambio de alcance, registramos la corrección directamente en la actividad de Jira: qué cambia, por qué, criterios nuevos, responsable y efecto sobre el sprint. Actualizamos también los requisitos Markdown afectados, el plan y los encargos que correspondan, e indicamos en la entrega las claves de Jira, los archivos/secciones modificados y el commit. Si una decisión modifica el comportamiento acordado con el cliente o docente, dejamos su aprobación o su estado pendiente; no la presentamos como un acuerdo confirmado por el solo hecho de implementarla.
+
+El documento de requisitos de Drive y su copia `docs/Requisitos_del_Sistema.docx` se actualizan manualmente. Cuando una corrección afecte esos requisitos, incluimos siempre este recordatorio en Jira y en la entrega: **«Pendiente actualizar requisitos en Drive y Word local: [RF/RNF o sección], [cambio concreto]»**. Mantenemos el pendiente hasta que el responsable confirme ambos documentos. Editar el Markdown no significa que Drive o Word hayan cambiado.
+
+Marcamos una actividad como terminada con evidencia de sus criterios vigentes. Una implementación parcial o un PR abierto queda en curso; una tarea aplazada conserva su motivo y destino. El procedimiento y la revisión actual están en `docs/Flujo_Equipo_Dev.md`.

@@ -6,6 +6,8 @@
 
 Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
+**Revisión del 15 de octubre:** los responsables vigentes están en Jira y [el plan](Plan_de_Sprints.md). EC-14 y EC-29 quedan En curso; EC-72 registra la verificación complementaria de CI/CD/Deploy key en Sprint 4, sin puntos nuevos, porque EC-21 no es accesible con nuestra sesión. Las tablas de estimación siguientes conservan el plan original; no son un recuento en vivo de Jira. Los cambios de alcance siguen [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos), con corrección directa en la actividad y recordatorio de requisitos en Drive/Word.
+
 **Corte de estado:** 9 de octubre de 2026. Usamos `[x]` para criterios comprobados, `[~]` para una historia parcial o publicada sin integrar/aceptar y `[ ]` para trabajo pendiente en `dev`. Los puntos del resumen siguen siendo estimaciones originales, no puntos aceptados automáticamente. El reparto actualizado y la validación de interfaz están en [Tareas_Alex.md](Tareas_Alex.md); el CSV conserva el importable original, no es un reporte sincronizado del avance actual.
 
 ---
@@ -32,7 +34,7 @@ Monorepo, proyectos base, esquema de datos, contenedor y despliegue. Es la base 
 
 _7 historias · 35 puntos_
 
-### [~] Configurar monorepo, convenciones y estructura de proyectos
+### [x] Configurar monorepo, convenciones y estructura de proyectos
 
 `Sprint 1` · `3 pts` · `High` · `infra`
 
@@ -41,7 +43,7 @@ Dejar el repositorio listo para que los tres proyectos convivan y el equipo trab
 **Criterios de aceptación**
 
 - [x] El monorepo contiene apps/mobile, apps/api, la carpeta reservada apps/web y packages/shared
-- [~] Lint y formato están disponibles para API/móvil; `apps/web` aún es un placeholder con README y se implementa en Sprint 4
+- [x] Las herramientas de API/móvil están disponibles; `apps/web` queda reservado para Sprint 4 y su implementación no bloquea la historia de cimientos
 - [x] El README explica como levantar cada proyecto desde cero
 - [x] Existe .env.example documentado, y .env esta ignorado por git
 - [x] CI/CD de `dev` publicado y verificado con instalación limpia, lint/build/test, Docker y despliegue SSH; evidencia en la guía de despliegue

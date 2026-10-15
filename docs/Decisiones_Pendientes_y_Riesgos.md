@@ -2,9 +2,11 @@
 
 ### App móvil — El Encanto Campestre
 
-**Versión:** 0.4 · **Actualizado:** 9 de octubre de 2026
+**Versión:** 0.5 · **Actualizado:** 15 de octubre de 2026
 
 Registramos lo acordado y lo distinguimos de lo implementado. Las filas con `⬜` siguen abiertas. Actualizamos ramas, revisión y pendientes ya resueltos en los requisitos, sin cambiar por nuestra cuenta las reglas del cliente. El reparto vigente está en [Tareas_Alex.md](Tareas_Alex.md).
+
+El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejando la corrección en Jira y en los documentos afectados. Aplicamos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos dónde cambió y recordamos actualizar manualmente los requisitos de Drive y `docs/Requisitos_del_Sistema.docx`. Está pendiente incorporar a esos documentos la sección de gestión de cambios y responsable de sincronización; en esta revisión no modificamos requisitos funcionales del restaurante.
 
 ---
 

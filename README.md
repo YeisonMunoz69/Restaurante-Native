@@ -25,6 +25,7 @@ La última aceptación de despliegue registrada pasó [CI/CD dev, ejecución 378
 - [Plan y estado de sprints](docs/Plan_de_Sprints.md): conservamos fechas originales y mostramos el atraso.
 - [Tareas de Alex](docs/Tareas_Alex.md): reparto actualizado, entregas pequeñas, dependencias y pruebas de interfaz.
 - [Flujo del equipo](docs/Flujo_Equipo_Dev.md): ramas personales, PR a `dev`, revisión y entrega sin acceso SSH.
+- [Regla de ajustes de alcance](Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): podemos corregir tareas durante el proceso, dejando la corrección en Jira, documentación y el pendiente manual de requisitos en Drive/Word.
 - [Despliegue y diagnóstico](docs/Despliegue_VPS_Staging.md): preparación de servidor nuevo, trabajo diario y mantenimiento de la landing.
 - [Resumen de CI/CD](docs/Resumen_CI_CD_Dev.md): explicación breve del recorrido desde el PR hasta la VPS.
 - [Requisitos](docs/Requisitos_del_Sistema.md), [análisis y ADR](docs/Sprint0_Analisis_y_Diseno.md) y [decisiones](docs/Decisiones_Pendientes_y_Riesgos.md): comportamiento acordado y diferencias por resolver.
