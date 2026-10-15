@@ -1,5 +1,7 @@
 # Trabajo del equipo sobre dev
 
+**Reparto vigente del 15 de octubre:** sustituimos la concentración en Alex por los bloques y dependencias de [Encargos_Equipo.md](Encargos_Equipo.md). Sprint 2 tiene tres historias por persona; Sprint 3, tres por persona y EC-40 de integración coordinada por Yeison. Conservamos criterios, puntos, fechas y entregas existentes; las referencias posteriores al reparto anterior no son el encargo actual.
+
 ## 1. Qué compartimos y qué verificamos
 
 Trabajamos en el computador de cada integrante y usamos la VPS como destino de prueba compartido. No necesitamos programar dentro del clon del servidor: una modificación sin commit allí detiene el despliegue para evitar perderla.

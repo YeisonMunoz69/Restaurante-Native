@@ -112,17 +112,17 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 |    [ ]    | Carta por categorías con lista virtualizada en React Native                           | RF-MEN01, RF-MEN06 |   8    | Alex        |
 |    [ ]    | Pantalla de inicio con los platos del próximo día de atención                         | RF-MEN02           |   5    | Alex        |
 |    [ ]    | Detalle de plato con galería de hasta 10 fotos                                        | RF-MEN03           |   5    | Alex        |
-|    [ ]    | API de menú: categorías, platos, etiquetas y disponibilidad                           | RF-MEN01–06        |   5    | Alex        |
-|    [ ]    | Administración de categorías y platos en backend y móvil                              | RF-ADM01, 02, 04   |   8    | Alex        |
-|    [ ]    | Carga de fotos: compresión con `sharp`, Supabase Storage y variante para vista previa | RF-ADM02, C-7      |   8    | Alex        |
-|    [ ]    | Disponibilidad de platos por fecha: administración y consulta                         | RF-ADM03, ADR-010  |   8    | Alex        |
+|    [ ]    | API de menú: categorías, platos, etiquetas y disponibilidad                           | RF-MEN01–06        |   5    | Fabián      |
+|    [ ]    | Administración de categorías y platos en backend y móvil                              | RF-ADM01, 02, 04   |   8    | Yeison      |
+|    [ ]    | Carga de fotos: compresión con `sharp`, Supabase Storage y variante para vista previa | RF-ADM02, C-7      |   8    | Yeison      |
+|    [ ]    | Disponibilidad de platos por fecha: administración y consulta                         | RF-ADM03, ADR-010  |   8    | Fabián      |
 |    [~]    | Calendario: incorporamos backend del PR #2; falta aceptación del panel móvil          | RF-ADM06, HU-05    |   8    | Fabián      |
-|    [ ]    | Pruebas de disponibilidad de plato por fecha                                          | RNF-12             |   3    | Alex        |
+|    [ ]    | Pruebas de disponibilidad de plato por fecha                                          | RNF-12             |   3    | Yeison      |
 | **Total** |                                                                                       |                    | **58** |             |
 
-**Situación real:** incorporamos los cuatro commits de [Fabián, PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), cabeza `76805a4`, conservando su autoría. No incluye interfaz móvil: EC-29 sigue En curso y Alex implementa A05 sobre ese contrato. Registramos pruebas e integración en [Encargos_Equipo.md](Encargos_Equipo.md). Los avances de carta/detalle en `yeison/inicio-sprint-2` se revisan para reutilizarlos, sin incorporar automáticamente la migración a Expo.
+**Situación real:** incorporamos los cuatro commits de [Fabián, PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), cabeza `76805a4`, conservando su autoría. No incluye interfaz móvil: EC-29 sigue En curso y Fabián implementa A05 sobre ese contrato. Registramos pruebas e integración en [Encargos_Equipo.md](Encargos_Equipo.md). Los avances de carta/detalle en `yeison/inicio-sprint-2` se revisan para reutilizarlos, sin incorporar automáticamente la migración a Expo.
 
-En Jira asignamos EC-29 a Fabián como responsable de coordinar el cierre del calendario; Alex conserva el panel A05 y Yeison la revisión. No encontramos avances de Alex publicados en las ramas/PR del repositorio al consultar el 15 de octubre.
+El reparto vigente distribuye EC-22/23/24 a Alex, EC-25/28/29 a Fabián y EC-26/27/30 a Yeison. Fabián conserva EC-29 y entrega también su panel antes asignado a Alex. No encontramos avances nuevos de Alex publicados al consultar el 15 de octubre; revisamos su rama antes de duplicar trabajo.
 
 **Si hay que recortar:** búsqueda, filtros, favoritos y caché sin conexión siguen en Sprint 5. No posponemos la integración del calendario que ya está publicado: la necesitamos para validar reservas. Seguimos A00–A06 de la guía de Alex.
 
@@ -140,19 +140,19 @@ En Jira asignamos EC-29 a Fabián como responsable de coordinar el cierre del ca
 
 |  Estado   | Tarea                                                                        | Requisitos                 |  Pts   | Responsable |
 | :-------: | ---------------------------------------------------------------------------- | -------------------------- | :----: | ----------- |
-|    [ ]    | Cálculo de franjas a partir del calendario, la duración y la granularidad    | RF-RES01, 02, 17           |   8    | Alex        |
-|    [ ]    | Validación de aforo en transacción serializable                              | RF-RES02, ADR-005          |   5    | Alex        |
+|    [ ]    | Cálculo de franjas a partir del calendario, la duración y la granularidad    | RF-RES01, 02, 17           |   8    | Fabián      |
+|    [ ]    | Validación de aforo en transacción serializable                              | RF-RES02, ADR-005          |   5    | Fabián      |
 |    [ ]    | Flujo de reserva en cuatro pasos: fecha, franja, pedido opcional, resumen    | RF-RES03–06                |   13   | Alex        |
-|    [ ]    | Cálculo del total y generación del ticket copiable                           | RF-RES05, RF-RES18         |   5    | Alex        |
+|    [ ]    | Cálculo del total y generación del ticket copiable                           | RF-RES05, RF-RES18         |   5    | Fabián      |
 |    [ ]    | Pantalla de solicitud enviada con instrucciones de pago y acción de WhatsApp | RF-RES07                   |   3    | Alex        |
-|    [ ]    | Bandeja de solicitudes con aprobación y rechazo con motivo                   | RF-RES09, RF-ADM08, 11, 12 |   8    | Alex        |
-|    [ ]    | Máquina de estados con validación de transiciones                            | §9.4                       |   5    | Alex        |
+|    [ ]    | Bandeja de solicitudes con aprobación y rechazo con motivo                   | RF-RES09, RF-ADM08, 11, 12 |   8    | Yeison      |
+|    [ ]    | Máquina de estados con validación de transiciones                            | §9.4                       |   5    | Yeison      |
 |    [ ]    | Mis reservas, detalle y cancelación                                          | RF-RES11, RF-RES12         |   5    | Alex        |
-|    [ ]    | Agenda del día y marcado de llegada                                          | RF-ADM09, RF-ADM10         |   5    | Alex        |
-|    [ ]    | Pruebas de aforo y de transiciones de estado                                 | RNF-12                     |   5    | Alex        |
+|    [ ]    | Agenda del día y marcado de llegada                                          | RF-ADM09, RF-ADM10         |   5    | Yeison      |
+|    [ ]    | Pruebas de aforo y de transiciones de estado                                 | RNF-12                     |   5    | Yeison      |
 | **Total** |                                                                              |                            | **62** |             |
 
-**Situación real:** en `dev` no hay módulo funcional de reservas y el botón móvil de nueva reserva no tiene acción. Alex trabaja A07–A09 con revisión de Yeison. Antes de A07 cerramos las diferencias de anticipación/duración entre acuerdos y Prisma/seed, y alineamos `EXPIRADA` en shared. No resolvemos esas diferencias por suposición.
+**Situación real:** en `dev` no hay módulo funcional de reservas y el botón móvil de nueva reserva no tiene acción. Distribuimos motor/total a Fabián, interfaz del comensal a Alex y estados/administración a Yeison, según Encargos_Equipo.md. Antes de A07 cerramos las diferencias de anticipación/duración entre acuerdos y Prisma/seed, y alineamos `EXPIRADA` en shared. No resolvemos esas diferencias por suposición.
 
 **Si hay que recortar:** podemos proponer diferir la agenda, pero lo acordamos explícitamente antes de quitar criterios. No damos por entregadas notificaciones, expiración automática ni inasistencia: siguen en Sprint 5.
 
