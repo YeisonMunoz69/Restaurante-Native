@@ -2,6 +2,10 @@
 
 **Corte: 9 de octubre de 2026.** Usamos `dev` para integrar y desplegar la API del equipo 7 en la VPS de desarrollo. Reservamos `main` para una VPS futura. Este resumen explica el recorrido; los comandos de preparación y diagnóstico están en [la guía de despliegue](Despliegue_VPS_Staging.md).
 
+**Actualización del 15 de octubre:** comprobamos en GitHub la Deploy key de solo lectura y desde la VPS la descarga de `dev` por SSH. Los secretos `SSH_*` permiten entrar de Actions a la VPS; la Deploy key permite leer el repositorio desde la VPS. La configuración y ubicación de ambas llaves quedan en la sección 7.1 de la guía. El clon siguió limpio y la API respondió con base conectada.
+
+Repetimos también el workflow completo sobre `0e27cb4`: [intento 2 de CI/CD dev](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598/attempts/2), con pruebas y despliegue en success. La evidencia quedó en Jira EC-72 y la salud HTTPS posterior volvió a indicar base conectada.
+
 ## Del cambio al despliegue
 
 Trabajamos en ramas personales y abrimos pull requests hacia `dev`. El archivo [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) hace que GitHub Actions instale dependencias con `npm ci`, compile el paquete compartido, genere el cliente Prisma, revise y pruebe la API, pruebe el móvil, compruebe el script y construya la imagen Docker. Un pull request ejecuta esas verificaciones, pero no despliega.

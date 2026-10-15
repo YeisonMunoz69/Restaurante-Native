@@ -2,6 +2,10 @@
 
 ## 1. Donde quedamos y que seguimos del docente
 
+**Actualización del 15 de octubre:** el dominio vigente es `https://encanto-campestre-dev.apolobyte.online`. La salida SSH de hoy confirma el clon limpio en `/root/projects/equipo-7`, `dev` en `0e27cb4`, contenedor `elev-d-e-7-api` saludable y PostgreSQL conectado. Configuramos además la Deploy key de solo lectura para la descarga VPS → GitHub, descrita en la sección 7.1. Conservamos los secretos SSH para la conexión Actions → VPS de la guía del docente; ambas conexiones cumplen funciones distintas. Las referencias al subdominio del equipo en los resultados anteriores son históricas.
+
+Para ubicarnos rápidamente en la VPS ejecutamos `cd /root/projects/equipo-7`, `git status --short --branch` y `docker ps --filter name=elev-d-e-7-api`. La configuración privada está en `apps/api/.env.vps`; Compose en `apps/api/docker-compose.vps.yml`; el script es `scripts/deploy-vps.sh`. Las llaves están en `/root/.ssh`; no copiamos sus archivos privados a documentación. El puerto verificado sigue siendo `127.0.0.1:8084`, hacia el 3000 del contenedor. Consultamos `nginx -T` filtrado por dominio/proxy para localizar el sitio actual sin asumir que su nombre de archivo cambió con el dominio.
+
 **Corte del 9 de octubre de 2026:** esta VPS ya está preparada y `dev` desplegada con la landing en `0e27cb4`. La última aceptación registrada pasó [CI/CD, ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598), y salud HTTPS respondió con base conectada. No repetimos esa prueba remota por actualizar documentación.
 
 Tenemos Ubuntu 24.04, Docker/Compose, Nginx y Certbot. El clon está en `/root/projects/equipo-7`; el sitio `apolobyte-e-7` atiende `equipo-7-elev-d-dev.apolobyte.online` y envía a `127.0.0.1:8084`, que Docker lleva al puerto 3000 de la API. El 8083 era el ejemplo inicial, no nuestro puerto vigente.
@@ -225,6 +229,38 @@ cat /root/.ssh/id_restaurante_dev
 ```
 
 La copiamos directamente a GitHub, incluyendo las lineas de inicio y fin. No pegamos esa salida en el chat, capturas, archivos versionados ni logs compartidos.
+
+### 7.1 Deploy key para que la VPS descargue este repositorio
+
+El 15 de octubre registramos en **Settings → Deploy keys** la clave «VPS dev equipo 7 - lectura del repositorio», sin habilitar escritura. Su huella es `SHA256:mP1ieomUCNZfJmmp2MQg24ODjWdl/mevJlNagDNgUNQ`; la privada permanece en `/root/.ssh/id_restaurante_repo` y la pública en el archivo terminado en `.pub`. Esta llave es distinta de `id_restaurante_dev`, que ya se usa para que Actions entre a la VPS mediante `authorized_keys` y `SSH_PRIVATE_KEY`.
+
+En `/root/.ssh/config` añadimos un alias exclusivo, conservando los de los otros proyectos:
+
+```sshconfig
+Host github-restaurante-dev
+  HostName github.com
+  User git
+  IdentityFile /root/.ssh/id_restaurante_repo
+  IdentitiesOnly yes
+  BatchMode yes
+  StrictHostKeyChecking yes
+  HostKeyAlias github.com
+```
+
+Probamos la lectura y después cambiamos únicamente el remoto `origin` del clon de este equipo. No cambiamos identidad Git ni archivos de otros equipos:
+
+```bash
+cd /root/projects/equipo-7
+git ls-remote ssh://git@github-restaurante-dev/YeisonMunoz69/Restaurante-Native.git refs/heads/dev
+git remote set-url origin ssh://git@github-restaurante-dev/YeisonMunoz69/Restaurante-Native.git
+git fetch origin dev
+git remote get-url origin
+git status --short --branch
+```
+
+La salida recibida devolvió `0e27cb445581f2ac1536c352d4a674c5a90246f3 refs/heads/dev`, completó el fetch por el alias y mostró `dev...origin/dev` sin cambios locales. El workflow existente usa ese remoto al hacer fetch/pull; no necesita recibir la llave privada del repositorio como otro secreto de Actions. La confianza del host GitHub ya estaba configurada y se mantuvo la comprobación estricta. En una VPS nueva verificamos primero su huella oficial, sin desactivar esa comprobación.
+
+Después repetimos el workflow completo: el intento 2 de [la ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598/attempts/2) terminó el 15 de octubre con `Build and test` y `Deploy dev to VPS` en success, sobre `0e27cb4`. La consulta HTTPS posterior devolvió API y base conectadas. Registramos esa evidencia en Jira EC-72; no hicimos un push de código para provocar la prueba.
 
 ## 8. Configurar los secretos de GitHub
 
