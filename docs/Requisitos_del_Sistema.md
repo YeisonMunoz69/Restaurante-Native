@@ -395,3 +395,9 @@ Dada la capacidad de ~52 horas por sprint (3 integrantes), los Sprints 3 y 5 tie
 3. **Requisitos definitivamente fuera del alcance del semestre (Backlog futuro):**
    - **`RF-RES16`**: Intercambio de platos confirmados en la app.
    - **`RF-ADM13`**: Tablero analítico e indicadores estadísticos agregados.
+
+## 10. Registro de ajustes y sincronización del documento
+
+El 15 de octubre acordamos que podemos modificar tareas, alcance y distribución durante el desarrollo, dejando la corrección directamente en Jira y en los documentos afectados. Seguimos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos decisión, motivo, criterios vigentes, responsable, sprint y referencias a archivos/commit. Los recortes de la sección 9 son opciones disponibles, no cambios aplicados automáticamente.
+
+El responsable del ajuste mantiene el aviso **«Pendiente actualizar requisitos en Drive y Word local»** con los RF/RNF o secciones afectadas y la corrección concreta. Actualizamos a mano `docs/Requisitos_del_Sistema.docx` y el documento de Drive; solo retiramos el pendiente al confirmar ambos. Esta sección se añadió al Markdown: falta copiarla a esos documentos y revisar allí la referencia al dominio de desarrollo y las dos conexiones SSH. Jira EC-14, EC-29 y EC-72 contienen el recordatorio; los cambios de esta revisión no alteran reglas funcionales de reservas ni carta.

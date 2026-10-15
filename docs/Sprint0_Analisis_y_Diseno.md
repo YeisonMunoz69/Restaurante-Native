@@ -995,7 +995,7 @@ El restaurante habilita platos especiales según el día. Se introduce `DISPONIB
 
 **Listo** — una historia puede entrar a un sprint cuando tiene identificador, criterios de aceptación redactados, estimación, dependencias identificadas y referencia visual si implica interfaz.
 
-**Hecho** — una historia termina cuando el código está integrado en `develop`, pasa lint y las pruebas existentes, los criterios de aceptación se verificaron en dispositivo, la documentación está actualizada, **no introduce literales de texto en el código** y **cada integrante puede explicar qué hace, por qué se eligió ese enfoque y qué alternativa se descartó**.
+**Hecho** — una historia termina cuando el código está integrado en `dev`, pasa lint y las pruebas existentes, los criterios de aceptación se verificaron en dispositivo, la documentación está actualizada, **no introduce literales de texto en el código** y **cada integrante puede explicar qué hace, por qué se eligió ese enfoque y qué alternativa se descartó**. Usamos `dev` como integración y despliegue de desarrollo; `main` se reserva para otra VPS de producción, según la actualización del equipo del 9 de octubre.
 
 Este último punto es el que sostiene la preparación para los parciales y conviene tratarlo como bloqueante, dado que la construcción se apoya en generación asistida.
 

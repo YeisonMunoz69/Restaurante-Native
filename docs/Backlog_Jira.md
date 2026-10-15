@@ -6,7 +6,9 @@
 
 Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
-**Corte de estado:** 8 de octubre de 2026. Uso `[x]` para criterios comprobados, `[~]` para una historia con aceptación pendiente y `[ ]` para trabajo no iniciado. Los puntos del resumen siguen siendo estimaciones originales, no puntos aceptados automáticamente.
+**Revisión del 15 de octubre:** los responsables vigentes están en Jira y [el plan](Plan_de_Sprints.md). EC-14 y EC-29 quedan En curso; EC-72 registra la verificación complementaria de CI/CD/Deploy key en Sprint 4, sin puntos nuevos, porque EC-21 no es accesible con nuestra sesión. Las tablas de estimación siguientes conservan el plan original; no son un recuento en vivo de Jira. Los cambios de alcance siguen [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos), con corrección directa en la actividad y recordatorio de requisitos en Drive/Word.
+
+**Corte de estado:** 9 de octubre de 2026. Usamos `[x]` para criterios comprobados, `[~]` para una historia parcial o publicada sin integrar/aceptar y `[ ]` para trabajo pendiente en `dev`. Los puntos del resumen siguen siendo estimaciones originales, no puntos aceptados automáticamente. El reparto actualizado y la validación de interfaz están en [Tareas_Alex.md](Tareas_Alex.md); el CSV conserva el importable original, no es un reporte sincronizado del avance actual.
 
 ---
 
@@ -32,7 +34,7 @@ Monorepo, proyectos base, esquema de datos, contenedor y despliegue. Es la base 
 
 _7 historias · 35 puntos_
 
-### [~] Configurar monorepo, convenciones y estructura de proyectos
+### [x] Configurar monorepo, convenciones y estructura de proyectos
 
 `Sprint 1` · `3 pts` · `High` · `infra`
 
@@ -41,10 +43,10 @@ Dejar el repositorio listo para que los tres proyectos convivan y el equipo trab
 **Criterios de aceptación**
 
 - [x] El monorepo contiene apps/mobile, apps/api, la carpeta reservada apps/web y packages/shared
-- [~] Lint y formato están disponibles para API/móvil; `apps/web` aún es un placeholder con README y se implementa en Sprint 4
+- [x] Las herramientas de API/móvil están disponibles; `apps/web` queda reservado para Sprint 4 y su implementación no bloquea la historia de cimientos
 - [x] El README explica como levantar cada proyecto desde cero
 - [x] Existe .env.example documentado, y .env esta ignorado por git
-- [~] CI/CD de `dev` preparado con instalación limpia, lint/build/test y Docker; pendiente publicar los ajustes y validar una ejecución completa en GitHub
+- [x] CI/CD de `dev` publicado y verificado con instalación limpia, lint/build/test, Docker y despliegue SSH; evidencia en la guía de despliegue
 
 ### [x] Inicializar la app React Native con navegacion de cinco destinos
 
@@ -60,7 +62,7 @@ Tener la aplicacion corriendo en Android con el esqueleto de navegacion definiti
 - [x] El tema claro y oscuro se resuelve con fichas de diseno, sin colores literales en los componentes
 - [x] La orientacion esta fijada en vertical
 
-### [x] Configurar i18n y externalizar los textos desde el primer commit
+### [~] Configurar i18n y externalizar los textos desde el primer commit
 
 `Sprint 1` · `3 pts` · `High` · `movil` · `RNF-03, ADR-009`
 
@@ -69,7 +71,7 @@ Cumplir la condicion del cliente de que ningun texto de interfaz este escrito en
 **Criterios de aceptación**
 
 - [x] i18next esta configurado con espanol como idioma inicial
-- [x] Todos los textos de las pantallas existentes provienen de archivos de recursos
+- [~] i18n funciona, pero todavía hay literales y contenido de muestra en pantallas; Alex los retira en A00/A02 al conectar datos reales
 - [x] Existe una verificacion o convencion documentada para detectar literales antes de integrar
 - [x] Los formatos de moneda (COP sin decimales) y fecha (dd/mm/aaaa) estan centralizados en utilidades
 
@@ -113,7 +115,7 @@ Poder probar la aplicacion con contenido verosimil desde el primer dia.
 - [x] El calendario tiene marcados los proximos fines de semana y festivos
 - [x] Existen las tres cuentas de prueba: comensal, staff y dueno
 
-### [~] Preparar y desplegar el contenedor del backend en la VPS
+### [x] Preparar y desplegar el contenedor del backend en la VPS
 
 `Sprint 1` · `5 pts` · `High` · `infra` · `ADR-008`
 
@@ -121,13 +123,15 @@ Tener un entorno de desarrollo compartido en esta VPS. Reservamos producción y 
 
 **Criterios de aceptación**
 
-- [ ] La imagen se construye y ejecuta en el host reservado
-- [ ] Nuestra API responde por HTTPS en equipo-7-elev-d-dev.apolobyte.online; el sitio SSL existente aún apunta al ejemplo
+- [x] La imagen se construye y ejecuta en el host reservado
+- [x] Nuestra API responde por HTTPS en equipo-7-elev-d-dev.apolobyte.online; Nginx apunta a loopback 8084
 - [x] La plantilla mantiene las variables fuera del repositorio y el archivo real está ignorado
 - [x] El procedimiento manual de staging queda documentado en `docs/Despliegue_VPS_Staging.md`
 - [x] Existe un perfil Compose de staging sin bind mounts, con loopback, healthcheck de DB y Swagger desactivado
-- [ ] La imagen de staging se construye y verifica en el host reservado
-- [ ] Un push a dev que pase los filtros despliega por SSH y deja API/PostgreSQL saludables; main queda fuera
+- [x] La imagen de staging se construye y verifica en el host reservado
+- [x] Un push a dev que pase los filtros despliega por SSH y deja API/PostgreSQL saludables; main queda fuera
+
+Comprobamos despliegue y landing en `0e27cb4`, [ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598). No repetimos una prueba remota por editar documentación ni usamos este resultado para dar por probados módulos aún no integrados.
 
 ---
 
@@ -310,11 +314,13 @@ Reflejar que el restaurante habilita platos especiales segun el dia.
 - Existe la accion de copiar la seleccion de otra fecha
 - La carta del comensal refleja el cambio al consultar esa fecha
 
-### Configurar el calendario de atencion
+### [~] Configurar el calendario de atencion
 
 `Sprint 2` · `8 pts` · `Highest` · `movil,backend` · `RF-ADM06, HU-05`
 
 Representar una operacion discontinua: fines de semana, festivos y aperturas por reserva.
+
+Fabián publicó el backend en [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4` al revisar). Sigue sin integrar en este corte. No marcamos los criterios completos hasta revisar/integrar API y aceptar el panel móvil A05 de Alex; no duplicamos el backend existente.
 
 **Criterios de aceptación**
 

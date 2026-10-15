@@ -6,13 +6,13 @@ Trabajamos en el computador de cada integrante y usamos la VPS como destino de p
 
 Nuestro flujo es: rama personal → Pull Request a `dev` → filtros → integración a `dev` → despliegue por SSH. También configuramos el despliegue para un push directo a `dev`, pero preferimos el Pull Request para revisar el trabajo. Reservamos `main` para la futura VPS de producción; no desplegamos esa rama en este servidor.
 
-El 8 de octubre verificamos el despliegue manual: migraciones sin pendientes, contenedor saludable en `127.0.0.1:8084` y salud HTTPS con `status: ok` y `database: connected`, según las salidas SSH compartidas. Después pasó el intento 3 de [CI/CD dev, ejecución 37829822767](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37829822767), sobre `db937f1`. Ya podemos entregar funcionalidades mediante PR a `dev`; seguimos comprobando cada despliegue nuevo. La [guía de despliegue](Despliegue_VPS_Staging.md) queda como referencia para volver a preparar un servidor.
+El 8 de octubre verificamos el despliegue manual: migraciones sin pendientes, contenedor saludable en `127.0.0.1:8084` y salud HTTPS con `status: ok` y `database: connected`, según las salidas SSH compartidas. Después pasó [CI/CD dev, ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598), con la landing integrada en `0e27cb4`. Ya podemos entregar funcionalidades mediante PR a `dev`; seguimos comprobando cada despliegue nuevo. La [guía de despliegue](Despliegue_VPS_Staging.md) distingue operación diaria de preparación inicial.
 
 No compartimos `.env`, llaves privadas, contraseñas ni tokens. Consultamos KeePass. Sigue pendiente confirmar la rotación de las credenciales expuestas; que el despliegue funcione no demuestra que se hayan rotado.
 
 ## 2. Preparar nuestra máquina
 
-Usamos Node 22 actualizado (22.22.3 o superior en esa línea), Git y los requisitos Android del README. Después de que `dev` esté publicada, desde PowerShell:
+Usamos Node 22 actualizado (22.22.3 o superior en esa línea), Git y los requisitos Android del README. `dev` ya está publicada; para un clon nuevo, desde PowerShell:
 
 ```powershell
 git clone --branch dev https://github.com/YeisonMunoz69/Restaurante-Native.git
@@ -62,19 +62,19 @@ No usamos `git push --force` sobre `dev`. Si falta proteger la rama, Yeison pued
 
 ## 4. Trabajo por compañero
 
-Tomamos las responsabilidades del [plan de sprints](Plan_de_Sprints.md). Esta tabla define el siguiente trabajo, no afirma que las funcionalidades estén terminadas.
+Actualizamos el reparto el 9 de octubre a petición del equipo. Conservamos las entregas publicadas y encargamos a Alex gran parte de la recuperación de sprints 2 y 3. No afirmamos que las funcionalidades siguientes estén terminadas.
 
-| Integrante | Sprint 2: primera entrega | Sprint 3: después de carta y calendario |
-| --- | --- | --- |
-| Alex | API de categorías, platos, etiquetas y disponibilidad; pruebas por fecha. Después, fotos con sharp y Supabase Storage. | Franjas de reserva, aforo en transacción serializable y pruebas de concurrencia/transiciones. |
-| Fabián | Administración de categorías/platos, disponibilidad por fecha y calendario de atención con excepciones. | Estados de reserva, aprobación/rechazo, bandeja y agenda con marcado de llegada. |
-| Yeison | Revisar los avances móviles de carta y detalle en su rama anterior, integrarlos con la API real y preparar el uso del dominio dev. | Formulario de reserva, pedido/resumen, ticket, instrucciones de pago/WhatsApp y mis reservas. |
+| Integrante | Sprint 2: primera entrega                                                                                    | Sprint 3: después de carta y calendario                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Alex       | A00–A06: configuración móvil, API/carta/detalle, administración, disponibilidad, panel de calendario y fotos | A07–A09: franjas/aforo, flujo del comensal, estados, solicitudes y agenda, en PR pequeños         |
+| Fabián     | Atender revisión/correcciones del calendario publicado en PR #2; no rehacerlo                                | Apoyar revisión de reglas de datos/concurrencia; nueva implementación solo por acuerdo            |
+| Yeison     | Revisar PR #2, coordinar recuperación de carta/detalle anterior y validar interfaz/integración               | Revisar entregas, decisiones de negocio y evidencia; verificar Actions y nube después de integrar |
 
 Antes de duplicar la carta y la galería, revisamos los commits `34e17b9` y `5b2d5cd` de `yeison/inicio-sprint-2`. También existe `5ec3d22` con una migración a Expo que necesita revisión separada: no la integramos automáticamente en esta preparación del despliegue. Que esos avances existan en una rama no significa que estén entregados en `dev` ni aceptados de extremo a extremo.
 
-Acordamos primero entre Alex y Fabián las rutas, DTOs y responsabilidades del menú para no implementar dos veces el mismo CRUD. Compartimos validaciones/tipos en `packages/shared` cuando corresponda. Cada cambio de esquema incluye su migración versionada y una explicación del efecto en los datos; en la VPS usamos `migrate deploy`, nunca `migrate reset` ni `db push`.
+Fabián sí publicó su trabajo: [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion`, cabeza `76805a4` al revisar. Todavía no está integrado en `dev`. Alex espera su integración para consumir el calendario y no duplica sus servicios. Compartimos validaciones/tipos en `packages/shared` cuando corresponda; coordinamos cambios mínimos del índice y `AppModule`. Cada cambio de esquema incluye migración versionada y explicación del efecto en datos; en la VPS usamos `migrate deploy`, nunca `migrate reset` ni `db push`.
 
-Dividimos la primera entrega en [encargos concretos de Sprint 2](Encargos_Sprint2.md): Alex empieza por la API pública del menú y Fabián por el calendario. Todavía no damos por terminados administración de carta, carga de fotos, pantallas móviles ni reservas.
+La secuencia vigente, contratos, dependencias, pruebas de interfaz y prompt inicial están en [Tareas_Alex.md](Tareas_Alex.md). Alex empieza únicamente por A00/A01; seguimos pendientes de carta conectada, administración, fotos y reservas. No editamos los mismos módulos en paralelo sin acordarlo.
 
 Para cerrar una historia comprobamos su criterio de aceptación real: pantallas conectadas, permisos administrativos y pruebas. Actualizamos el plan/backlog con la evidencia, no solo porque un archivo compile.
 
@@ -83,12 +83,12 @@ Para cerrar una historia comprobamos su criterio de aceptación real: pantallas 
 Después de integrar revisamos **Actions → CI/CD dev**: deben pasar `Build and test` y `Deploy dev to VPS`. Luego comprobamos:
 
 ```powershell
-Invoke-RestMethod https://equipo-7-elev-d-dev.apolobyte.online/api/v1/health
+Invoke-RestMethod https://encanto-campestre-dev.apolobyte.online/api/v1/health
 ```
 
 Esperamos `status: ok` y `database: connected`. La salud demuestra que la API y PostgreSQL responden; no reemplaza las pruebas funcionales del módulo que acabamos de entregar.
 
-La app móvil de esta rama todavía usa direcciones locales de desarrollo. Configurar y probar el cliente contra el dominio de la VPS es una tarea de Yeison; el `API_URL` del archivo del servidor no cambia automáticamente la URL compilada en el teléfono. La app React Native no se publica como página web dentro de este contenedor.
+La app móvil de esta rama todavía usa direcciones locales de desarrollo. Alex configura y prueba el cliente contra el dominio de la VPS en A00, con revisión de Yeison; el `API_URL` del archivo del servidor no cambia automáticamente la URL compilada en el teléfono. La app React Native no se publica como página web dentro de este contenedor.
 
 Si algo falla, identificamos el primer paso rojo y lo corregimos en nuestra rama. Para SSH, variables, Nginx, migraciones o contenedor `unhealthy`, seguimos el diagnóstico de la guía. No detenemos contenedores ni modificamos sitios de otros equipos.
 
@@ -97,3 +97,17 @@ Si algo falla, identificamos el primer paso rojo y lo corregimos en nuestra rama
 Durante la construcción local del 8 de octubre, npm reportó una alerta crítica de `proxy-addr` en las dependencias de la API. Con autorización de Yeison actualizamos solo ese paquete de 2.0.7 a 2.0.8, versión corregida según la [alerta oficial](https://github.com/advisories/GHSA-jqcg-44mw-7w3h). La auditoría de dependencias de ejecución de API/shared ya reporta cero vulnerabilidades; también la etapa de Docker que elimina dependencias de desarrollo reportó cero. Esto corresponde a esa comprobación y ese alcance, no garantiza ausencia de fallos ni reemplaza nuevas auditorías.
 
 La auditoría del monorepo también reportó alertas de dependencias móviles y de herramientas, entre ellas [shell-quote](https://github.com/advisories/GHSA-pqg4-j6r4-53mv). Las separamos de la API y revisamos las actualizaciones compatibles, sin ejecutar `npm audit fix --force` ni degradar React Native a ciegas. El parche de `proxy-addr` no modifica el código funcional ni resuelve esas otras alertas.
+
+## 7. Mantener Jira y requisitos al cambiar el trabajo
+
+Desde el 15 de octubre dejamos explícito el acuerdo de [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos). Podemos ajustar tareas durante el proceso. Registramos en la actividad afectada la decisión, su motivo, nuevos criterios de aceptación, responsable y sprint; después alineamos los requisitos Markdown, plan y encargos relacionados. La entrega indica las claves de Jira, rutas/secciones cambiadas y commit, para encontrar la corrección sin reconstruir el chat.
+
+Si cambia un requisito, dejamos en esa actividad y en la entrega el recordatorio **«Pendiente actualizar requisitos en Drive y Word local»**, con el RF/RNF o sección y el texto concreto que debe corregirse en `docs/Requisitos_del_Sistema.docx`. El responsable confirma manualmente ambos documentos antes de quitar el pendiente. No reescribimos los archivos académicos como efecto secundario de editar Markdown.
+
+En la revisión del 15 de octubre, `origin/dev` continúa en `0e27cb4`. No encontramos una rama o PR de menú de Alex en este repositorio; su trabajo local o en otro repositorio requiere que nos comparta la referencia. El PR #2 de calendario sigue abierto: conservamos su autoría y no damos por integrado su backend ni por terminado el panel móvil. El reparto de sprints 2/3 sigue en [Tareas_Alex.md](Tareas_Alex.md); para sprints 4/5 conservamos el plan y para Sprint 6 asignamos a Yeison la coordinación de las actividades que antes decían «Equipo», con colaboración de los tres.
+
+Corregimos EC-14 (i18n) y EC-29 (calendario) a En curso, con comentarios de evidencia y responsables Alex y Fabián, respectivamente. Conservamos en Listo los cimientos entregados de Sprint 1. Creamos [EC-72](https://yjmunoz.atlassian.net/browse/EC-72) para registrar el despliegue/Deploy key porque EC-21 no es accesible; quedó en Listo, a cargo de Yeison, dentro de Sprint 4 y de la épica EC-1, sin puntos nuevos. El intento 2 de [CI/CD dev](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598) pasó verificación y despliegue el 15 de octubre. Dejamos el pendiente manual de requisitos en las tres actividades.
+
+Comprobamos el filtro `project = EC AND assignee IS EMPTY`: devolvió cero actividades. El proyecto conserva 60 historias y 11 épicas tras añadir EC-72; las épicas tienen una persona que coordina y los encargos de los sprints mantienen su responsable de implementación. La revisión de estados no convierte el trabajo de una rama pendiente en funcionalidad entregada en `dev`.
+
+Las épicas EC-1, EC-2, EC-4 y EC-10 pasan a En curso porque contienen entregas parciales de plataforma, cuenta, calendario y seguridad. No las cerramos por haber terminado solo algunas historias. La norma de sincronización está también en `docs/Requisitos_del_Sistema.md`, sección 10; sigue pendiente copiar esa sección a Drive y Word.
