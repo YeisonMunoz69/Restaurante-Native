@@ -1,5 +1,7 @@
 # Entregas pendientes de Alex: carta y reservas
 
+**Actualización de integración, 15 de octubre:** el backend de calendario de Fabián se incorpora a la base del equipo mediante su PR #2; verificamos el resultado publicado en `dev` y Actions antes de comenzar A05. El reparto detallado A00–A09 se conserva. Si ya tenemos avances, primero los publicamos y contrastamos sus criterios; no repetimos implementaciones ni marcamos historias completas por tener solo archivos locales. Usamos el procedimiento y los prompts actualizados de [Encargos_Equipo.md](Encargos_Equipo.md).
+
 **Corte: 9 de octubre de 2026.** Revisamos `dev` en `0e27cb4`. Este documento reemplaza el reparto inicial de Sprint 2: encargamos a Alex las entregas siguientes de backend y móvil, por partes. No significa que ya estén implementadas ni cambia el alcance académico acordado.
 
 **Revisión del 15 de octubre:** asignamos a Alex EC-14, EC-22 a EC-28 y EC-30 a EC-40 según este reparto. El calendario EC-29 tiene a Fabián como responsable de coordinar su cierre, con A05 a cargo de Alex. El repositorio aún no muestra una rama o PR de menú de Alex; antes de repetir trabajo comprobamos sus avances locales. Podemos ajustar estas entregas con la corrección registrada en Jira y la sincronización de [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos), recordando los requisitos manuales de Drive/Word.

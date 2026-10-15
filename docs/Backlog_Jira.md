@@ -320,7 +320,7 @@ Reflejar que el restaurante habilita platos especiales segun el dia.
 
 Representar una operacion discontinua: fines de semana, festivos y aperturas por reserva.
 
-Fabián publicó el backend en [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4` al revisar). Sigue sin integrar en este corte. No marcamos los criterios completos hasta revisar/integrar API y aceptar el panel móvil A05 de Alex; no duplicamos el backend existente.
+Incorporamos el backend de Fabián del [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4`), conservando sus commits. EC-29 sigue parcial hasta aceptar el panel móvil A05 de Alex y el recorrido funcional. El procedimiento de entrega y los encargos actualizados están en [Encargos_Equipo.md](Encargos_Equipo.md); no duplicamos el backend existente.
 
 **Criterios de aceptación**
 

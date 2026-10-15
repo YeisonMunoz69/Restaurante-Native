@@ -62,6 +62,8 @@ No usamos `git push --force` sobre `dev`. Si falta proteger la rama, Yeison pued
 
 ## 4. Trabajo por compañero
 
+**Actualización del 15 de octubre:** integramos la documentación del PR #3 y preparamos la incorporación del backend del PR #2 conservando los commits de Fabián. El reparto anterior sigue vigente, pero ya no pedimos rehacer el calendario. Consultamos [Encargos_Equipo.md](Encargos_Equipo.md) para publicar avances existentes, validar criterios, actualizar Jira y continuar desde `dev`. Las referencias posteriores a PR abiertos describen el corte anterior; comprobamos su estado actual en GitHub.
+
 Actualizamos el reparto el 9 de octubre a petición del equipo. Conservamos las entregas publicadas y encargamos a Alex gran parte de la recuperación de sprints 2 y 3. No afirmamos que las funcionalidades siguientes estén terminadas.
 
 | Integrante | Sprint 2: primera entrega                                                                                    | Sprint 3: después de carta y calendario                                                           |
