@@ -116,11 +116,11 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 |    [ ]    | Administración de categorías y platos en backend y móvil                              | RF-ADM01, 02, 04   |   8    | Alex        |
 |    [ ]    | Carga de fotos: compresión con `sharp`, Supabase Storage y variante para vista previa | RF-ADM02, C-7      |   8    | Alex        |
 |    [ ]    | Disponibilidad de platos por fecha: administración y consulta                         | RF-ADM03, ADR-010  |   8    | Alex        |
-|    [~]    | Calendario: backend publicado en PR #2; faltan integración y panel móvil              | RF-ADM06, HU-05    |   8    | Fabián      |
+|    [~]    | Calendario: incorporamos backend del PR #2; falta aceptación del panel móvil          | RF-ADM06, HU-05    |   8    | Fabián      |
 |    [ ]    | Pruebas de disponibilidad de plato por fecha                                          | RNF-12             |   3    | Alex        |
 | **Total** |                                                                                       |                    | **58** |             |
 
-**Situación real:** [Fabián publicó el PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2) desde `fabian/calendario-atencion` (`76805a4` al revisar). No está integrado en este corte ni incluye interfaz móvil. Revisamos sus pruebas antes de aceptar el backend; Alex implementa el panel A05 después de la integración. Los avances de carta/detalle en `yeison/inicio-sprint-2` se revisan para reutilizarlos, sin incorporar automáticamente la migración a Expo.
+**Situación real:** incorporamos los cuatro commits de [Fabián, PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), cabeza `76805a4`, conservando su autoría. No incluye interfaz móvil: EC-29 sigue En curso y Alex implementa A05 sobre ese contrato. Registramos pruebas e integración en [Encargos_Equipo.md](Encargos_Equipo.md). Los avances de carta/detalle en `yeison/inicio-sprint-2` se revisan para reutilizarlos, sin incorporar automáticamente la migración a Expo.
 
 En Jira asignamos EC-29 a Fabián como responsable de coordinar el cierre del calendario; Alex conserva el panel A05 y Yeison la revisión. No encontramos avances de Alex publicados en las ramas/PR del repositorio al consultar el 15 de octubre.
 

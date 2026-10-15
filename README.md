@@ -8,15 +8,15 @@ Trabajamos Yeison Muñoz, Alex Santacruz y Fabián Hoyos. Respetamos [Reglas.md]
 
 Revisamos `dev` en `0e27cb4`. No confundimos una maqueta, una rama publicada o una landing con una funcionalidad terminada.
 
-| Parte               | Estado                                                                                                                                                                |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| API y autenticación | Docker, Prisma/migraciones, registro/login, JWT rotatorio, guards y salud con consulta a PostgreSQL implementados                                                     |
-| VPS de desarrollo   | API en loopback 8084, Nginx/HTTPS y CI/CD de `dev` comprobados en la última aceptación registrada                                                                     |
-| Landing             | «En construcción…» integrada y desplegada en la raíz del dominio; no es la app móvil                                                                                  |
-| Android             | Cinco pestañas, temas, i18n y autenticación con Keychain; todavía hay literales/datos de muestra que debemos retirar                                                  |
-| Carta/reservas      | Carta de ejemplo, sin menú conectado; «Nueva reserva» todavía no tiene acción. No damos por terminados los sprints 2 y 3                                              |
-| Calendario          | Fabián publicó el backend en [PR #2 hacia dev](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2); sigue sin integrar en este corte y no incluye panel móvil |
-| Web/SSR y noticias  | `apps/web` sigue reservado para Sprint 4; el muro móvil actual no consume noticias reales                                                                             |
+| Parte               | Estado                                                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API y autenticación | Docker, Prisma/migraciones, registro/login, JWT rotatorio, guards y salud con consulta a PostgreSQL implementados                                          |
+| VPS de desarrollo   | API en loopback 8084, Nginx/HTTPS y CI/CD de `dev` comprobados en la última aceptación registrada                                                          |
+| Landing             | «En construcción…» integrada y desplegada en la raíz del dominio; no es la app móvil                                                                       |
+| Android             | Cinco pestañas, temas, i18n y autenticación con Keychain; todavía hay literales/datos de muestra que debemos retirar                                       |
+| Carta/reservas      | Carta de ejemplo, sin menú conectado; «Nueva reserva» todavía no tiene acción. No damos por terminados los sprints 2 y 3                                   |
+| Calendario          | Incorporamos el backend de Fabián del [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2); falta aceptar el panel móvil A05 y cerrar EC-29 |
+| Web/SSR y noticias  | `apps/web` sigue reservado para Sprint 4; el muro móvil actual no consume noticias reales                                                                  |
 
 La última aceptación de despliegue registrada pasó [CI/CD dev, ejecución 37848652598](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/37848652598). El [nuevo dominio dev](https://encanto-campestre-dev.apolobyte.online/) y su [salud HTTPS](https://encanto-campestre-dev.apolobyte.online/api/v1/health) respondieron el 9 de octubre. Ese resultado no prueba módulos todavía pendientes ni sustituye revisar cada despliegue nuevo.
 
@@ -24,6 +24,7 @@ La última aceptación de despliegue registrada pasó [CI/CD dev, ejecución 378
 
 - [Plan y estado de sprints](docs/Plan_de_Sprints.md): conservamos fechas originales y mostramos el atraso.
 - [Tareas de Alex](docs/Tareas_Alex.md): reparto actualizado, entregas pequeñas, dependencias y pruebas de interfaz.
+- [Encargos actualizados del equipo](docs/Encargos_Equipo.md): publicación de avances existentes, prompts para Alex/Fabián y cierre con evidencia en Jira.
 - [Flujo del equipo](docs/Flujo_Equipo_Dev.md): ramas personales, PR a `dev`, revisión y entrega sin acceso SSH.
 - [Regla de ajustes de alcance](Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): podemos corregir tareas durante el proceso, dejando la corrección en Jira, documentación y el pendiente manual de requisitos en Drive/Word.
 - [Despliegue y diagnóstico](docs/Despliegue_VPS_Staging.md): preparación de servidor nuevo, trabajo diario y mantenimiento de la landing.
