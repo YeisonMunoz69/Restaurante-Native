@@ -1,5 +1,7 @@
 # Primera entrega del calendario de atención
 
+**Continuación del 16 de octubre:** conservamos este backend integrado y añadimos su panel y seis pruebas de transacciones con PostgreSQL aislado. Recorrido Android, capturas y pendientes de aceptación en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). EC-29 sigue En curso; las limitaciones y la confirmación de cierre descritas aquí se conservan.
+
 Implementamos el backend de RF-ADM06 / HU-05 del Sprint 2. Consultamos un día y el próximo día abierto, mantenemos reglas semanales y excepciones por fecha, y advertimos antes de cerrar fechas con reservas confirmadas. No cerramos la historia móvil ni todo el sprint con esta entrega.
 
 Trabajamos con `Restaurant`, `TimeSlot` y `CalendarDay` existentes. No cambiamos el esquema ni creamos migraciones. Compartimos validaciones y tipos en `packages/shared/src/schemas/calendar.schema.ts`. Registramos `CalendarModule` en `AppModule` y exportamos desde `AuthModule` su JWT configurado y las guardias necesarias.

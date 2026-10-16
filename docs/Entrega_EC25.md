@@ -1,6 +1,8 @@
 # Entrega EC-25: API pública de menú
 
-**Responsable:** Fabián Hoyos · **Fecha:** 15 de octubre de 2026 · **Estado:** En curso, pendiente de revisión e integración.
+**Responsable:** Fabián Hoyos · **Fecha:** 15 de octubre de 2026 · **Estado:** Listo, integrado y verificado en HTTPS.
+
+Integramos el PR #6 por GitHub con merge `f8271b935732bde2723cefd9e621f9203e855930`, conservando commits y después de revisión y filtros verdes. [CI/CD dev 38840180341](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/38840180341) completó build/test y despliegue VPS. Verificamos las cuatro rutas públicas en HTTPS: 6 categorías, 5 etiquetas, 16 platos, precio COP numérico y consultas de 2026-10-18/19. Salud `ok`, base `connected`. Pasamos Jira EC-25 a **Listo**, comentario `10039`. Las secciones siguientes conservan la evidencia del PR y sus pendientes históricos, sustituidos por este resultado de integración.
 
 **PR:** [#6, base dev](https://github.com/YeisonMunoz69/Restaurante-Native/pull/6) · **Rama:** `fabian/api-menu-publico`.
 

@@ -236,7 +236,7 @@ Presentar el plato con la mayor fuerza visual posible.
 
 Servir la carta al cliente movil resolviendo la disponibilidad por fecha.
 
-**EC-25, corte 15 de octubre:** Fabián prepara contrato/API en `fabian/api-menu-publico`, sin cerrar la historia antes de revisión y merge. Documentamos precio numérico COP acordado, rutas, criterios, prueba con dobles y PostgreSQL aislado en [API_Menu_EC25.md](API_Menu_EC25.md). La administración por fecha sigue en EC-28; no la confundimos con su consulta pública. Pendiente actualizar requisitos en Drive y Word local: secciones 8 (reparto vigente) y 10 (gestión de cambios/sincronización).
+**EC-25, corte actualizado 15 de octubre:** PR #6 integrado con merge `f8271b9`, CI/CD dev 38840180341 correcto y cuatro rutas HTTPS verificadas con datos reales. Jira Listo, comentario 10039. Contratos en [API_Menu_EC25.md](API_Menu_EC25.md), evidencia en [Entrega_EC25.md](Entrega_EC25.md). EC-28 sigue En curso: API/copia efectiva confirmada integrada por PR #7 (`19c5d93`), panel y aceptación Android en curso. EC-29 conserva su backend integrado y sigue En curso hasta panel y aceptación, a cargo de Fabián. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/copia efectiva confirmada, configuración compartida y secciones 8/10.
 
 **Criterios de aceptación**
 
@@ -324,7 +324,7 @@ Reflejar que el restaurante habilita platos especiales segun el dia.
 
 Representar una operacion discontinua: fines de semana, festivos y aperturas por reserva.
 
-Incorporamos el backend de Fabián del [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4`), conservando sus commits. EC-29 sigue parcial hasta aceptar el panel móvil A05 de Alex y el recorrido funcional. El procedimiento de entrega y los encargos actualizados están en [Encargos_Equipo.md](Encargos_Equipo.md); no duplicamos el backend existente.
+Incorporamos el backend de Fabián del [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4`), conservando sus commits. EC-29 sigue parcial hasta integrar y aceptar el panel móvil A05 de Fabián y el recorrido funcional. Registramos capturas Android, pruebas con PostgreSQL aislado y pendientes en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). El procedimiento vigente está en [Encargos_Equipo.md](Encargos_Equipo.md); no duplicamos el backend existente.
 
 **Criterios de aceptación**
 
