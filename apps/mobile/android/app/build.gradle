@@ -7,6 +7,10 @@ apply plugin: "com.facebook.react"
  * By default you don't need to apply any configuration, just uncomment the lines you need.
  */
 react {
+    // Resuelvo los paquetes desde la raíz del monorepo sin duplicar instalaciones.
+    reactNativeDir = file("../../../../node_modules/react-native")
+    codegenDir = file("../../../../node_modules/@react-native/codegen")
+    cliFile = file("../../../../node_modules/react-native/cli.js")
     /* Folders */
     //   The root of your project, i.e. where "package.json" lives. Default is '../..'
     // root = file("../../")
@@ -73,6 +77,19 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
+    // Acorto las rutas temporales de C++ en Windows para respetar el límite de Ninja.
+    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        externalNativeBuild {
+            cmake {
+                buildStagingDirectory file("${System.getProperty('java.io.tmpdir')}/encanto-native-${rootDir.absolutePath.hashCode()}")
+            }
+        }
+        defaultConfig {
+            externalNativeBuild {
+                cmake { arguments "-DCMAKE_OBJECT_PATH_MAX=250" }
+            }
+        }
+    }
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
