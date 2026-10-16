@@ -12,3 +12,6 @@ export * from './schemas/calendar.schema';
 
 // Compartimos el contrato de lectura que consumen carta y administración.
 export * from './schemas/menu.schema';
+
+// Administramos excepciones por fecha sin cambiar la disponibilidad general.
+export * from './schemas/dish-availability.schema';
