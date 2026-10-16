@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler, ScrollView, StyleSheet } from 'react-native';
+import { BackHandler, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CalendarRestaurantSchema } from '@encanto/shared';
@@ -64,17 +64,14 @@ export function AttentionScreen({ onBack }: { onBack: () => void }) {
               selected={tab === 'availability'}
               onPress={() => setTab('availability')}
             />
-            {tab === 'calendar' ? (
-              <CalendarPanel
-                key={settings.restauranteId}
-                restauranteId={settings.restauranteId}
-              />
-            ) : (
-              <AvailabilityPanel
-                key={settings.restauranteId}
-                restauranteId={settings.restauranteId}
-              />
-            )}
+            {/* Separo el árbol nativo de cada formulario para no reutilizar controles del otro panel. */}
+            <View key={`${tab}:${settings.restauranteId}`} collapsable={false}>
+              {tab === 'calendar' ? (
+                <CalendarPanel restauranteId={settings.restauranteId} />
+              ) : (
+                <AvailabilityPanel restauranteId={settings.restauranteId} />
+              )}
+            </View>
           </>
         ) : (
           <Note>{t('attention.configureRestaurant')}</Note>
