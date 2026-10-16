@@ -43,6 +43,7 @@ jest.mock('react-native-safe-area-context', () => {
 
   return {
     SafeAreaProvider: ({ children }) => children,
+    SafeAreaView: require('react-native').View,
     SafeAreaConsumer: SafeAreaInsetsContext.Consumer,
     SafeAreaInsetsContext,
     SafeAreaFrameContext,
