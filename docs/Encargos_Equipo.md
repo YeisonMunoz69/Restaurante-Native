@@ -49,6 +49,8 @@ Validamos en Android carga, éxito, vacío, error/reintento, cambio de fecha y p
 
 ## Fabián: consolidar calendario y apoyar aceptación
 
+**Acuerdo del 16 de octubre:** publicamos el panel en PR #8, conservando backend y contratos. Fabián aplaza el recorrido Android restante para realizarlo con su celular conectado, sin Android Studio ahora. Conservamos EC-28/29 En curso y el detalle de criterios/evidencia en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md); el aplazamiento no es aceptación funcional. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/RF-ADM06, configuración compartida, aceptación móvil aplazada y secciones 8/10.
+
 No rehacemos el backend publicado. Sincronizamos nuestra rama con `origin/dev` después del merge del PR #2. Fabián lleva EC-25, EC-28 y EC-29, incluyendo el panel antes asignado a Alex. Revisa el contrato de [Calendario_Atencion.md](Calendario_Atencion.md): reglas semanales, excepciones, IDs conservados en PUT y confirmación 409. EC-29 sigue En curso mientras falte interfaz y aceptación completa.
 
 Como siguiente entrega comprobamos persistencia y transacciones con PostgreSQL aislado, nunca limpiando Supabase compartido. Probamos reemplazar reglas conservando IDs/aforo, eliminar excepciones, rollback y conflictos concurrentes reales; documentamos cómo repetir las pruebas. Si encontramos un defecto, lo corregimos en un PR acotado con regresión. No añadimos multisede ni cambiamos el modelo de reservas sin acuerdo. Después coordinamos con Yeison el siguiente encargo del plan, evitando trabajar sobre las pantallas que lleva Alex.

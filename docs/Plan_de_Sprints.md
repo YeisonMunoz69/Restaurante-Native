@@ -6,6 +6,8 @@
 
 **Estados:** `[x]` con evidencia de entrega indicada; `[~]` parcial o publicado sin integrar/aceptar; `[ ]` pendiente en `dev`. No confundimos código en otra rama con una historia terminada.
 
+**Corte del 16 de octubre:** panel EC-28/29 publicado en PR #8; Fabián aplaza los pasos Android restantes para probarlos con su celular conectado, sin Android Studio ahora. Continuamos integración con filtros verdes y mantenemos ambas historias En curso hasta criterios y aceptación completos. Evidencia y reproducción en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md).
+
 **Recuperación desde el 9 de octubre:** conservamos las fechas originales para hacer visible el atraso. Priorizamos carta/calendario y después reservas antes de abrir más trabajo de Sprint 4. Encargamos a Alex las entregas API+móvil de [Tareas_Alex.md](Tareas_Alex.md); Yeison revisa e integra, y Fabián atiende revisión/correcciones de su calendario ya publicado. No cambiamos retrospectivamente los estimados ni damos por hecha la capacidad para terminar todo.
 
 Podemos corregir tareas y alcance mediante el procedimiento de [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): corrección en Jira, documentos afectados y recordatorio manual para requisitos en Drive/Word. Cada actividad tiene un responsable único; colaboración no significa dejarla sin asignar.

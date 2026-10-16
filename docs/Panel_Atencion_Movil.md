@@ -2,6 +2,8 @@
 
 **Responsable:** Fabián Hoyos. **Corte:** 16 de octubre de 2026. Entregamos el panel y sus pruebas para revisión; EC-28/29 continúan En curso hasta completar los pendientes de aceptación de esta guía.
 
+**Decisión de Fabián del 16 de octubre:** aplazamos la validación Android restante. No usaremos Android Studio ahora; la retomaremos con su celular conectado. Continuamos publicación/revisión/integración del código con filtros verdes. Este aplazamiento no equivale a aprobar el recorrido pendiente ni a cerrar EC-28/29. Publicamos la entrega en [PR #8](https://github.com/YeisonMunoz69/Restaurante-Native/pull/8), base dev.
+
 Reutilizamos el backend de calendario integrado en PR #2. La API pública de menú está integrada por PR #6 (`f8271b9`), y la administración de disponibilidad por PR #7 (`19c5d93`). [CI/CD de EC-28](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/38843229932) pasó build/test y despliegue; verificamos salud HTTPS y 401 de la nueva ruta administrativa sin token.
 
 ## Acceso y conexión compartida
@@ -70,5 +72,7 @@ Pendientes para completar aceptación:
 2. Cerrar/reabrir la app: verificar configuración, sesión y datos persistidos; comprobar red caída/reintento y la presentación final de errores/SafeArea.
 3. Validación con el dueño del recorrido de calendario y criterios vigentes, dejando su aprobación explícita. Las pruebas técnicas no sustituyen esa aceptación.
 4. Alex conecta la carta EC-22 a EC-25 y recarga según fecha para demostrar el criterio visual de EC-28 en la carta del comensal. No desarrollamos su pantalla en paralelo ni la damos por entregada.
+
+Para retomar con el celular no necesitamos abrir Android Studio: comprobaremos su autorización USB y ABI, compilaremos el APK debug para esa arquitectura y usaremos la API/PostgreSQL local aislados. Con `adb reverse tcp:3038 tcp:3038` configuraremos `http://127.0.0.1:3038/api/v1` antes del login. El APK x86_64 probado en el emulador no se presenta como APK validado para un teléfono ARM64. No ejecutamos ahora esta preparación ni escrituras de QA en la VPS.
 
 EC-29 sigue En curso hasta panel integrado y aceptación completa. EC-28 sigue En curso hasta panel/recorrido y consumo final. No iniciamos EC-31/32/34. **Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/ADR-010 y RF-ADM06/HU-05, copia efectiva confirmada, acceso/configuración compartida, responsable Fabián de A04/A05 y secciones 8/10.**
