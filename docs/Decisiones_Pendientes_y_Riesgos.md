@@ -168,6 +168,8 @@ Bloque completado y archivado en la carpeta `design/`.
 
 Podemos avanzar con carta y calendario. Las diferencias de reglas de reserva sí deben resolverse antes de A07; no copiamos el seed como si fuera un acuerdo nuevo del cliente.
 
+**Aclaración de lectura, 16 de octubre de 2026:** las reglas de duración y anticipación ya están acordadas en B-1, B-5 y B-6, y también constan en RN-01 y RN-05 de los requisitos. H-10, H-11 y H-12 no significan que esas reglas de negocio no existan: registran precisiones de implementación que siguen abiertas. H-10 debe alinear el límite de tres meses y el corte de las 13:00 con la configuración y sus pruebas; H-11 debe resolver cómo representar las duraciones de 90/120 minutos si el modelo conserva un único valor configurable; H-12 debe fijar el límite exacto de cancelación en el instante de 60 minutos. El valor de 60 días del seed no reemplaza por sí mismo el acuerdo de tres meses.
+
 | #       | Pregunta                                                                                               | Por qué importa                                                                                                                        |
 | ------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
 | H-1 ✅  | Pedido opcional por debajo de ocho personas; obligatorio desde ocho                                    | Lo recogemos de B-7 y requisitos; lo validamos también en servidor                                                                     |
