@@ -8,7 +8,7 @@ import App from '../App';
 
 // Aíslo el arranque de la app para no montar pantallas que llaman servicios reales.
 jest.mock('../src/context/AuthContext', () => ({
-  AuthProvider: ({ children }) => children,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mantengo la prueba centrada en proveedores y estructura raíz, sin navegación de red.
@@ -21,11 +21,11 @@ jest.mock('../src/navigation/BottomTabNavigator', () => {
   };
 });
 
-test('renders the application providers and navigation root', () => {
+test('renders the application providers and navigation root', async () => {
   let tree: ReactTestRenderer.ReactTestRenderer;
 
   // Renderizo la raíz aislada y verifico que incluya el navegador principal.
-  ReactTestRenderer.act(() => {
+  await ReactTestRenderer.act(async () => {
     tree = ReactTestRenderer.create(<App />);
   });
 
