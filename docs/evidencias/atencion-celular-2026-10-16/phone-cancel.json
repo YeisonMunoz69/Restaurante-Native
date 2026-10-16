@@ -1,0 +1,100 @@
+{
+  "stage": "cancel",
+  "device": "Samsung SM-G780G",
+  "android": 13,
+  "date": "2026-10-16",
+  "dishes": [
+    {
+      "id": "8c890968-8ecc-4086-8db3-dec5240c7a2a",
+      "nombre": "Plato general habilitado",
+      "disponible": true,
+      "schedules": [
+        {
+          "fecha": "2031-02-23T00:00:00.000Z",
+          "disponible": false
+        }
+      ]
+    },
+    {
+      "id": "6c87a1e2-137b-4ef5-8307-4439b453407b",
+      "nombre": "Plato general deshabilitado",
+      "disponible": false,
+      "schedules": [
+        {
+          "fecha": "2031-02-23T00:00:00.000Z",
+          "disponible": true
+        }
+      ]
+    }
+  ],
+  "dates": {
+    "2031-02-23": [
+      {
+        "id": "6c87a1e2-137b-4ef5-8307-4439b453407b",
+        "nombre": "Plato general deshabilitado",
+        "disponible": true,
+        "origen": "FECHA",
+        "precio": 18000
+      },
+      {
+        "id": "8c890968-8ecc-4086-8db3-dec5240c7a2a",
+        "nombre": "Plato general habilitado",
+        "disponible": false,
+        "origen": "FECHA",
+        "precio": 32000
+      }
+    ],
+    "2031-02-24": [
+      {
+        "id": "6c87a1e2-137b-4ef5-8307-4439b453407b",
+        "nombre": "Plato general deshabilitado",
+        "disponible": false,
+        "origen": "GENERAL",
+        "precio": 18000
+      },
+      {
+        "id": "8c890968-8ecc-4086-8db3-dec5240c7a2a",
+        "nombre": "Plato general habilitado",
+        "disponible": true,
+        "origen": "GENERAL",
+        "precio": 32000
+      }
+    ],
+    "2031-02-25": [
+      {
+        "id": "6c87a1e2-137b-4ef5-8307-4439b453407b",
+        "nombre": "Plato general deshabilitado",
+        "disponible": false,
+        "origen": "GENERAL",
+        "precio": 18000
+      },
+      {
+        "id": "8c890968-8ecc-4086-8db3-dec5240c7a2a",
+        "nombre": "Plato general habilitado",
+        "disponible": true,
+        "origen": "GENERAL",
+        "precio": 32000
+      }
+    ]
+  },
+  "rules": [
+    {
+      "id": "779d82eb-3c24-4628-97e8-6558f6485193",
+      "diaSemana": 0,
+      "horaApertura": "10:00",
+      "horaCierre": "18:00",
+      "aforoMaximo": 17
+    }
+  ],
+  "days": [],
+  "reservations": [
+    {
+      "codigo": "ANDROID-QA-0",
+      "estado": "CONFIRMADA"
+    },
+    {
+      "codigo": "ANDROID-QA-1",
+      "estado": "CONFIRMADA"
+    }
+  ]
+}
