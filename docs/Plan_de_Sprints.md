@@ -6,7 +6,7 @@
 
 **Estados:** `[x]` con evidencia de entrega indicada; `[~]` parcial o publicado sin integrar/aceptar; `[ ]` pendiente en `dev`. No confundimos código en otra rama con una historia terminada.
 
-**Corte del 16 de octubre:** panel EC-28/29 publicado en PR #8; Fabián aplaza los pasos Android restantes para probarlos con su celular conectado, sin Android Studio ahora. Continuamos integración con filtros verdes y mantenemos ambas historias En curso hasta criterios y aceptación completos. Evidencia y reproducción en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md).
+**Corte del 16 de octubre:** panel EC-28/29 integrado por PR #8 (`b1e0cf1`). Retomamos los pasos Android aplazados con el celular de Fabián: guardado/recarga, copia cancelada/confirmada, errores y advertencia 409, contra PostgreSQL local aislado. Mantenemos ambas historias En curso: falta aceptación del dueño y, para EC-28, carta de Alex consumiendo los cambios por fecha. Evidencia y límites en [el acta del celular](evidencias/atencion-celular-2026-10-16/README.md) y reproducción en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md).
 
 **Recuperación desde el 9 de octubre:** conservamos las fechas originales para hacer visible el atraso. Priorizamos carta/calendario y después reservas antes de abrir más trabajo de Sprint 4. Encargamos a Alex las entregas API+móvil de [Tareas_Alex.md](Tareas_Alex.md); Yeison revisa e integra, y Fabián atiende revisión/correcciones de su calendario ya publicado. No cambiamos retrospectivamente los estimados ni damos por hecha la capacidad para terminar todo.
 

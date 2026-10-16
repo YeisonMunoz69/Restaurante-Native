@@ -12,6 +12,8 @@ Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
 **Corte de estado:** 9 de octubre de 2026. Usamos `[x]` para criterios comprobados, `[~]` para una historia parcial o publicada sin integrar/aceptar y `[ ]` para trabajo pendiente en `dev`. Los puntos del resumen siguen siendo estimaciones originales, no puntos aceptados automáticamente. El reparto actualizado y la validación de interfaz están en [Tareas_Alex.md](Tareas_Alex.md); el CSV conserva el importable original, no es un reporte sincronizado del avance actual.
 
+**Evidencia adicional del 16 de octubre:** probamos EC-28/29 en el celular de Fabián con API/PostgreSQL local aislados: guardado/recarga, precedencia, copia cancelada/confirmada, errores y cierre advertido sin modificar reservas. Panel integrado por PR #8 (`b1e0cf1`), con [acta y capturas](evidencias/atencion-celular-2026-10-16/README.md). Ambas historias siguen En curso hasta aceptación del dueño y, en EC-28, consumo visual de la carta EC-22 de Alex. No cerramos Sprint 2 ni iniciamos reservas. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/ADR-010, RF-ADM06/HU-05, configuración compartida y secciones 8/10.
+
 ---
 
 ## Resumen
@@ -324,7 +326,7 @@ Reflejar que el restaurante habilita platos especiales segun el dia.
 
 Representar una operacion discontinua: fines de semana, festivos y aperturas por reserva.
 
-Incorporamos el backend de Fabián del [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4`), conservando sus commits. EC-29 sigue parcial hasta integrar y aceptar el panel móvil A05 de Fabián y el recorrido funcional. Registramos capturas Android, pruebas con PostgreSQL aislado y pendientes en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). El procedimiento vigente está en [Encargos_Equipo.md](Encargos_Equipo.md); no duplicamos el backend existente.
+Incorporamos el backend de Fabián del [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4`), conservando sus commits. Integramos el panel móvil A05 por PR #8 y comprobamos el recorrido técnico en el celular; EC-29 sigue parcial hasta su aceptación explícita con el dueño. Registramos capturas Android, pruebas con PostgreSQL aislado y pendientes en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). El procedimiento vigente está en [Encargos_Equipo.md](Encargos_Equipo.md); no duplicamos el backend existente.
 
 **Criterios de aceptación**
 

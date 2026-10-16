@@ -2,13 +2,15 @@
 
 **Responsable:** Fabián Hoyos. **Corte:** 16 de octubre de 2026. Entregamos el panel y sus pruebas para revisión; EC-28/29 continúan En curso hasta completar los pendientes de aceptación de esta guía.
 
-**Decisión de Fabián del 16 de octubre:** aplazamos la validación Android restante. No usaremos Android Studio ahora; la retomaremos con su celular conectado. Continuamos publicación/revisión/integración del código con filtros verdes. Este aplazamiento no equivale a aprobar el recorrido pendiente ni a cerrar EC-28/29. Publicamos la entrega en [PR #8](https://github.com/YeisonMunoz69/Restaurante-Native/pull/8), base dev.
+**Actualización del 16 de octubre:** retomamos con el celular de Fabián la validación que habíamos aplazado. Compilamos ARM64 e instalamos el APK en Samsung SM-G780G, Android 13, sin Android Studio. Probamos guardado, recarga, copia cancelada/confirmada, retirada de excepciones, errores de conexión/fecha/hora y cierre con advertencia de dos reservas. La entrega funcional está integrada por [PR #8](https://github.com/YeisonMunoz69/Restaurante-Native/pull/8), merge `b1e0cf1`. Dejamos la evidencia nueva y las limitaciones en [el acta del celular](evidencias/atencion-celular-2026-10-16/README.md); mantenemos EC-28/29 En curso hasta sus criterios externos pendientes.
 
 Reutilizamos el backend de calendario integrado en PR #2. La API pública de menú está integrada por PR #6 (`f8271b9`), y la administración de disponibilidad por PR #7 (`19c5d93`). [CI/CD de EC-28](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/38843229932) pasó build/test y despliegue; verificamos salud HTTPS y 401 de la nueva ruta administrativa sin token.
 
 ## Acceso y conexión compartida
 
 Conservamos React Native bare, la autenticación existente y las cinco pestañas. En **Ajustes**, solo ADMIN encuentra **Atención y disponibilidad**. El servidor sigue comprobando JWT/ADMIN; ocultar el botón no sustituye sus guards.
+
+Durante la comprobación con el Samsung ajustamos el espacio inferior de las pestañas, separamos cada formulario en un contenedor nativo no colapsable con clave por panel/sede y desactivamos `removeClippedSubviews` únicamente en el ScrollView del panel. Al alternar formularios/fechas aparecían controles recortados o mezclados pese a terminar la consulta; después del ajuste repetimos las consultas con filas visibles. Conservamos los destinos, la autenticación y las banderas nativas.
 
 Antes del login elegimos API local o HTTPS dev y guardamos el UUID del restaurante. No hay UUID fijo en componentes ni credenciales compiladas. Local usa por defecto `http://10.0.2.2:3000/api/v1` en emulador Android; nuestra QA aislada usa puerto 3038. HTTPS dev usa `https://encanto-campestre-dev.apolobyte.online/api/v1`. El transporte HTTP local requiere la compilación debug; para la VPS usamos HTTPS.
 
@@ -52,7 +54,7 @@ En el recorrido del **15 de octubre** iniciamos sesión ADMIN por la API local r
 | Apertura solo por reserva | [Origen excepción, abierto](evidencias/calendario-android/calendario-abierto-reserva.png) |
 | Fecha inválida | [Validación visible](evidencias/calendario-android/calendario-error-fecha.png) |
 
-Las capturas corresponden a ese recorrido, anterior al ajuste final de SafeArea y del título genérico del error. No las presentamos como validación visual de esos ajustes ni como aceptación del dueño. No hay evidencia Android completa de guardar/copiar disponibilidad ni de recarga tras cerrar el proceso. Al continuar el 16 de octubre, la revisión automática bloqueó abrir/reiniciar la app por ADB con el motivo `blocked by policy`; no eludimos el bloqueo ni declaramos esos pasos aprobados.
+Las capturas de esa tabla corresponden al recorrido anterior al ajuste final de SafeArea y del título genérico del error. No las presentamos como aceptación del dueño. El 16 de octubre validamos la presentación final y la disponibilidad en el celular, con [capturas y contrastes nuevos](evidencias/atencion-celular-2026-10-16/README.md). La revisión automática había bloqueado abrir/reiniciar la app por ADB con `blocked by policy`; Fabián abrió y forzó manualmente su detención, sin eludir ese bloqueo. Comprobamos un proceso nuevo y la sesión ADMIN restaurada sin introducir de nuevo sus credenciales.
 
 ## Reproducción aislada y aceptación pendiente
 
@@ -68,13 +70,13 @@ Creamos antes la carpeta externa. El helper rechaza el destino de base no aislad
 
 En otra terminal ejecutamos Metro: `npm run start --workspace=@encanto/mobile -- --max-workers 2`. Desde `apps/mobile/android` compilamos `./gradlew.bat :app:assembleDebug -PreactNativeArchitectures=x86_64 --max-workers=2`. Abrimos la app debug en el emulador desde Android Studio, configuramos la API 3038 y el UUID del archivo externo, e iniciamos sesión con el usuario de QA. Nunca usamos estas pruebas de escritura contra HTTPS/Supabase compartido.
 
+Comprobamos los dos primeros pasos técnicos en el teléfono: guardado/recarga, copia cancelada/confirmada, vuelta al general y aislamiento entre fechas; recuperación del enlace local tras error, errores visibles y restauración de sesión/configuración después de detener la app. Contrastamos las escrituras con otra conexión PostgreSQL y con la API pública. Las capturas finales usan navegación por gestos: Fabián cambió la configuración del teléfono durante la prueba. Corregimos la altura/relleno de las cinco pestañas para sumar el área inferior del sistema; no afirmamos haber repetido el recorrido final con tres botones.
+
 Pendientes para completar aceptación:
 
-1. En Android final: guardar disponibilidad opuesta al general para ambos platos, recargar, copiar entre dos fechas con cancelar/confirmar y comprobar que generales/otras fechas quedan intactos; quitar excepción y volver al general.
-2. Cerrar/reabrir la app: verificar configuración, sesión y datos persistidos; comprobar red caída/reintento y la presentación final de errores/SafeArea.
-3. Validación con el dueño del recorrido de calendario y criterios vigentes, dejando su aprobación explícita. Las pruebas técnicas no sustituyen esa aceptación.
-4. Alex conecta la carta EC-22 a EC-25 y recarga según fecha para demostrar el criterio visual de EC-28 en la carta del comensal. No desarrollamos su pantalla en paralelo ni la damos por entregada.
+1. Validación con el dueño del recorrido de calendario y criterios vigentes, dejando su aprobación explícita. Las pruebas técnicas no sustituyen esa aceptación.
+2. Alex conecta la carta EC-22 a EC-25 y recarga según fecha para demostrar el criterio visual de EC-28 en la carta del comensal. No desarrollamos su pantalla en paralelo ni la damos por entregada.
 
-Para retomar con el celular no necesitamos abrir Android Studio: comprobaremos su autorización USB y ABI, compilaremos el APK debug para esa arquitectura y usaremos la API/PostgreSQL local aislados. Con `adb reverse tcp:3038 tcp:3038` configuraremos `http://127.0.0.1:3038/api/v1` antes del login. El APK x86_64 probado en el emulador no se presenta como APK validado para un teléfono ARM64. No ejecutamos ahora esta preparación ni escrituras de QA en la VPS.
+Para repetir con el celular no necesitamos Android Studio. Comprobamos USB y ABI, compilamos con `:app:assembleDebug -PreactNativeArchitectures=arm64-v8a --max-workers=2` y usamos API/PostgreSQL locales aislados. Configuramos `adb reverse tcp:8081 tcp:8081` para Metro y `adb reverse tcp:3038 tcp:3038` para `http://127.0.0.1:3038/api/v1` antes del login. El APK x86_64 del emulador no sirve como evidencia ARM64. No ejecutamos escrituras de QA en la VPS.
 
 EC-29 sigue En curso hasta panel integrado y aceptación completa. EC-28 sigue En curso hasta panel/recorrido y consumo final. No iniciamos EC-31/32/34. **Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/ADR-010 y RF-ADM06/HU-05, copia efectiva confirmada, acceso/configuración compartida, responsable Fabián de A04/A05 y secciones 8/10.**
