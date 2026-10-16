@@ -9,3 +9,6 @@ export * from './schemas/auth.schema';
 
 // Compartimos los contratos del calendario con nuestros clientes.
 export * from './schemas/calendar.schema';
+
+// Compartimos el contrato de lectura que consumen carta y administración.
+export * from './schemas/menu.schema';
