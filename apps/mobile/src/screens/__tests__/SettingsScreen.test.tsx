@@ -1,9 +1,11 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { TextInput, TouchableOpacity } from 'react-native';
+import { TextInput } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { SettingsScreen } from '../SettingsScreen';
+import { Action } from '../../components/attention/Controls';
+import { ConnectionForm } from '../../components/ConnectionForm';
 
 // Reemplazo traducciones por sus claves para validar la pantalla sin inicializar i18next.
 jest.mock('react-i18next', () => ({
@@ -31,6 +33,62 @@ describe('SettingsScreen authentication form', () => {
       checkSession: jest.fn(),
     });
   });
+
+  // El selector espera a que termine cualquier restauración o cambio de sesión.
+  it('oculta el selector de servidor mientras autenticación está trabajando', () => {
+    jest
+      .mocked(useAuth)
+      .mockReturnValue({
+        user: null,
+        isAuthenticated: false,
+        isLoading: true,
+        login,
+        register,
+        logout,
+        checkSession: jest.fn(),
+      });
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => {
+      tree = ReactTestRenderer.create(
+        <ThemeProvider>
+          <SettingsScreen />
+        </ThemeProvider>,
+      );
+    });
+    expect(tree!.root.findAllByType(ConnectionForm)).toHaveLength(0);
+    ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it.each(['ADMIN', 'COMENSAL', 'STAFF'])(
+    'muestra el acceso administrativo únicamente para ADMIN: %s',
+    rol => {
+      jest
+        .mocked(useAuth)
+        .mockReturnValue({
+          user: { id: 'test', correo: 'prueba@example.test', rol },
+          isAuthenticated: true,
+          isLoading: false,
+          login,
+          register,
+          logout,
+          checkSession: jest.fn(),
+        });
+      let tree: ReactTestRenderer.ReactTestRenderer;
+      ReactTestRenderer.act(() => {
+        tree = ReactTestRenderer.create(
+          <ThemeProvider>
+            <SettingsScreen />
+          </ThemeProvider>,
+        );
+      });
+      expect(
+        tree!.root
+          .findAllByType(Action)
+          .filter(node => node.props.label === 'attention.title'),
+      ).toHaveLength(rol === 'ADMIN' ? 1 : 0);
+      ReactTestRenderer.act(() => tree!.unmount());
+    },
+  );
 
   // Compruebo que el inicio de sesión envíe credenciales válidas al contexto.
   it('submits validated login credentials', async () => {

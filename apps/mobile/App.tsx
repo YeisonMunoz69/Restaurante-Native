@@ -10,6 +10,7 @@ import './src/i18n'; // cargamos la configuracion de internacionalizacion
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider } from './src/context/AuthContext';
 import { BottomTabNavigator } from './src/navigation/BottomTabNavigator';
+import { ConnectionProvider } from './src/context/ConnectionContext';
 
 // componente interno que conecta el tema de React Navigation con nuestro ThemeContext
 const AppContent: React.FC = () => {
@@ -53,9 +54,9 @@ const App: React.FC = () => {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AuthProvider>
+        <ConnectionProvider><AuthProvider>
           <AppContent />
-        </AuthProvider>
+        </AuthProvider></ConnectionProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

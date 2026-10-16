@@ -43,6 +43,7 @@ jest.mock('react-native-safe-area-context', () => {
 
   return {
     SafeAreaProvider: ({ children }) => children,
+    SafeAreaView: require('react-native').View,
     SafeAreaConsumer: SafeAreaInsetsContext.Consumer,
     SafeAreaInsetsContext,
     SafeAreaFrameContext,
@@ -62,4 +63,11 @@ jest.mock('react-native-screens', () => {
     NativeScreen: View,
     NativeScreenContainer: View,
   };
+});
+
+// Cargo los componentes simulados antes de medir cada prueba: RN los importa de forma perezosa.
+// Así el primer render no consume su límite de 5 s transformando ScrollView, Modal y TextInput.
+const nativeComponents = require('react-native');
+['View', 'Text', 'TextInput', 'TouchableOpacity', 'ScrollView', 'Switch', 'Modal', 'ActivityIndicator', 'StatusBar'].forEach(name => {
+  Reflect.get(nativeComponents, name);
 });

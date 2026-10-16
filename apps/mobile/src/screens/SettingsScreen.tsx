@@ -13,6 +13,10 @@ import { useTranslation } from 'react-i18next';
 import { LoginSchema, RegisterSchema } from '@encanto/shared';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { ConnectionForm } from '../components/ConnectionForm';
+import { Action } from '../components/attention/Controls';
+import { AttentionScreen } from './AttentionScreen';
+import { useConnection } from '../context/ConnectionContext';
 import {
   Moon,
   Sun,
@@ -31,15 +35,18 @@ export const SettingsScreen: React.FC = () => {
     useTheme();
   const { user, isAuthenticated, isLoading, login, register, logout } =
     useAuth();
+  const { isSaving } = useConnection();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<'login' | 'register'>('login');
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
+  const [attention, setAttention] = useState(false);
 
   // Valido los campos con el mismo esquema compartido por la API.
   const handleSubmit = async () => {
+    if (isSaving || isLoading) return;
     try {
       setErrorMessage(null);
       if (formMode === 'register') {
@@ -65,6 +72,7 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  if (attention && user?.rol === 'ADMIN') return <AttentionScreen onBack={() => setAttention(false)} />;
   return (
     <ScrollView
       style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
@@ -78,6 +86,9 @@ export const SettingsScreen: React.FC = () => {
           {t('settings.title')}
         </Text>
       </View>
+
+      {!isAuthenticated && !isLoading && <ConnectionForm />}
+      {user?.rol === 'ADMIN' && <Action label={t('attention.title')} onPress={() => setAttention(true)} />}
 
       {/* Presento el estado de cuenta y el formulario de autenticacion. */}
       <View
@@ -330,7 +341,7 @@ export const SettingsScreen: React.FC = () => {
             <TouchableOpacity
               testID="auth-submit"
               onPress={handleSubmit}
-              disabled={isLoading}
+              disabled={isLoading || isSaving}
               style={[
                 styles.botonAccion,
                 {
