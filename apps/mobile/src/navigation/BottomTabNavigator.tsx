@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { MenuScreen } from '../screens/MenuScreen';
 import { ReservationsScreen } from '../screens/ReservationsScreen';
@@ -30,6 +31,7 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 export const BottomTabNavigator: React.FC = () => {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -41,8 +43,9 @@ export const BottomTabNavigator: React.FC = () => {
         tabBarStyle: {
           backgroundColor: colors.superficie.fondo,
           borderTopColor: colors.superficie.borde,
-          height: Platform.OS === 'android' ? 64 : 80,
-          paddingBottom: 8,
+          // Reservo el espacio de los botones o gestos del sistema sin tapar las pestañas.
+          height: (Platform.OS === 'android' ? 64 : 80) + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 6,
           elevation: 8, // sombra en Android
         },
@@ -83,7 +86,6 @@ export const BottomTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: t('tabs.news'),
           tabBarIcon: ({
-            color,
             focused,
           }: {
             color: string;
