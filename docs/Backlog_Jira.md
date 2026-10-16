@@ -236,6 +236,8 @@ Presentar el plato con la mayor fuerza visual posible.
 
 Servir la carta al cliente movil resolviendo la disponibilidad por fecha.
 
+**EC-25, corte 15 de octubre:** Fabián prepara contrato/API en `fabian/api-menu-publico`, sin cerrar la historia antes de revisión y merge. Documentamos precio numérico COP acordado, rutas, criterios, prueba con dobles y PostgreSQL aislado en [API_Menu_EC25.md](API_Menu_EC25.md). La administración por fecha sigue en EC-28; no la confundimos con su consulta pública. Pendiente actualizar requisitos en Drive y Word local: secciones 8 (reparto vigente) y 10 (gestión de cambios/sincronización).
+
 **Criterios de aceptación**
 
 - GET de categorias, platos y etiquetas con paginacion

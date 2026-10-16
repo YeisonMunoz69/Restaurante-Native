@@ -5,6 +5,7 @@ import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { CalendarModule } from './calendar/calendar.module.js';
+import { MenuModule } from './menu/menu.module.js';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { CalendarModule } from './calendar/calendar.module.js';
     AuthModule,
     PrismaModule,
     CalendarModule,
+    MenuModule,
   ],
   controllers: [AppController],
   providers: [AppService],

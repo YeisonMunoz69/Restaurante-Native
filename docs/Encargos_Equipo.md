@@ -39,6 +39,8 @@ El Sprint 3 tiene diez historias: la décima es de pruebas y la coordina Yeison 
 
 El panel A05 pasa a Fabián con EC-29; A03/A06 pasan a Yeison con EC-26/EC-27. Las fichas A00–A09 de Tareas_Alex.md se conservan como especificación compartida, no como lista completa a cargo de Alex. Antes de empezar comprobamos avances existentes y coordinamos cualquier archivo común. Si el avance está hecho, lo publicamos con pruebas en lugar de repetirlo.
 
+**Contrato EC-25 preparado el 15 de octubre:** [API_Menu_EC25.md](API_Menu_EC25.md) define las cuatro rutas de lectura, paginación, DTO compartidos y precio numérico COP acordado con Fabián. Alex mantiene sus pantallas/configuración y Yeison sus escrituras; este PR solo agrega MenuModule a AppModule y exporta el archivo propio de menú desde shared. No retiramos los módulos/exports existentes ni añadimos navegación. La revisión del PR coordina su integración antes del consumo en la VPS.
+
 Validamos en Android carga, éxito, vacío, error/reintento, cambio de fecha y permisos. Probamos sesión tras reabrir, detalle/retroceso y persistencia de cambios administrativos. A05 consume el contrato existente y muestra el 409 de reservas afectadas antes de confirmar. Una respuesta HTTP o test Jest no demuestra por sí sola ese recorrido.
 
 ### Prompt para Alex

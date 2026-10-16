@@ -112,7 +112,7 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 |    [ ]    | Carta por categorías con lista virtualizada en React Native                           | RF-MEN01, RF-MEN06 |   8    | Alex        |
 |    [ ]    | Pantalla de inicio con los platos del próximo día de atención                         | RF-MEN02           |   5    | Alex        |
 |    [ ]    | Detalle de plato con galería de hasta 10 fotos                                        | RF-MEN03           |   5    | Alex        |
-|    [ ]    | API de menú: categorías, platos, etiquetas y disponibilidad                           | RF-MEN01–06        |   5    | Fabián      |
+|    [~]    | API de menú: contrato y backend preparados; pendiente revisión e integración EC-25     | RF-MEN01–06        |   5    | Fabián      |
 |    [ ]    | Administración de categorías y platos en backend y móvil                              | RF-ADM01, 02, 04   |   8    | Yeison      |
 |    [ ]    | Carga de fotos: compresión con `sharp`, Supabase Storage y variante para vista previa | RF-ADM02, C-7      |   8    | Yeison      |
 |    [ ]    | Disponibilidad de platos por fecha: administración y consulta                         | RF-ADM03, ADR-010  |   8    | Fabián      |
@@ -123,6 +123,8 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 **Situación real:** incorporamos los cuatro commits de [Fabián, PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), cabeza `76805a4`, conservando su autoría. No incluye interfaz móvil: EC-29 sigue En curso y Fabián implementa A05 sobre ese contrato. Registramos pruebas e integración en [Encargos_Equipo.md](Encargos_Equipo.md). Los avances de carta/detalle en `yeison/inicio-sprint-2` se revisan para reutilizarlos, sin incorporar automáticamente la migración a Expo.
 
 El reparto vigente distribuye EC-22/23/24 a Alex, EC-25/28/29 a Fabián y EC-26/27/30 a Yeison. Fabián conserva EC-29 y entrega también su panel antes asignado a Alex. No encontramos avances nuevos de Alex publicados al consultar el 15 de octubre; revisamos su rama antes de duplicar trabajo.
+
+**Entrega EC-25 del 15 de octubre:** preparamos contrato y API pública en `fabian/api-menu-publico`, con precio numérico COP acordado con Fabián, precedencia por fecha y pruebas HTTP/Prisma simulado más PostgreSQL aislado. Contrato y consumo en [API_Menu_EC25.md](API_Menu_EC25.md). Conservamos En curso hasta revisar e integrar; no entregamos pantallas de Alex, administración de Yeison ni EC-28/29 completas. Sigue el recordatorio manual de requisitos en Drive/Word, secciones 8 y 10, descrito en esa guía.
 
 **Si hay que recortar:** búsqueda, filtros, favoritos y caché sin conexión siguen en Sprint 5. No posponemos la integración del calendario que ya está publicado: la necesitamos para validar reservas. Seguimos A00–A06 de la guía de Alex.
 
