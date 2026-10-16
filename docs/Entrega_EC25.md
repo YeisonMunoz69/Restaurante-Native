@@ -44,9 +44,11 @@ El [contrato y los ejemplos para Alex/Yeison](API_Menu_EC25.md) precisan nombres
 
 EC-28 sigue pendiente de su administración y aceptación móvil; resolver su lectura en EC-25 no la cierra. EC-29 permanece En curso hasta panel Android y aceptación, reutilizando su backend integrado, IDs y confirmación 409. No empezamos EC-31/32/34 ni otras reservas.
 
-## Comentario exacto para Yeison en Jira
+## Evidencia publicada en Jira
 
-No publicamos este comentario en Jira: Atlassian respondió que la conexión no está autorizada. Yeison puede copiar el bloque siguiente en la historia existente **EC-25**, sin crear otra ni marcarla Listo:
+Después de autorizar Atlassian publicamos este comentario en la historia existente [EC-25](https://yjmunoz.atlassian.net/browse/EC-25), ID de comentario `10036`, y la pasamos de Por hacer a **En curso**. Conservamos el responsable Fabián. No creamos otra historia ni la marcamos Listo. El intento inicial sin autorización no había realizado ninguna escritura; esta conexión posterior permitió completar la actualización.
+
+Registramos además los pendientes de [EC-28](https://yjmunoz.atlassian.net/browse/EC-28), comentario `10037`, manteniendo **Por hacer**; y corregimos la evidencia/reparto antiguo de [EC-29](https://yjmunoz.atlassian.net/browse/EC-29), comentario `10038`, manteniendo **En curso**. El backend del PR #2 ya está integrado, pero el panel y la aceptación corresponden a Fabián y siguen pendientes. Las ocho integraciones PostgreSQL de este PR son de menú, no del calendario.
 
 > EC-25 — Responsable Fabián Hoyos. Publicamos contrato y API pública en el PR https://github.com/YeisonMunoz69/Restaurante-Native/pull/6, base dev, rama fabian/api-menu-publico. Commits: ba8f24f (contrato), fe87782 (API), 4cb8385 (pruebas). Estado: En curso hasta revisión, merge y criterios completos.
 >
@@ -57,5 +59,7 @@ No publicamos este comentario en Jira: Atlassian respondió que la conexión no 
 > Alex puede consumir el contrato de docs/API_Menu_EC25.md y los tipos de shared con el Restaurant.id real suministrado por entorno y fecha explícita; las rutas solo estarán en la VPS después de integrar y desplegar. Yeison mantiene EC-26/27/30; Alex EC-22/23/24. EC-28 sigue pendiente de administración y aceptación, y EC-29 sigue En curso por panel Android/aceptación; no las cerramos con este PR. Falta revisión/merge y comprobación funcional en dev.
 >
 > Registramos la representación numérica COP sin cambiar reglas de negocio. Pendiente actualizar requisitos en Drive y Word local: sección 8, reparto EC-25/28/29 a Fabián, EC-22/23/24 a Alex y EC-26/27/30 a Yeison; sección 10, gestión de cambios y responsable de sincronización. Markdown actualizado en docs/API_Menu_EC25.md, docs/Plan_de_Sprints.md, docs/Backlog_Jira.md y docs/Encargos_Equipo.md; no afirmamos que Drive/Word se hayan actualizado.
+>
+> CI del commit 2a7c2f1 correcto, incluida imagen VPS: https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/38833793607. PR abierto sin merge ni despliegue.
 
 El aviso ya vigente de EC-29 se mantiene: **En curso; backend integrado, panel/aceptación pendientes**. Esta entrega no cambia ese estado ni requiere reasignar historias.
