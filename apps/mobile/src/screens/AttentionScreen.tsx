@@ -42,6 +42,8 @@ export function AttentionScreen({ onBack }: { onBack: () => void }) {
         style={{ backgroundColor: colors.superficie.fondo }}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        // Conservo las vistas al alternar formularios para que Android no deje controles recortados.
+        removeClippedSubviews={false}
       >
         <Action label={t('attention.back')} onPress={onBack} />
         <Note>{t('attention.title')}</Note>
