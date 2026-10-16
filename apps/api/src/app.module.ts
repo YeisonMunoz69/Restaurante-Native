@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { CalendarModule } from './calendar/calendar.module.js';
 import { MenuModule } from './menu/menu.module.js';
+import { DishAvailabilityModule } from './dish-availability/dish-availability.module.js';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { MenuModule } from './menu/menu.module.js';
     PrismaModule,
     CalendarModule,
     MenuModule,
+    DishAvailabilityModule,
   ],
   controllers: [AppController],
   providers: [AppService],
