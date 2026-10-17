@@ -25,21 +25,23 @@ compose=(docker compose --env-file apps/api/.env.vps -p elev-d-e-7-dev -f apps/a
 "${compose[@]}" --profile tools run --rm migrate
 
 # Espero HTTP y base de datos mediante el healthcheck del contenedor.
-"${compose[@]}" up -d --no-build --wait --wait-timeout 240 api
+# Recreo también cuando la caché conserva capas: el contenedor debe usar la etiqueta recién construida.
+"${compose[@]}" up -d --no-build --force-recreate --wait --wait-timeout 240 api
 "${compose[@]}" ps api
 
 # Confirmo que el contenedor usa la imagen recien construida, sin bind mounts
 # que sustituyan el codigo compilado del runtime.
 api_container="$("${compose[@]}" ps -q api)"
-expected_image_id="$("${compose[@]}" images -q api)"
 
-if [[ -z "$api_container" || -z "$expected_image_id" ]]; then
-    printf '%s\n' 'Compose no encuentra el contenedor o la imagen del servicio API.' >&2
+if [[ -z "$api_container" ]]; then
+    printf '%s\n' 'Compose no encuentra el contenedor del servicio API.' >&2
     exit 1
 fi
 
-# Compose imprime el hash sin el prefijo sha256; lo normalizo con image inspect.
-expected_image_id="$(docker image inspect --format '{{.Id}}' "$expected_image_id")"
+# Consulto la etiqueta configurada: compose images puede devolver el ID viejo de un
+# contenedor que sigue vivo aunque ese ID ya no sea inspeccionable tras reconstruir.
+runtime_image="$(docker inspect --format '{{.Config.Image}}' "$api_container")"
+expected_image_id="$(docker image inspect --format '{{.Id}}' "$runtime_image")"
 actual_image_id="$(docker inspect --format '{{.Image}}' "$api_container")"
 runtime_command="$(docker inspect --format '{{join .Config.Cmd " "}}' "$api_container")"
 mount_count="$(docker inspect --format '{{len .Mounts}}' "$api_container")"

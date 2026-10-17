@@ -73,7 +73,9 @@ jobs:
         run: npm run test --workspace=@encanto/mobile
 
       - name: Check deployment script
-        run: bash -n scripts/deploy-vps.sh
+        run: |
+          bash -n scripts/deploy-vps.sh
+          bash scripts/test-deploy-vps.sh
 
       - name: Build and smoke-test VPS containers
         env:
