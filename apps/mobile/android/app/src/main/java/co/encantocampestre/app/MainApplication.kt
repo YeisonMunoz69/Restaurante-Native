@@ -1,4 +1,4 @@
-package com.helloworld
+package co.encantocampestre.app
 
 import android.app.Application
 import com.facebook.react.PackageList
@@ -14,8 +14,7 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
-          // Packages that cannot be autolinked yet can be added manually here, for example:
-          // add(MyReactNativePackage())
+          // Registro aquí los paquetes nativos que React Native no pueda enlazar automáticamente.
         },
     )
   }
