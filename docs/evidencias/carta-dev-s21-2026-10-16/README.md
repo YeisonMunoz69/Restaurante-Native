@@ -1,5 +1,11 @@
 # Carta real en S21 y comprobación del runtime Docker
 
+**Cierre posterior registrado:** integramos la rama completa mediante PR #11 en `dev` (`0245146`); GitHub registró también #10 como integrada por contener un subconjunto ancestro. CI/CD 39003167145 y 11 comprobaciones HTTPS posteriores pasaron. Jira Sprint 2 quedó cerrado el 16 de octubre a las 23:43 de Bogotá: EC-23/24/25/26/28/29/30 Listo; EC-22 y EC-27 En curso en backlog, responsable Yeison. La primera conserva la prueba física de 100 platos y la segunda Storage real. El [acta final](../../Cierre_Sprint2_2026-10-16.md) reúne comentarios, responsables, alcance y pruebas. Las notas anteriores al cierre se conservan abajo como evidencia histórica.
+
+La revisión añadió el horario real y la acción a la próxima apertura (dcdfa40), con regresión automática; [el horario se vio en S21](07-horario-real.png). También corregimos la creación de un segundo plato (40b8a6f), con regresión del formulario. El CI final pasó 195 pruebas API sin omisiones y 49 móviles. No repetimos una carga real de Storage ni declaramos validado el APK release.
+
+## Recorridos y cortes previos al cierre
+
 El 16 de octubre probamos el S21 SM-G991B con la aplicación `co.encantocampestre.app`, Metro del worktree de integración en el puerto 8091 y la API `https://encanto-campestre-dev.apolobyte.online/api/v1`. Configuramos la sede real desde Ajustes, sin publicar credenciales ni modificar la base compartida. La sede se obtuvo mediante una consulta de lectura de `Restaurant.id` y `nombre`.
 
 ## Recorrido realizado

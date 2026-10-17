@@ -1,14 +1,14 @@
-# Entregas pendientes de Alex: carta y reservas
+# Contratos de carta y reservas y encargos históricos
 
-**Estado actualizado al 16 de octubre de 2026:** EC-22/23/24 y EC-33/35/38 están implementadas en `yeison/ajusta-encabezados-y-auth-plan`, todavía sin integrar en `dev`. Pasan 187 pruebas API, 47 móviles, TypeScript, build Android, Docker aislado e integración HTTP. En S21 se recorrieron carta y reserva: selección de fecha/franja, pedido, ticket, Mis reservas y revisión ADMIN hasta completar la atención. Se corrigió la selección al avanzar de semana. Alex conserva las historias en Jira: debe comparar sus avances, revisar criterios y ayudar con la aceptación; publica solo diferencias propias, sin duplicar la implementación ni atribuirse estos commits. Aún faltan escenarios límite, Storage real, merge y aceptación del equipo. Ver [Encargos_Equipo.md](Encargos_Equipo.md) y [contrato EC-31–40](Reservas_EC31_EC40.md).
+**Corte de cierre del 16 de octubre:** integramos PR #11 en `dev`, merge `0245146`, conservando el subconjunto de PR #10 y todos los commits posteriores. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles. Registramos en Jira que Yeison asume EC-22/23/24/26/27/28/29/30; EC-25 conserva a Fabián. EC-22 mantiene pendiente la prueba física con 100 platos y EC-27 la validación real de Storage, ambas sin Listo. Los resultados de VPS, estados finales y registro del sprint están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md). Este corte prevalece sobre las notas históricas siguientes.
 
-**Reparto vigente:** Alex EC-22/23/24 y EC-33/35/38; Fabián EC-25/28/29 y EC-31/32/34; Yeison EC-26/27/30 y EC-36/37/39/40. Este reparto no cambia por implementar tareas ajenas con autorización del equipo. Las historias no están cerradas en Jira por pasar pruebas locales: falta revisión, aceptación e integración a `dev`.
+**Reparto vigente del cierre:** Yeison lleva EC-22/23/24/26/27/28/29/30; Fabián conserva EC-25. Sprint 3 mantiene su reparto anterior y su aceptación independiente. Alex revisa diferencias propias sin duplicar lo integrado. Las fichas siguientes conservan contratos y encargos históricos; sus asignaciones anteriores de Sprint 2 no prevalecen sobre este corte.
 
 **Decisión futura:** el acceso único con Google, la protección global de las cinco pestañas y las subpantallas de Ajustes siguen en el alcance solicitado para Sprint 5, no están implementados ni sincronizados todavía en Jira. Las instrucciones históricas de Sprint 2/3 que describen navegación pública no adelantan ni sustituyen ese cambio.
 
 **Corte inicial del 9 de octubre de 2026 (histórico):** revisamos `dev` en `0e27cb4`. Este documento reemplaza el reparto inicial de Sprint 2; su estado actual se describe en el corte del 16 de octubre y en el plan vigente.
 
-**Revisión del 16 de octubre:** Alex conserva EC-22/23/24 y EC-33/35/38; Fabián EC-25/28/29 y EC-31/32/34; Yeison EC-26/27/30 y EC-37/36/39, con EC-40 coordinada. Antes de duplicar, cada quien revisa y publica avances de su rama. El cambio futuro de autenticación se mantiene pendiente de Jira y de sincronizar requisitos manuales de Drive/Word.
+**Revisión histórica anterior al cierre del 16 de octubre:** Alex conserva EC-22/23/24 y EC-33/35/38; Fabián EC-25/28/29 y EC-31/32/34; Yeison EC-26/27/30 y EC-37/36/39, con EC-40 coordinada. Antes de duplicar, cada quien revisa y publica avances de su rama. El cambio futuro de autenticación se mantiene pendiente de Jira y de sincronizar requisitos manuales de Drive/Word.
 
 ## 1. Foto previa a esta implementación (histórica)
 

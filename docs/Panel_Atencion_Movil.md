@@ -1,5 +1,9 @@
 # Panel de atención y disponibilidad · EC-28 / EC-29
 
+**Corte de cierre del 16 de octubre:** integramos PR #11 en `dev`, merge `0245146`, conservando el subconjunto de PR #10 y todos los commits posteriores. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles. Registramos en Jira que Yeison asume EC-22/23/24/26/27/28/29/30; EC-25 conserva a Fabián. EC-22 mantiene pendiente la prueba física con 100 platos y EC-27 la validación real de Storage, ambas sin Listo. Los resultados de VPS, estados finales y registro del sprint están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md). Este corte prevalece sobre las notas históricas siguientes.
+
+## Evidencia y cortes históricos
+
 **Responsable:** Fabián Hoyos. **Corte:** 16 de octubre de 2026. Entregamos el panel y sus pruebas para revisión; EC-28/29 continúan En curso hasta completar los pendientes de aceptación de esta guía.
 
 **Actualización del 16 de octubre:** retomamos con el celular de Fabián la validación que habíamos aplazado. Compilamos ARM64 e instalamos el APK en Samsung SM-G780G, Android 13, sin Android Studio. Probamos guardado, recarga, copia cancelada/confirmada, retirada de excepciones, errores de conexión/fecha/hora y cierre con advertencia de dos reservas. La entrega funcional está integrada por [PR #8](https://github.com/YeisonMunoz69/Restaurante-Native/pull/8), merge `b1e0cf1`. Dejamos la evidencia nueva y las limitaciones en [el acta del celular](evidencias/atencion-celular-2026-10-16/README.md); mantenemos EC-28/29 En curso hasta sus criterios externos pendientes.

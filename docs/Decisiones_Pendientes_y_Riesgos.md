@@ -8,7 +8,7 @@ Registramos lo acordado y lo distinguimos de lo implementado. Las filas con `⬜
 
 El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejando la corrección en Jira y en los documentos afectados. Aplicamos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos dónde cambió y recordamos actualizar manualmente los requisitos de Drive y `docs/Requisitos_del_Sistema.docx`. El 16 de octubre cerramos las reglas operativas de reservas y tres decisiones de Android que estaban pendientes. También se pidió Google como proveedor único y un acceso global para el Sprint 5, además de ordenar Ajustes en subpantallas. Jira queda por sincronizar: estas decisiones describen el alcance solicitado, no su implementación ni cambios ya guardados en Jira o en los documentos manuales.
 
-**Estado de implementación al 16 de octubre:** las reglas H-10–H-12 están codificadas y probadas en la rama `yeison/ajusta-encabezados-y-auth-plan`, aún no integrada en `dev`. El cambio futuro de Google y la reorganización de Ajustes sigue pendiente de planificación en Jira y de actualizar los requisitos manuales; no se incluyó en este trabajo.
+**Estado de implementación al cierre del 16 de octubre:** H-10–H-12 están codificadas y probadas, integradas en `dev` mediante PR #11 (`0245146`). La aceptación de Sprint 3 y la sincronización de sus actividades conservan seguimiento independiente. Google y la reorganización de Ajustes siguen pendientes para Sprint 5; no se implementaron en este cierre. En Sprint 2, EC-22 conserva la prueba de 100 platos y EC-27 Storage real; [el acta de cierre](Cierre_Sprint2_2026-10-16.md) distingue lo integrado de lo aceptado.
 
 ---
 

@@ -1,0 +1,13 @@
+Fuente: https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/39003167145
+Job: Deploy dev to VPS (117310627395), conclusion success
+Extracto de comprobacion; omitimos variables y salidas privadas.
+
+2026-10-17T04:40:51.1996079Z out: 6 migrations found in prisma/migrations
+2026-10-17T04:40:52.4541109Z out: Applying migration `20261016000000_alinea_politicas_reserva_confirmadas`
+2026-10-17T04:40:53.0296196Z out: Applying migration `20261016120000_agrega_borrado_logico_plato`
+2026-10-17T04:40:53.5184094Z out: Applying migration `20261016130000_registra_llegada_reserva`
+2026-10-17T04:40:54.0340080Z out: Applying migration `20261016140000_registra_inasistencias_y_cierre_reserva`
+2026-10-17T04:40:54.3899595Z out: All migrations have been successfully applied.
+2026-10-17T04:41:03.2413464Z out: elev-d-e-7-api   elev-d-e-7-api:***   "docker-entrypoint.s…"   api       9 seconds ago   Up 6 seconds (healthy)   127.0.0.1:8084->3000/tcp
+2026-10-17T04:41:04.1602345Z out: Runtime confirmado: imagen=sha256:0d6e6809e261 comando=node dist/main.js montajes=0
+2026-10-17T04:41:04.1670921Z out: Desplegado correctamente: 0245146

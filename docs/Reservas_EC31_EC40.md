@@ -1,6 +1,6 @@
 # Reservas y operación · EC-31 a EC-40
 
-**Corte:** 16 de octubre de 2026. Implementamos estas historias en `yeison/ajusta-encabezados-y-auth-plan`, basada en `dev` (`47a1e0e`). Aún no están integradas en `dev` ni aceptadas en Jira. Los nombres de responsable en el backlog no cambian: esta implementación acelerada la realizó Yeison con autorización del equipo y no se atribuye a commits de Alex o Fabián.
+**Corte:** 16 de octubre de 2026. Integramos esta implementación en `dev` mediante PR #11, merge `0245146`, conservando sus commits y migraciones. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles, además del runtime Docker. Esta integración técnica no cierra Sprint 3 ni cambia automáticamente sus responsables o aceptación. Evidencia de VPS y límites en [el acta de cierre](Cierre_Sprint2_2026-10-16.md).
 
 ## Qué quedó implementado
 

@@ -1,0 +1,94 @@
+{
+  "observedAtUTC": "2026-10-17T04:42:22.923Z",
+  "merge": "024514671cb9a0cb23bec74a1b6a0cec90a6cd87",
+  "workflow": "https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/39003167145",
+  "base": "https://encanto-campestre-dev.apolobyte.online/api/v1",
+  "checks": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "path": "/menu/categorias?restauranteId=6933b63c-24cf-495b-b396-f88c4956624c",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "path": "/menu/etiquetas?restauranteId=6933b63c-24cf-495b-b396-f88c4956624c",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "path": "/menu/platos?restauranteId=6933b63c-24cf-495b-b396-f88c4956624c&fecha=2026-10-18&tamanoPagina=100",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "path": "/menu/platos/9334b4fe-5fc6-47dd-8c06-14bf93c70ada?restauranteId=6933b63c-24cf-495b-b396-f88c4956624c&fecha=2026-10-18",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "path": "/calendario/dia?restauranteId=6933b63c-24cf-495b-b396-f88c4956624c&fecha=2026-10-19",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "path": "/calendario/proximo?restauranteId=6933b63c-24cf-495b-b396-f88c4956624c&desde=2026-10-19",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/menu/categorias",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "method": "GET",
+      "path": "/admin/reservas/solicitudes",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "method": "GET",
+      "path": "/reservas/mias",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "method": "GET",
+      "path": "/menu/platos?restauranteId=00000000-0000-4000-8000-000000000099&fecha=2026-10-18",
+      "status": 404,
+      "expected": 404
+    }
+  ],
+  "summary": {
+    "health": {
+      "status": "ok",
+      "database": "connected"
+    },
+    "categories": 6,
+    "tags": 5,
+    "dishes": 16,
+    "dishPriceCOP": 38000,
+    "existingPhotoURLsHTTPS": true,
+    "closedDate": "2026-10-19",
+    "nextOpenDate": "2026-10-24",
+    "hours": [
+      {
+        "horaApertura": "10:00",
+        "horaCierre": "18:00"
+      }
+    ]
+  },
+  "scope": "Solo lecturas públicas y rechazo anónimo de rutas protegidas. No prueba escrituras administrativas remotas ni una carga real de Storage."
+}
