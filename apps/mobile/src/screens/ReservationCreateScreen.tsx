@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  ScrollView,
   Share,
   StyleSheet,
   Text,
@@ -198,6 +199,17 @@ export function ReservationCreateScreen({
   const days = Array.from({ length: 7 }, (_, index) => shiftDate(today, windowOffset + index))
     .filter(day => day <= maxDate);
 
+  // Al cambiar de semana mantengo la selección si sigue visible; de lo contrario
+  // selecciono el primer día de la nueva semana para que la consulta coincida.
+  const moveWindow = (nextOffset: number) => {
+    const firstDay = shiftDate(today, nextOffset);
+    const lastDay = shiftDate(today, nextOffset + 6);
+    setWindowOffset(nextOffset);
+    setSelectedDate(current =>
+      current < firstDay || current > lastDay ? firstDay : current,
+    );
+  };
+
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -212,17 +224,21 @@ export function ReservationCreateScreen({
           <Panel>
             <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{t('reservations.chooseDate')}</Text>
             <View style={styles.weekHeader}>
-              <Action label="‹" disabled={windowOffset === 0} onPress={() => setWindowOffset(value => Math.max(0, value - 7))} />
+              <Action label="‹" disabled={windowOffset === 0} onPress={() => moveWindow(Math.max(0, windowOffset - 7))} />
               <Text style={[typography.cuerpoM, { color: colors.texto.primario }]}>{formatDate(days[0])}</Text>
-              <Action label="›" disabled={shiftDate(today, windowOffset + 7) > maxDate} onPress={() => setWindowOffset(value => value + 7)} />
+              <Action label="›" disabled={shiftDate(today, windowOffset + 7) > maxDate} onPress={() => moveWindow(windowOffset + 7)} />
             </View>
-            <View style={styles.days}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.days}
+            >
               {days.map(day => (
                 <View key={day} style={styles.day}>
                   <Action label={formatDate(day, { weekday: 'short', day: 'numeric' })} selected={selectedDate === day} onPress={() => setSelectedDate(day)} />
                 </View>
               ))}
-            </View>
+            </ScrollView>
             <Note>{t('reservations.maxAdvance')}</Note>
             <Field label={t('reservations.people')} value={peopleText} onChangeText={setPeopleText} keyboardType="number-pad" />
             {people >= 15 && <Note>{t('reservations.weekdayGroup')}</Note>}
@@ -297,8 +313,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' },
   weekHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  days: { flexDirection: 'row', flexWrap: 'wrap' },
-  day: { width: '14.28%', minWidth: 42 },
+  days: { flexDirection: 'row', paddingVertical: 4 },
+  day: { width: 76, marginRight: 8 },
   dishRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginVertical: 4 },
   thumbnail: { width: 48, height: 48, borderRadius: 8 },
   flex: { flex: 1 },

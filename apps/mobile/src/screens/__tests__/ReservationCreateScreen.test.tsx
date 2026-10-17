@@ -150,4 +150,37 @@ describe('ReservationCreateScreen', () => {
     expect(review.props.disabled).toBe(true);
     ReactTestRenderer.act(() => tree!.unmount());
   });
+
+  it('selecciona un día visible al avanzar de semana antes de consultar franjas', async () => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Bogota',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date());
+    const value = (type: string) => parts.find(part => part.type === type)?.value ?? '01';
+    const today = `${value('year')}-${value('month')}-${value('day')}`;
+    const [year, month, day] = today.split('-').map(Number);
+    const nextWeek = new Date(Date.UTC(year, month - 1, day + 7))
+      .toISOString()
+      .slice(0, 10);
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(
+        <ThemeProvider>
+          <ReservationCreateScreen onBack={onBack} onCreated={onCreated} />
+        </ThemeProvider>,
+      );
+    });
+
+    ReactTestRenderer.act(() => {
+      tree!.root.findAllByType(Action).find(action => action.props.label === '›')!.props.onPress();
+    });
+    await ReactTestRenderer.act(async () => {
+      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
+    });
+
+    expect(api.slots).toHaveBeenCalledWith({ fecha: nextWeek, numComensales: 2 });
+    ReactTestRenderer.act(() => tree!.unmount());
+  });
 });
