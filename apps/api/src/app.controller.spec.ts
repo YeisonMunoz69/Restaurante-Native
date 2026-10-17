@@ -34,6 +34,9 @@ describe('AppController', () => {
       status: 'ok',
       database: 'connected',
     });
+    expect(prismaMock.$queryRaw.mock.calls[0][0].join('')).toBe(
+      'SELECT "activo" FROM "platos" LIMIT 0',
+    );
   });
 
   // Compruebo que una base inaccesible devuelva un estado de servicio no disponible.

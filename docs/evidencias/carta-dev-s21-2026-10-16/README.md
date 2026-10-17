@@ -31,6 +31,8 @@ Usamos el proyecto Compose `encanto-local` y el archivo `apps/api/docker-compose
 
 ## Pendientes concretos
 
+**Corrección posterior de readiness:** cambiamos el healthcheck a una consulta sin filas sobre `platos.activo`. Ahora una base sin la migración de menú responde 503, aunque acepte `SELECT 1`. Las pruebas PostgreSQL aisladas comprueban esquema migrado vacío, columna ausente y recuperación; la respuesta HTTP conserva un mensaje genérico sin detalles de Prisma. Esto detecta el desfase observado del menú, no sustituye las pruebas funcionales de cada módulo.
+
 1. Revisar e integrar PR #10: al consultar GitHub seguía abierta, en borrador, con Build and test correcto y despliegue omitido por tratarse de un PR.
 2. Integrar la administración y reservas de la otra rama con sus migraciones; después comprobar rutas funcionales además del health. La rama completa incluye Sprint 3 y no forma parte de PR #10.
 3. Configurar `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_STORAGE_BUCKET` en los entornos privados necesarios. Las tres faltaban en el entorno local consultado. Validar carga real, variantes, orden y eliminación antes de cerrar EC-27. No publicar la clave de servicio ni incluirla en el móvil.

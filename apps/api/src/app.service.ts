@@ -9,10 +9,10 @@ export class AppService {
     return 'Hello World!';
   }
 
-  // Confirmo que la API puede consultar la base de datos sin exponer detalles internos.
+  // Consulto el esquema del menú, sin leer filas: SELECT 1 no detectaba migraciones pendientes.
   async checkHealth() {
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await this.prisma.$queryRaw`SELECT "activo" FROM "platos" LIMIT 0`;
       return { status: 'ok', database: 'connected' };
     } catch {
       throw new ServiceUnavailableException('Database unavailable');
