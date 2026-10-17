@@ -7,6 +7,7 @@ import {
   Switch,
   ActivityIndicator,
   TextInput,
+  useWindowDimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { LoginSchema, RegisterSchema } from '@encanto/shared';
@@ -36,6 +37,7 @@ export const SettingsScreen: React.FC = () => {
   const { user, isAuthenticated, isLoading, login, register, logout } =
     useAuth();
   const { isSaving } = useConnection();
+  const { width } = useWindowDimensions();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<'login' | 'register'>('login');
   const [nombre, setNombre] = useState('');
@@ -72,23 +74,39 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
-  if (attention && user?.rol === 'ADMIN') return <AttentionScreen onBack={() => setAttention(false)} />;
+  if (attention && user?.rol === 'ADMIN')
+    return <AttentionScreen onBack={() => setAttention(false)} />;
   return (
     <KeyboardAwareScrollView
       style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
       contentContainerStyle={[
         styles.scrollContent,
-        { padding: spacing.margenLateral },
+        {
+          padding: spacing.margenLateral,
+          paddingTop: spacing.xxxl,
+        },
       ]}
     >
       <View style={styles.header}>
-        <Text style={[typography.display, { color: colors.texto.primario }]}>
+        <Text
+          style={[
+            typography.display,
+            width < 360 ? styles.tituloCompacto : undefined,
+            width >= 600 ? styles.tituloAmplio : undefined,
+            { color: colors.texto.primario },
+          ]}
+        >
           {t('settings.title')}
         </Text>
       </View>
 
       {!isAuthenticated && !isLoading && <ConnectionForm />}
-      {user?.rol === 'ADMIN' && <Action label={t('attention.title')} onPress={() => setAttention(true)} />}
+      {user?.rol === 'ADMIN' && (
+        <Action
+          label={t('attention.title')}
+          onPress={() => setAttention(true)}
+        />
+      )}
 
       {/* Presento el estado de cuenta y el formulario de autenticacion. */}
       <View
@@ -546,9 +564,20 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
   },
   header: {
-    marginTop: 10,
+    marginTop: 0,
+  },
+  tituloCompacto: {
+    fontSize: 26,
+    lineHeight: 32,
+  },
+  tituloAmplio: {
+    fontSize: 32,
+    lineHeight: 40,
   },
   seccion: {
     borderWidth: 1,

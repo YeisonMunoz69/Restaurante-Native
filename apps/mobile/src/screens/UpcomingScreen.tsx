@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  useWindowDimensions,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme/ThemeContext';
 import { Sparkles, Bike, Fish, MessageCircle } from 'lucide-react-native';
@@ -8,17 +14,28 @@ import { Sparkles, Bike, Fish, MessageCircle } from 'lucide-react-native';
 export const UpcomingScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
+  const { width } = useWindowDimensions();
 
   return (
     <ScrollView
       style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
       contentContainerStyle={[
         styles.scrollContent,
-        { padding: spacing.margenLateral },
+        {
+          padding: spacing.margenLateral,
+          paddingTop: spacing.xxxl,
+        },
       ]}
     >
       <View style={styles.header}>
-        <Text style={[typography.display, { color: colors.texto.primario }]}>
+        <Text
+          style={[
+            typography.display,
+            width < 360 ? styles.tituloCompacto : undefined,
+            width >= 600 ? styles.tituloAmplio : undefined,
+            { color: colors.texto.primario },
+          ]}
+        >
           {t('upcoming.title')}
         </Text>
         <Text
@@ -169,9 +186,20 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
   },
   header: {
-    marginTop: 10,
+    marginTop: 0,
+  },
+  tituloCompacto: {
+    fontSize: 26,
+    lineHeight: 32,
+  },
+  tituloAmplio: {
+    fontSize: 32,
+    lineHeight: 40,
   },
   tarjeta: {
     borderWidth: 1,
