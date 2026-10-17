@@ -271,6 +271,20 @@ export function MenuDishDetailModal({
                           </Text>
                         </View>
                       )}
+                      <Text
+                        style={[
+                          typography.pie,
+                          {
+                            color: colors.texto.secundario,
+                            padding: spacing.s,
+                          },
+                        ]}
+                      >
+                        {t('menu.photoPosition', {
+                          number: index + 1,
+                          total: Math.min(dish.fotos.length, 10),
+                        })}
+                      </Text>
                     </View>
                   );
                 })}

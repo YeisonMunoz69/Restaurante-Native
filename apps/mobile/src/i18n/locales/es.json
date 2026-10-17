@@ -26,6 +26,7 @@
     "detailError": "No pudimos cargar los detalles. Comprueba la conexión e inténtalo de nuevo.",
     "photos": "Fotos del plato",
     "photoLabel": "Foto {{number}} del plato",
+    "photoPosition": "Foto {{number}} de {{total}}",
     "photoUnavailable": "La foto no tiene una URL pública disponible.",
     "noPhotos": "Este plato todavía no tiene fotos publicadas.",
     "allergens": "Alérgenos"
