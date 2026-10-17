@@ -367,10 +367,12 @@ const styles = StyleSheet.create({
   },
   retryButton: { minHeight: 48, justifyContent: 'center', padding: 12 },
   availability: { alignSelf: 'flex-start' },
-  photoCard: { width: 280, height: 210, overflow: 'hidden', borderWidth: 1 },
-  photo: { width: '100%', height: '100%' },
+  // Dejo crecer la tarjeta para que el contador no quede recortado debajo de la imagen 4:3.
+  photoCard: { width: 280, overflow: 'hidden', borderWidth: 1 },
+  photo: { width: '100%', aspectRatio: 4 / 3 },
   photoFallback: {
-    flex: 1,
+    width: '100%',
+    aspectRatio: 4 / 3,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
