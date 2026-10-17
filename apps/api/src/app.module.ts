@@ -7,6 +7,8 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { CalendarModule } from './calendar/calendar.module.js';
 import { MenuModule } from './menu/menu.module.js';
 import { DishAvailabilityModule } from './dish-availability/dish-availability.module.js';
+import { MenuAdminModule } from './menu-admin/menu-admin.module.js';
+import { ReservationsModule } from './reservations/reservations.module.js';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { DishAvailabilityModule } from './dish-availability/dish-availability.mo
     CalendarModule,
     MenuModule,
     DishAvailabilityModule,
+    MenuAdminModule,
+    ReservationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

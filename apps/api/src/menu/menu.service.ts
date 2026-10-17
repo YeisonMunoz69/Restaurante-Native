@@ -130,6 +130,7 @@ export class MenuService {
   async dishes(query: MenuDishesQuery): Promise<MenuDishesPage> {
     return this.read(query.restauranteId, async (db) => {
       const where = {
+        activo: true,
         category: { restaurantId: query.restauranteId, activa: true },
       };
       const total = await db.dish.count({ where });
@@ -158,6 +159,7 @@ export class MenuService {
       const dish = await db.dish.findFirst({
         where: {
           id,
+          activo: true,
           category: { restaurantId: query.restauranteId, activa: true },
         },
         select: dishSelect(query.fecha),
@@ -181,6 +183,7 @@ export class MenuService {
         dishes: {
           some: {
             dish: {
+              activo: true,
               category: { restaurantId: query.restauranteId, activa: true },
             },
           },
