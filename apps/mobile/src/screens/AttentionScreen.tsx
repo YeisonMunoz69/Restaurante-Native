@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BackHandler, ScrollView, StyleSheet, View } from 'react-native';
+import { BackHandler, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CalendarRestaurantSchema } from '@encanto/shared';
@@ -10,6 +10,7 @@ import { Action, Note } from '../components/attention/Controls';
 import { CalendarPanel } from '../components/attention/CalendarPanel';
 import { AvailabilityPanel } from '../components/attention/AvailabilityPanel';
 import { ConnectionForm } from '../components/ConnectionForm';
+import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 
 // Mantengo las cinco pestañas y protejo también el acceso visual administrativo.
 export function AttentionScreen({ onBack }: { onBack: () => void }) {
@@ -38,7 +39,7 @@ export function AttentionScreen({ onBack }: { onBack: () => void }) {
       edges={['top']}
       style={[styles.container, { backgroundColor: colors.superficie.fondo }]}
     >
-      <ScrollView
+      <KeyboardAwareScrollView
         style={{ backgroundColor: colors.superficie.fondo }}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
@@ -76,7 +77,7 @@ export function AttentionScreen({ onBack }: { onBack: () => void }) {
         ) : (
           <Note>{t('attention.configureRestaurant')}</Note>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

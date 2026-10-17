@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Switch,
   ActivityIndicator,
@@ -14,6 +13,7 @@ import { LoginSchema, RegisterSchema } from '@encanto/shared';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { ConnectionForm } from '../components/ConnectionForm';
+import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { Action } from '../components/attention/Controls';
 import { AttentionScreen } from './AttentionScreen';
 import { useConnection } from '../context/ConnectionContext';
@@ -74,7 +74,7 @@ export const SettingsScreen: React.FC = () => {
 
   if (attention && user?.rol === 'ADMIN') return <AttentionScreen onBack={() => setAttention(false)} />;
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
       contentContainerStyle={[
         styles.scrollContent,
@@ -536,7 +536,7 @@ export const SettingsScreen: React.FC = () => {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 
