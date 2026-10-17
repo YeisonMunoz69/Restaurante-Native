@@ -21,11 +21,17 @@ export interface UploadedDishPhoto {
 export class DishPhotoService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
-    @Inject(SupabaseStorageService) private readonly storage: SupabaseStorageService,
+    @Inject(SupabaseStorageService)
+    private readonly storage: SupabaseStorageService,
   ) {}
 
-  async upload(restauranteId: string, dishId: string, file?: UploadedDishPhoto) {
-    if (!file) throw new ConflictException('Seleccione una foto antes de guardar');
+  async upload(
+    restauranteId: string,
+    dishId: string,
+    file?: UploadedDishPhoto,
+  ) {
+    if (!file)
+      throw new ConflictException('Seleccione una foto antes de guardar');
     const dish = await this.prisma.dish.findFirst({
       where: {
         id: dishId,
@@ -87,6 +93,15 @@ export class DishPhotoService {
       } catch {
         // La respuesta original es más útil; la guía explica cómo limpiar objetos huérfanos.
       }
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2034'
+      ) {
+        // Conservo el límite de diez: pido recargar cuando dos personas suben a la vez.
+        throw new ConflictException(
+          'La galería cambió mientras subíamos la foto; recárguela y vuelva a intentar',
+        );
+      }
       throw error;
     }
   }
@@ -111,10 +126,14 @@ export class DishPhotoService {
       });
       if (
         rows.length !== fotos.length ||
-        [...fotos].sort((a, b) => a.orden - b.orden).some((foto, index) => foto.orden !== index) ||
+        [...fotos]
+          .sort((a, b) => a.orden - b.orden)
+          .some((foto, index) => foto.orden !== index) ||
         rows.some((row) => !fotos.some((photo) => photo.id === row.id))
       ) {
-        throw new ConflictException('Recargue la galería antes de ordenar las fotos');
+        throw new ConflictException(
+          'Recargue la galería antes de ordenar las fotos',
+        );
       }
       await Promise.all(
         fotos.map(({ id, orden }) =>
@@ -124,7 +143,10 @@ export class DishPhotoService {
           }),
         ),
       );
-      return { platoId: dishId, fotos: [...fotos].sort((a, b) => a.orden - b.orden) };
+      return {
+        platoId: dishId,
+        fotos: [...fotos].sort((a, b) => a.orden - b.orden),
+      };
     });
   }
 

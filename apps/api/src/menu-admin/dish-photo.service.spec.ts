@@ -1,5 +1,6 @@
 import { ConflictException, BadRequestException } from '@nestjs/common';
 import sharp from 'sharp';
+import { Prisma } from '@prisma/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { DishPhotoService } from './dish-photo.service.js';
@@ -12,7 +13,10 @@ describe('DishPhotoService', () => {
   let service: DishPhotoService;
   let db: Record<string, any>;
   let storage: Record<string, any>;
-  let prisma: { dish: { findFirst: ReturnType<typeof vi.fn> }; $transaction: ReturnType<typeof vi.fn> };
+  let prisma: {
+    dish: { findFirst: ReturnType<typeof vi.fn> };
+    $transaction: ReturnType<typeof vi.fn>;
+  };
   let input: Buffer;
 
   beforeEach(async () => {
@@ -24,7 +28,11 @@ describe('DishPhotoService', () => {
     db = {
       dishPhoto: {
         findMany: vi.fn().mockResolvedValue([]),
-        create: vi.fn().mockImplementation(({ data }) => Promise.resolve({ id: 'photo-id', ...data })),
+        create: vi
+          .fn()
+          .mockImplementation(({ data }) =>
+            Promise.resolve({ id: 'photo-id', ...data }),
+          ),
       },
     };
     prisma = {
@@ -34,7 +42,9 @@ describe('DishPhotoService', () => {
     storage = {
       upload: vi.fn().mockResolvedValue(undefined),
       remove: vi.fn().mockResolvedValue(undefined),
-      publicUrl: vi.fn((path: string) => `https://storage.example/public/${path}`),
+      publicUrl: vi.fn(
+        (path: string) => `https://storage.example/public/${path}`,
+      ),
     };
     service = new DishPhotoService(
       prisma as unknown as PrismaService,
@@ -56,7 +66,10 @@ describe('DishPhotoService', () => {
 
   it('limpia los archivos nuevos si la galería ya alcanzó el máximo', async () => {
     db.dishPhoto.findMany.mockResolvedValue(
-      Array.from({ length: 10 }, (_, orden) => ({ id: `photo-${orden}`, orden })),
+      Array.from({ length: 10 }, (_, orden) => ({
+        id: `photo-${orden}`,
+        orden,
+      })),
     );
 
     await expect(
@@ -66,7 +79,9 @@ describe('DishPhotoService', () => {
         size: input.length,
       }),
     ).rejects.toBeInstanceOf(ConflictException);
-    expect(storage.remove).toHaveBeenCalledWith(expect.arrayContaining([expect.stringContaining('.webp')]));
+    expect(storage.remove).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.stringContaining('.webp')]),
+    );
   });
 
   it('rechaza una imagen inválida sin llamar al almacenamiento', async () => {
@@ -78,5 +93,26 @@ describe('DishPhotoService', () => {
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(storage.upload).not.toHaveBeenCalled();
+  });
+
+  it('limpia ambas variantes y responde conflicto si otra carga modifica la galería', async () => {
+    prisma.$transaction.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('serialization conflict', {
+        code: 'P2034',
+        clientVersion: '5.22.0',
+      }),
+    );
+    await expect(
+      service.upload(restaurantId, dishId, {
+        buffer: input,
+        mimetype: 'image/png',
+        size: input.length,
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    const paths = storage.remove.mock.calls[0][0];
+    expect(paths).toHaveLength(2);
+    expect(paths[0]).toMatch(/\.webp$/);
+    expect(paths[1]).toMatch(/-og\.webp$/);
+    expect(paths[0]).not.toBe(paths[1]);
   });
 });
