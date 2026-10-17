@@ -22,6 +22,7 @@ jest.mock('../../services/admin-menu.service', () => ({
     createCategory: jest.fn(),
     updateCategory: jest.fn(),
     dishes: jest.fn(),
+    createDish: jest.fn(),
     tags: jest.fn(),
   },
 }));
@@ -101,6 +102,56 @@ describe('MenuAdminScreen', () => {
     });
     expect(tree!.root.findAllByType(Note).some(note => note.props.children === 'menuAdmin.forbidden')).toBe(true);
     expect(tree!.root.findAllByType(Action)).toHaveLength(0);
+    ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('abre el formulario y crea otro plato cuando la carta ya contiene platos', async () => {
+    const existing = {
+      id: '00000000-0000-4000-8000-000000000013',
+      categoryId,
+      nombre: 'Entrada existente',
+      slug: 'entrada-existente',
+      descripcionBreve: null,
+      descripcion: 'Entrada de la carta',
+      precio: 12000,
+      alergenos: null,
+      disponible: true,
+      activo: true,
+      destacado: false,
+      orden: 0,
+      category: { id: categoryId, nombre: 'Entradas', activa: true },
+      photos: [],
+      etiquetasIds: [],
+    };
+    api.dishes.mockResolvedValue([existing]);
+    api.createDish.mockResolvedValue({ ...existing, id: '00000000-0000-4000-8000-000000000014' });
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(
+        <ThemeProvider><MenuAdminScreen onBack={jest.fn()} /></ThemeProvider>,
+      );
+    });
+    const press = (label: string) => tree!.root.findAllByType(Action)
+      .find(action => action.props.label === label)!.props.onPress();
+    ReactTestRenderer.act(() => press('menuAdmin.dishes'));
+    expect(tree!.root.findAllByType(TextInput)).toHaveLength(0);
+    ReactTestRenderer.act(() => press('menuAdmin.newDish'));
+    const change = (label: string, value: string) => tree!.root.findAllByType(TextInput)
+      .find(field => field.props.accessibilityLabel === label)!.props.onChangeText(value);
+    ReactTestRenderer.act(() => {
+      change('menuAdmin.dishName', 'Nueva entrada');
+      change('menuAdmin.description', 'Descripción de la nueva entrada');
+      change('menuAdmin.price', '18000');
+    });
+    await ReactTestRenderer.act(async () => {
+      press('menuAdmin.saveDish');
+    });
+    expect(api.createDish).toHaveBeenCalledWith(restaurantId, expect.objectContaining({
+      categoriaId: categoryId,
+      nombre: 'Nueva entrada',
+      slug: 'nueva-entrada',
+      precio: 18000,
+    }));
     ReactTestRenderer.act(() => tree!.unmount());
   });
 });

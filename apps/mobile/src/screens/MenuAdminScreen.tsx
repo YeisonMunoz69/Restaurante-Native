@@ -75,6 +75,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
   const [categoryName, setCategoryName] = useState('');
   const [categoryOrder, setCategoryOrder] = useState('0');
   const [selectedDishId, setSelectedDishId] = useState<string | null>(null);
+  const [showDishForm, setShowDishForm] = useState(false);
   const [draft, setDraft] = useState<DishDraft>(emptyDish());
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -143,6 +144,8 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
   };
 
   const startNewDish = () => {
+    // Abro el formulario aunque la carta ya tenga platos y el borrador esté vacío.
+    setShowDishForm(true);
     setSelectedDishId(null);
     setDraft(emptyDish(categories.find(category => category.activa)?.id ?? ''));
     setError(null);
@@ -150,6 +153,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
   };
 
   const editDish = (dish: AdminDish) => {
+    setShowDishForm(true);
     setSelectedDishId(dish.id);
     setDraft({
       categoriaId: dish.categoryId,
@@ -315,7 +319,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
                 {!selectedDishId && (
                   <Action label={t('menuAdmin.newDish')} disabled={busy || !categories.some(category => category.activa)} onPress={startNewDish} />
                 )}
-                {(selectedDishId || draft.nombre || !dishes.length) && (
+                {(showDishForm || !dishes.length) && (
                   <>
                     <Text style={[typography.tituloM, { color: colors.texto.primario }]}>
                       {selectedDishId ? t('menuAdmin.editDish') : t('menuAdmin.newDish')}
@@ -355,7 +359,11 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
                         ))}
                       </>
                     )}
-                    <Action label={t('common.back')} onPress={startNewDish} />
+                    <Action label={t('common.back')} onPress={() => {
+                      setShowDishForm(false);
+                      setSelectedDishId(null);
+                      setDraft(emptyDish());
+                    }} />
                   </>
                 )}
                 <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{t('menuAdmin.existingDishes')}</Text>
