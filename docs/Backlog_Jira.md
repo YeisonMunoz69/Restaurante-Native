@@ -2,6 +2,8 @@
 
 **Reparto vigente del 15 de octubre:** sustituimos la concentración en Alex por los bloques y dependencias de [Encargos_Equipo.md](Encargos_Equipo.md). Sprint 2 tiene tres historias por persona; Sprint 3, tres por persona y EC-40 de integración coordinada por Yeison. Conservamos criterios, puntos, fechas y entregas existentes; las referencias posteriores al reparto anterior no son el encargo actual.
 
+**Cambio solicitado el 16 de octubre, pendiente de Jira:** Google como único proveedor de autenticación, acceso global obligatorio y subpantallas en Ajustes para Sprint 5. No modificamos el CSV importable ni afirmamos haber creado actividades; antes de programar se deben crear/ajustar las historias, responsables y estimaciones en Jira. La revisión incluye retirar o diferir verificación y recuperación de contraseñas propias si Google administra las credenciales.
+
 ### Épicas, historias y criterios de aceptación
 
 **Versión:** 0.1 · **Generado:** 20 de agosto de 2026

@@ -2,11 +2,11 @@
 
 ### App móvil — El Encanto Campestre
 
-**Versión:** 0.6 · **Actualizado:** 16 de octubre de 2026
+**Versión:** 0.7 · **Actualizado:** 16 de octubre de 2026
 
 Registramos lo acordado y lo distinguimos de lo implementado. Las filas con `⬜` siguen abiertas. Actualizamos ramas, revisión y pendientes ya resueltos en los requisitos, sin cambiar por nuestra cuenta las reglas del cliente. El reparto vigente está en [Tareas_Alex.md](Tareas_Alex.md).
 
-El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejando la corrección en Jira y en los documentos afectados. Aplicamos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos dónde cambió y recordamos actualizar manualmente los requisitos de Drive y `docs/Requisitos_del_Sistema.docx`. El 16 de octubre cerramos las reglas operativas de reservas y tres decisiones de Android que estaban pendientes. El registro de Jira de esta ronda queda por sincronizar porque el controlador de escritorio falló; no afirmamos que Jira o los documentos manuales ya estén actualizados.
+El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejando la corrección en Jira y en los documentos afectados. Aplicamos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos dónde cambió y recordamos actualizar manualmente los requisitos de Drive y `docs/Requisitos_del_Sistema.docx`. El 16 de octubre cerramos las reglas operativas de reservas y tres decisiones de Android que estaban pendientes. También se pidió Google como proveedor único y un acceso global para el Sprint 5, además de ordenar Ajustes en subpantallas. Jira queda por sincronizar: estas decisiones describen el alcance solicitado, no su implementación ni cambios ya guardados en Jira o en los documentos manuales.
 
 ---
 
@@ -161,6 +161,8 @@ Bloque completado y archivado en la carpeta `design/`.
 | G-15    | Datos de ejemplo                | Los redacta el administrador                                                                                                                                          |
 | G-16    | Copia de seguridad              | Mensual, en Supabase o en Google Drive                                                                                                                                |
 | G-17    | Cuentas de prueba               | `yeison@encanto.com` · `fabian@encanto.com` · `alex@encanto.com`                                                                                                      |
+| G-18    | Inicio de sesión                | Google será el único proveedor en la primera versión de autenticación revisada; sin sesión no se abre ninguna pestaña ni servicio. Los roles se asignan en servidor, no desde el perfil móvil. Sprint 5; pendiente Jira y revisión de RF-AUT02/RF-AUT05. |
+| G-19    | Organización de Ajustes          | Conservamos las cinco pestañas y separamos Ajustes en Perfil, Preferencias, Aplicación, Cuenta y seguridad, e Información/ayuda, con navegación interna y retroceso visible. Sprint 5; pendiente Jira. |
 
 ---
 

@@ -4,8 +4,10 @@
 
 **Cliente:** El Encanto Campestre · Vereda Las Huacas, Timbío, Cauca  
 **Asignatura:** Electiva V · Desarrollo Móvil (agosto – noviembre 2026)  
-**Versión:** 1.1 · **Fecha:** 16 de octubre de 2026
-**Documentos base:** `Sprint0_Analisis_y_Diseno.md` v0.2 · `Decisiones_Pendientes_y_Riesgos.md` v0.3 · `Plan_de_Sprints.md` v0.2 · `Backlog_Jira.md` v0.1
+**Versión:** 1.2 · **Fecha:** 16 de octubre de 2026
+**Documentos base:** `Sprint0_Analisis_y_Diseno.md` v0.2 · `Decisiones_Pendientes_y_Riesgos.md` v0.7 · `Plan_de_Sprints.md` · `Backlog_Jira.md` v0.1
+
+**Cambio solicitado el 16 de octubre:** Google como único proveedor y bloqueo global antes de iniciar sesión; Ajustes se dividirá en subpantallas. El cambio queda documentado localmente para Sprint 5, pendiente de registrar en Jira y copiar manualmente a Drive y `Requisitos_del_Sistema.docx`. El inicio de sesión correo/contraseña que se construyó en Sprint 1 describe la versión anterior, no el objetivo nuevo.
 
 ---
 
@@ -52,10 +54,10 @@
 
 | Actor                       | Descripción y Nivel de Acceso                                                                                                                                                                         | Método de Autenticación                                                         |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Visitante**               | Usuario no autenticado. Consulta carta del día, detalle de platos, muro de noticias e información general de ubicación y contacto.                                                                    | Sin credenciales                                                                |
-| **Comensal**                | Cliente registrado. Crea solicitudes de reserva con pedido, consulta su historial, cancela reservas vigentes, marca favoritos y configura preferencias de notificación.                               | Correo electrónico y contraseña (hash Argon2id)                                 |
-| **Personal (Staff)**        | Empleado del restaurante. Consulta la agenda operativa del día, filtra reservas confirmadas y registra el check-in (llegada) o inasistencia de comensales.                                            | Correo y contraseña con rol `STAFF`                                             |
-| **Dueño (Administrador)**   | Propietario o administrador general. Aprueba o rechaza solicitudes de reserva, gestiona la carta y disponibilidad, administra el calendario anual, publica noticias y modifica parámetros operativos. | Correo y contraseña con rol `ADMIN`, más verificación TOTP en acciones críticas |
+| **Visitante**               | Usuario sin sesión. Solo puede ver la pantalla de acceso; no entra a carta, noticias, reservas ni otros servicios de la app.                                                                         | Debe iniciar sesión con Google                                                 |
+| **Comensal**                | Cliente autenticado. Crea solicitudes de reserva con pedido, consulta su historial, cancela reservas vigentes, marca favoritos y configura preferencias de notificación.                              | Google; la API valida la identidad y emite la sesión propia                    |
+| **Personal (Staff)**        | Empleado autorizado. Consulta la agenda operativa del día, filtra reservas confirmadas y registra el check-in o inasistencia de comensales.                                                        | Google vinculado a una cuenta con rol `STAFF` asignado en servidor               |
+| **Dueño (Administrador)**   | Propietario autorizado. Aprueba o rechaza solicitudes, gestiona carta/disponibilidad/calendario/noticias y modifica parámetros operativos.                                                         | Google vinculado a rol `ADMIN`, más TOTP en acciones críticas                   |
 | **Sistema (Cron / Daemon)** | Procesos automatizados del backend para expiración de solicitudes sin comprobar, disparo de recordatorios y marcado de inasistencias por tolerancia.                                                  | Clave interna de servicio / JWT de sistema                                      |
 
 ---
@@ -91,14 +93,14 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 
 | ID           | Nombre del Requisito          | Descripción y Regla Operativa                                                                                                                 | Prioridad |  Sprint  | Ref. Jira |
 | ------------ | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | :-------: | :------: | --------- |
-| **RF-AUT01** | Registro de cuenta            | Registrar comensales capturando nombre completo, correo electrónico, número telefónico y contraseña con hash Argon2id.                        |   **M**   | Sprint 1 | EP-02     |
-| **RF-AUT02** | Verificación de correo        | Envío de código numérico temporal por correo electrónico vía servicio Resend para confirmar la titularidad de la cuenta.                      |   **S**   | Sprint 5 | EP-02     |
-| **RF-AUT03** | Inicio de sesión y tokens     | Autenticación con emisión de JWT de acceso de corta duración (15 min) y token de refresco rotatorio (7 días) resguardado en Keystore.         |   **M**   | Sprint 1 | EP-02     |
+| **RF-AUT01** | Alta o vínculo de cuenta       | Crear o vincular la cuenta a partir de la identidad Google verificada. No se registra ni almacena una contraseña propia; el teléfono se completa cuando sea necesario para reservar.                |   **M**   | Sprint 5 | EP-02     |
+| **RF-AUT02** | Verificación de correo        | Pendiente de revisar en Jira: no añadimos verificación propia si la identidad Google ya quedó verificada; cualquier comprobación se basa en la respuesta de Google. | **S** | Revisar | EP-02 |
+| **RF-AUT03** | Inicio Google y tokens        | Aceptar Google como único proveedor; la API verifica el token de identidad y emite JWT de acceso (15 min) y refresco rotatorio (7 días), resguardado en Keystore. No confiamos identidad ni rol enviados por el cliente. | **M** | Sprint 5 | EP-02 |
 | **RF-AUT04** | Cierre de sesión              | Revocación inmediata del token de refresco en la base de datos y eliminación del almacenamiento seguro en el dispositivo móvil.               |   **M**   | Sprint 1 | EP-02     |
-| **RF-AUT05** | Recuperación de contraseña    | Solicitud y validación de código OTP enviado al correo del comensal para redefinir credenciales de acceso de forma segura.                    |   **S**   | Sprint 5 | EP-02     |
+| **RF-AUT05** | Recuperación de contraseña    | Pendiente de revisar en Jira: la contraseña pertenece a Google; no construimos una recuperación de contraseña propia mientras Google sea el único proveedor.        | **S** | Revisar | EP-02 |
 | **RF-AUT06** | Configuración de 2FA TOTP     | Vinculación de segundo factor mediante aplicación de autenticación (Google Authenticator) exclusiva para usuarios con rol de Dueño (`ADMIN`). |   **S**   | Sprint 5 | EP-10     |
 | **RF-AUT07** | Guardia de acciones sensibles | Exigencia de token TOTP válido al dueño antes de ejecutar acciones de alto impacto (modificar parámetros globales, borrar cuentas).           |   **S**   | Sprint 5 | EP-10     |
-| **RF-AUT08** | Navegación pública sin sesión | Permitir explorar la carta, noticias e información sin iniciar sesión; requerir autenticación únicamente al pulsar "Solicitar reserva".       |   **M**   | Sprint 1 | EP-02     |
+| **RF-AUT08** | Acceso global con sesión      | Sin sesión solo se muestra el acceso Google. Las cinco pestañas, servicios y enlaces profundos esperan autenticación; cerrar sesión elimina los tokens locales y vuelve al acceso. La API conserva sus propias guardias. | **M** | Sprint 5 | EP-02 |
 | **RF-AUT09** | Advertencia de caducidad      | Diálogo modal interactivo que avisa 2 minutos antes de que expire la sesión si la aplicación se encuentra en primer plano activo.             |   **S**   | Sprint 5 | EP-02     |
 
 ### 4.2 Módulo de Carta Digital y Disponibilidad (MEN)
@@ -181,6 +183,7 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 | **RF-INF06** | Pantalla Próximamente        | Tarjetas informativas con estética de marca anunciando la pista de motos y la zona de pesca deportiva.                                        |   **S**   | Sprint 4 | EP-07     |
 | **RF-INF07** | Registro de tokens push      | Registro y actualización del token de Firebase Cloud Messaging asociado al dispositivo del usuario.                                           |   **M**   | Sprint 5 | EP-09     |
 | **RF-INF08** | Preferencias de notificación | Pantalla en perfil para que el comensal active o silencie notificaciones de noticias o recordatorios.                                         |   **S**   | Sprint 5 | EP-09     |
+| **RF-INF09** | Subpantallas de Ajustes       | Organizar Ajustes en Perfil, Preferencias, Aplicación, Cuenta y seguridad, e Información/ayuda; conservar el retorno visible y los cinco destinos principales. | **S** | Sprint 5 | EP-02 |
 
 ---
 
@@ -265,15 +268,16 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 
 | Requisito      | Descripción Sintética             | Decisión Vinculante | Épica Jira | Sprint Asignado | Política de Recorte / Fallback           |
 | -------------- | --------------------------------- | :-----------------: | :--------: | :-------------: | ---------------------------------------- |
-| **RF-AUT01**   | Registro de cuenta                |       C-6, E        |   EP-02    |  **Sprint 1**   | Núcleo del sistema (No recortable)       |
-| **RF-AUT02**   | Verificación por correo           |         C-3         |   EP-02    |  **Sprint 5**   | Se puede diferir validación obligatoria  |
-| **RF-AUT03**   | Login con tokens rotatorios       |    C-16, RNF-06     |   EP-02    |  **Sprint 1**   | Núcleo del sistema (No recortable)       |
+| **RF-AUT01**   | Alta/vínculo de cuenta Google     |       C-6, E        |   EP-02    |  **Sprint 5**   | Cuenta basada en identidad verificada; no contraseña propia |
+| **RF-AUT02**   | Verificación por correo           |         C-3         |   EP-02    |  **Revisar**    | Confirmar en Jira si se retira al usar Google |
+| **RF-AUT03**   | Login Google y tokens rotatorios  |    C-16, RNF-06     |   EP-02    |  **Sprint 5**   | La API verifica Google y emite JWT propios |
 | **RF-AUT04**   | Logout e invalidación             |        C-16         |   EP-02    |  **Sprint 1**   | Núcleo del sistema (No recortable)       |
-| **RF-AUT05**   | Recuperación de contraseña        |         C-3         |   EP-02    |  **Sprint 5**   | Segundo nivel de seguridad               |
+| **RF-AUT05**   | Recuperación de contraseña        |         C-3         |   EP-02    |  **Revisar**    | No duplicar recuperación que ofrece Google |
 | **RF-AUT06**   | 2FA TOTP para Dueño               |       ADR-007       |   EP-10    |  **Sprint 5**   | Opcional si desborda capacidad           |
 | **RF-AUT07**   | Guardia de acciones críticas      |       ADR-007       |   EP-10    |  **Sprint 5**   | Opcional si desborda capacidad           |
-| **RF-AUT08**   | Navegación anónima inicial        |         A-1         |   EP-02    |  **Sprint 1**   | Núcleo del sistema (No recortable)       |
+| **RF-AUT08**   | Acceso global con sesión          |         A-1         |   EP-02    |  **Sprint 5**   | Sin sesión solo queda visible el acceso |
 | **RF-AUT09**   | Alerta caducidad de sesión        |         G-4         |   EP-02    |  **Sprint 5**   | Refinamiento de experiencia              |
+| **RF-INF09**   | Subpantallas de Ajustes           |         G-19        |   EP-02    |  **Sprint 5**   | Categorías y navegación interna; pendiente Jira |
 | **RF-MEN01**   | Carta visual por categorías       |      A-5, F-5       |   EP-03    |  **Sprint 2**   | Núcleo del sistema (No recortable)       |
 | **RF-MEN02**   | Platos de próximo día hábil       |      P-1, G-8       |   EP-03    |  **Sprint 2**   | Esencia de la pantalla de inicio         |
 | **RF-MEN03**   | Ficha de plato con 10 fotos       |      C-7, C-8       |   EP-03    |  **Sprint 2**   | Reducir fotos iniciales si excede        |
@@ -347,7 +351,8 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 
 - **Foco:** Configuración del monorepo, contenedores Docker, esquema relacional en Prisma/Supabase, pipeline de i18n sin literales y ciclo de autenticación seguro (Argon2id + Keystore).
 - **Entregables:** App React Native con 5 tabs iniciales, API NestJS respondiendo en `/api/v1`, Swagger en `/api/docs`, despliegue inicial en VPS.
-- **Requisitos cubiertos:** `RF-AUT01`, `RF-AUT03`, `RF-AUT04`, `RF-AUT08`, `RF-ADM05`, `RNF-03`, `RNF-04`, `RNF-05`, `RNF-06`, `RNF-07`, `RNF-08`, `RNF-12`, `RNF-14`.
+- **Requisitos cubiertos en su versión original:** `RF-AUT01`, `RF-AUT03`, `RF-AUT04`, `RF-AUT08`, `RF-ADM05`, `RNF-03`, `RNF-04`, `RNF-05`, `RNF-06`, `RNF-07`, `RNF-08`, `RNF-12`, `RNF-14`.
+- **Nota de alcance:** Sprint 1 implementó el acceso anterior con correo/contraseña y navegación pública. El acuerdo del 16 de octubre lo reemplaza como objetivo futuro; Google y el bloqueo global quedan propuestos para Sprint 5, no se reabre retrospectivamente el cierre técnico de Sprint 1. RF-AUT02/RF-AUT05 quedan para revisión en Jira, no los contamos en la nueva estimación.
 
 ### Sprint 2: Carta Digital, Fotografías y Calendario (58 puntos)
 

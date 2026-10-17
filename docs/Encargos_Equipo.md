@@ -78,6 +78,16 @@ Yeison revisa PR, coordina decisiones, integra solo con filtros verdes y comprue
 
 Yeison implementa también su bloque EC-26 → EC-27 → EC-30 y, después, EC-37 → EC-36 → EC-39, coordinando EC-40 al final. No queda reducido a revisión mientras Alex programa todo. Acordamos contratos e IDs antes de tocar AppModule, shared o navegación comunes.
 
+## Solicitud de alcance para Sprint 5 · Google y Ajustes
+
+Yeison pidió el 16 de octubre que Google sea el único proveedor de inicio de sesión y que no se pueda abrir ninguna pestaña o servicio sin autenticarse. Esto todavía no está implementado ni sincronizado en Jira; no lo adelantamos a Sprint 2/3 ni cambiamos sus criterios mientras recuperamos carta y reservas.
+
+- **Fabián:** validar en la API el token de identidad de Google, rechazar tokens inválidos/vencidos, vincular la cuenta con el usuario y rol asignados en servidor y emitir los JWT/refresh del proyecto. No confiamos el rol en datos del teléfono ni en un campo modificable del perfil.
+- **Alex:** reemplazar el acceso actual de correo/contraseña por Google en móvil; guardar y renovar la sesión con el mecanismo seguro existente; bloquear las cinco pestañas y enlaces entrantes sin sesión; cerrar sesión y regresar al acceso. La API debe seguir protegiendo cada operación aunque se intente saltar la interfaz.
+- **Alex:** reorganizar Ajustes en subpantallas con retroceso visible: Perfil, Preferencias, Aplicación, Cuenta y seguridad, e Información/ayuda. Conservamos los cinco destinos principales.
+
+Antes de programar, Yeison sincroniza estos criterios en Jira y los requisitos; allí revisamos qué partes de RF-AUT02/RF-AUT05 se retiran o difieren porque Google administra la contraseña. Pendiente actualizar requisitos en Drive y Word local: RF-AUT01/03/08 y organización de Ajustes. No damos por asignadas ni estimadas oficialmente estas tareas hasta crear/actualizar sus actividades Jira.
+
 ```powershell
 npm run build --workspace=@encanto/shared
 npx prisma generate --schema=apps/api/prisma/schema.prisma

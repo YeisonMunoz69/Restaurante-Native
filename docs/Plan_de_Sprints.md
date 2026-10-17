@@ -10,6 +10,10 @@
 
 **Recuperación desde el 9 de octubre:** conservamos las fechas originales para hacer visible el atraso. Priorizamos carta/calendario y después reservas antes de abrir más trabajo de Sprint 4. Encargamos a Alex las entregas API+móvil de [Tareas_Alex.md](Tareas_Alex.md); Yeison revisa e integra, y Fabián atiende revisión/correcciones de su calendario ya publicado. No cambiamos retrospectivamente los estimados ni damos por hecha la capacidad para terminar todo.
 
+**Resumen funcional al 16 de octubre:** Sprint 1 tiene sus cimientos principales implementados; i18n sigue parcial y todavía no verificamos el entorno nativo en los tres computadores. En Sprint 2 EC-25 está integrada; EC-28 y EC-29 tienen backend/panel parcial, pero siguen en curso. La carta, inicio y detalle móvil (EC-22/23/24), administración de platos/fotos (EC-26/27) y sus pruebas (EC-30) continúan pendientes. En Sprint 3 no hay flujo funcional de reservas: la pantalla muestra un estado vacío y las políticas ya acordadas aún no generan franjas, solicitudes, estados ni aprobación. Los commits de políticas están en `yeison/define-politicas-reserva-android`, todavía no integrados en `dev`.
+
+**Verificación local del 16 de octubre en `yeison/ajusta-encabezados-y-auth-plan`:** ajustamos el espacio superior y el tamaño responsive de «Mis reservas», «Próximamente en El Encanto» y «Ajustes». En el S21 revisamos 360 dp nativos, 320 dp compactos y 640 dp amplios; restauramos la resolución original. En Docker construimos la imagen, levantamos la API y `/api/v1/health` confirmó PostgreSQL conectado, sin ejecutar migraciones. Para esta prueba usamos un override temporal porque el `.env` local conserva `CORS_ORIGIN=*`, que la API rechaza; el archivo no se modificó. La configuración de Compose quedó preparada para recibir `API_RUNTIME_ENV_FILE` sin copiar secretos. Los cambios siguen solo en esta rama y no en `dev`.
+
 Podemos corregir tareas y alcance mediante el procedimiento de [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): corrección en Jira, documentos afectados y recordatorio manual para requisitos en Drive/Word. Cada actividad tiene un responsable único; colaboración no significa dejarla sin asignar.
 
 ---
@@ -220,6 +224,8 @@ El reparto vigente distribuye EC-22/23/24 a Alex, EC-25/28/29 a Fabián y EC-26/
 **Guion para el parcial.** ¿Cómo llega una notificación desde el servidor hasta la bandeja del dispositivo con la app cerrada? ¿Qué es TOTP y por qué el código cambia cada treinta segundos? ¿Por qué el recordatorio se programa en el servidor y no en el dispositivo?
 
 **Cierre.** Una solicitud nueva llega al teléfono del dueño con la aplicación cerrada; al aprobarla, el comensal recibe la confirmación.
+
+**Cambio de alcance solicitado para el Sprint 5, pendiente de Jira:** Yeison aprobó el 16 de octubre usar Google como único proveedor de inicio de sesión y exigir una sesión antes de entrar a cualquiera de las cinco pestañas o servicios de la app. La pantalla de acceso será la única visible sin sesión; al cerrar sesión se vuelve a ella. Proponemos asignar la validación del token de Google y la emisión de JWT del proyecto a Fabián, y la integración móvil, guardia global y reorganización de Ajustes a Alex. En Ajustes planteamos subpantallas de Perfil, Preferencias, Aplicación, Cuenta y seguridad, e Información/ayuda. No alteramos los puntos ni declaramos estas tareas parte del Sprint 5 hasta reflejarlas en Jira. También debemos revisar allí las tareas de verificación y recuperación de contraseña, que ya no encajan con Google como único proveedor. Pendiente actualizar requisitos en Drive y Word local: RF-AUT01/03/08 y nueva organización de Ajustes.
 
 ---
 

@@ -2,11 +2,13 @@
 
 **Reparto vigente del 15 de octubre:** este catálogo ya no es una lista completa a cargo de Alex. Aplicamos [Encargos_Equipo.md](Encargos_Equipo.md): Alex EC-22/23/24 y luego EC-33/35/38; Fabián EC-25/28/29 y luego EC-31/32/34; Yeison EC-26/27/30 y luego EC-37/36/39, coordinando EC-40 al final. Conservamos las fichas como referencia compartida. A01/A04/A05 las lleva Fabián; A03/A06 y operación administrativa, Yeison. Las menciones posteriores al reparto anterior son históricas; el prompt vigente está en Encargos_Equipo.md, no encargamos toda la API y el móvil a Alex.
 
-**Actualización de integración, 15 de octubre:** el backend de calendario de Fabián se incorpora a la base del equipo mediante su PR #2; verificamos el resultado publicado en `dev` y Actions antes de comenzar A05. El reparto detallado A00–A09 se conserva. Si ya tenemos avances, primero los publicamos y contrastamos sus criterios; no repetimos implementaciones ni marcamos historias completas por tener solo archivos locales. Usamos el procedimiento y los prompts actualizados de [Encargos_Equipo.md](Encargos_Equipo.md).
+**Corte del 16 de octubre:** EC-25 está integrada; EC-28/29 tienen backend y panel publicados, pero continúan En curso hasta completar aceptación y consumo de disponibilidad desde la carta. EC-22/23/24 siguen pendientes de comprobar en la rama de Alex y en Android. En Sprint 3 no existe todavía un flujo funcional de reservas. Google como único acceso y el bloqueo de todas las pestañas son una solicitud para Sprint 5, pendiente de Jira; las indicaciones anteriores de navegación pública describen el alcance transitorio y quedan reemplazadas al implementar ese cambio.
 
-**Corte: 9 de octubre de 2026.** Revisamos `dev` en `0e27cb4`. Este documento reemplaza el reparto inicial de Sprint 2: encargamos a Alex las entregas siguientes de backend y móvil, por partes. No significa que ya estén implementadas ni cambia el alcance académico acordado.
+**Actualización del 16 de octubre:** el backend de calendario del PR #2 y el panel A05 del PR #8 ya están integrados en `dev`. No los rehacemos; faltan aceptación y pruebas pendientes descritas en el plan. Si Alex ya implementó carta/detalle, publica y demuestra ese avance; si no, empieza por EC-22 → EC-23 → EC-24. Usamos el reparto y los prompts vigentes de [Encargos_Equipo.md](Encargos_Equipo.md).
 
-**Revisión del 15 de octubre:** asignamos a Alex EC-14, EC-22 a EC-28 y EC-30 a EC-40 según este reparto. El calendario EC-29 tiene a Fabián como responsable de coordinar su cierre, con A05 a cargo de Alex. El repositorio aún no muestra una rama o PR de menú de Alex; antes de repetir trabajo comprobamos sus avances locales. Podemos ajustar estas entregas con la corrección registrada en Jira y la sincronización de [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos), recordando los requisitos manuales de Drive/Word.
+**Corte inicial del 9 de octubre de 2026 (histórico):** revisamos `dev` en `0e27cb4`. Este documento reemplaza el reparto inicial de Sprint 2; su estado actual se describe en el corte del 16 de octubre y en el plan vigente.
+
+**Revisión del 16 de octubre:** Alex conserva EC-22/23/24 y EC-33/35/38; Fabián EC-25/28/29 y EC-31/32/34; Yeison EC-26/27/30 y EC-37/36/39, con EC-40 coordinada. Antes de duplicar, cada quien revisa y publica avances de su rama. El cambio futuro de autenticación se mantiene pendiente de Jira y de sincronizar requisitos manuales de Drive/Word.
 
 ## 1. Desde dónde empezamos
 
@@ -147,7 +149,7 @@ Ya tenemos decisiones que **sí aplicamos**: pedido opcional con menos de ocho p
 
 ### A08. Reserva, ticket e historial del comensal
 
-- Conectamos «Nueva reserva». Permitimos explorar carta sin cuenta y pedimos iniciar sesión antes de enviar una reserva, conservando el contexto de forma segura.
+- Conectamos «Nueva reserva». Durante Sprint 3 se conserva el acceso público existente a carta; el cambio solicitado para Sprint 5 sustituye ese comportamiento: desde su integración ninguna pestaña ni servicio móvil queda disponible sin sesión Google. No adelantamos ese cambio a Sprint 3.
 - Implementamos fecha/personas, franja, pedido y resumen. Para menos de ocho personas permitimos omitir pedido; desde ocho explicamos que es obligatorio. No mostramos platos de hoy si la reserva es para otra fecha.
 - Al enviar desactivamos doble toque; un error conserva el formulario y no anuncia éxito. Solo mostramos solicitud enviada cuando recibimos código/estado del servidor.
 - Mostramos ticket copiable, total del servidor, instrucciones de pago externo y acción WhatsApp al contacto configurado. No incrustamos teléfono de prueba como negocio definitivo. La pantalla explica que falta aprobación del dueño.
