@@ -21,8 +21,9 @@ services:
       - /usr/src/app/apps/api/node_modules
       - /usr/src/app/packages/shared/node_modules
       - /usr/src/app/packages/shared/dist
+    # Puedo apuntar al .env del checkout principal desde un worktree sin copiar secretos.
     env_file:
-      - .env
+      - ${API_RUNTIME_ENV_FILE:-.env}
     environment:
       - NODE_ENV=development
     # Con esto docker ps me dice si la API está respondiendo de verdad, no solo si el proceso vive.
@@ -33,7 +34,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "fetch('http://localhost:3000/api/v1').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+          "fetch('http://127.0.0.1:3000/api/v1/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
         ]
       interval: 30s
       timeout: 10s
