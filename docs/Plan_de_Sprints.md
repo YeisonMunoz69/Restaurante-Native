@@ -115,22 +115,24 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 
 **Objetivo.** Que el comensal vea la carta real del próximo día de atención y que el dueño pueda mantenerla.
 
-|  Estado   | Tarea                                                                                 | Requisitos         |  Pts   | Responsable |
-| :-------: | ------------------------------------------------------------------------------------- | ------------------ | :----: | ----------- |
-|    [~]    | Carta por categorías con lista virtualizada en React Native                           | RF-MEN01, RF-MEN06 |   8    | Alex        |
-|    [~]    | Pantalla de inicio con los platos del próximo día de atención                         | RF-MEN02           |   5    | Alex        |
-|    [~]    | Detalle de plato con galería de hasta 10 fotos                                        | RF-MEN03           |   5    | Alex        |
-|    [x]    | API de menú EC-25: PR #6 integrado, CI/CD y cuatro rutas HTTPS verificados            | RF-MEN01–06        |   5    | Fabián      |
-|    [~]    | Administración de categorías y platos en backend y móvil                              | RF-ADM01, 02, 04   |   8    | Yeison      |
-|    [~]    | Carga de fotos: compresión con `sharp`, Supabase Storage y variante para vista previa | RF-ADM02, C-7      |   8    | Yeison      |
-|    [~]    | Disponibilidad por fecha: API integrada por PR #7; panel/aceptación en curso          | RF-ADM03, ADR-010  |   8    | Fabián      |
-|    [~]    | Calendario: incorporamos backend del PR #2; falta aceptación del panel móvil          | RF-ADM06, HU-05    |   8    | Fabián      |
-|    [~]    | Pruebas de disponibilidad de plato por fecha                                          | RNF-12             |   3    | Yeison      |
-| **Total** |                                                                                       |                    | **58** |             |
+|  Estado   | Tarea                                                                         | Requisitos         |  Pts   | Responsable |
+| :-------: | ----------------------------------------------------------------------------- | ------------------ | :----: | ----------- |
+|    [~]    | Carta por categorías con lista virtualizada en React Native                   | RF-MEN01, RF-MEN06 |   8    | Yeison      |
+|    [~]    | Pantalla de inicio con los platos del próximo día de atención                 | RF-MEN02           |   5    | Yeison      |
+|    [~]    | Detalle de plato con galería de hasta 10 fotos                                | RF-MEN03           |   5    | Yeison      |
+|    [x]    | API de menú EC-25: PR #6 integrado, CI/CD y cuatro rutas HTTPS verificados    | RF-MEN01–06        |   5    | Fabián      |
+|    [~]    | Administración de categorías y platos en backend y móvil                      | RF-ADM01, 02, 04   |   8    | Yeison      |
+|    [~]    | Fotos: implementación en rama; prueba Storage aplazada por falta de acceso    | RF-ADM02, C-7      |   8    | Yeison      |
+|    [~]    | Disponibilidad por fecha: API integrada por PR #7; integración final en curso | RF-ADM03, ADR-010  |   8    | Yeison      |
+|    [~]    | Calendario: backend y panel integrados; cierre técnico y registro pendientes  | RF-ADM06, HU-05    |   8    | Yeison      |
+|    [~]    | Pruebas de disponibilidad de plato por fecha                                  | RNF-12             |   3    | Yeison      |
+| **Total** |                                                                               |                    | **58** |             |
 
-**Situación al 16 de octubre:** conservamos el backend de calendario y el panel PR #8. La carta EC-22/23/24, administración EC-26/27, disponibilidad, fotos y pruebas están en esta rama; EC-29 conserva su recorrido previo. La PR #10 cubre solo la carta móvil y sigue como borrador: CI verde, sin revisión ni merge, con validación contra `dev` pendiente. El resto de la rama tampoco se ha integrado. En S21 recorrimos la carta con datos de prueba locales y disponibilidad general, y completamos reserva, bandeja ADMIN, aprobación, llegada y cierre contra fixtures locales. Aún falta la lectura de la carta con el `restauranteId` real de dev, carga real en Storage y aceptación del equipo. Por eso los criterios completos siguen `[~]`, no `Listo`.
+**Estado vigente al 16 de octubre:** conservamos el calendario y panel ya integrados. La carta real está probada en S21 contra HTTPS dev; administración, fotos y reservas están en la rama de integración. Pasan 195 pruebas API con PostgreSQL aislado, sin omisiones, y 47 móviles; los últimos ajustes de fecha tienen regresión dirigida y TypeScript correcto. Corregimos readiness sin migración de menú, conflicto de carga simultánea de fotos, versión de URL por fecha e indicador de galería. El CI ahora configura PostgreSQL temporal para ejecutar las integraciones. Faltan merge, comprobación del despliegue y registro en Jira: PR #10 cubre solo la carta y los otros cambios están en `yeison/ajusta-encabezados-y-auth-plan`.
 
-El reparto vigente distribuye EC-22/23/24 a Alex, EC-25/28/29 a Fabián y EC-26/27/30 a Yeison. Fabián conserva EC-29 y entrega también su panel antes asignado a Alex. No encontramos avances nuevos de Alex publicados al consultar el 15 de octubre; revisamos su rama antes de duplicar trabajo.
+**Responsabilidad del cierre:** por encargo del usuario, Yeison asume las actividades restantes de Sprint 2. Conservamos la autoría de las entregas de Fabián y el reparto histórico de Alex. La reasignación de Jira está pendiente de acceso operativo; esta tabla expresa el encargo aprobado, no afirma una modificación remota.
+
+**EC-27 aplazada por acceso externo:** el usuario confirmó que no dispone del acceso completo a Supabase y que esta parte deberá esperar. Conservamos la implementación y pruebas locales, pero falta probar subida y limpieza reales en el bucket. El destino de seguimiento es el backlog de integración de Storage, manteniendo a Yeison como responsable; el traslado debe registrarse en Jira antes de cerrar administrativamente el sprint. EC-27 no está terminada ni se elimina RF-ADM02. Pendiente actualizar requisitos en Drive y Word local: RF-ADM02/plan de entrega, prueba real de fotos aplazada por acceso; sección 8, Yeison asume el cierre de las tareas restantes.
 
 **Entrega EC-25 del 15 de octubre:** integramos PR #6 con merge `f8271b9`; CI/CD dev 38840180341 y consultas funcionales HTTPS correctos. Jira EC-25 está Listo (comentario 10039). Precio COP numérico y contratos en [API_Menu_EC25.md](API_Menu_EC25.md), evidencia en [Entrega_EC25.md](Entrega_EC25.md). EC-28 sigue En curso: API/copia confirmada integrada en PR #7 (`19c5d93`), panel Android y aceptación en curso. EC-29 conserva su backend integrado y sigue En curso hasta panel y aceptación. No cerramos las pantallas de Alex ni la administración de Yeison. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/copia efectiva confirmada, configuración compartida y secciones 8/10.
 
