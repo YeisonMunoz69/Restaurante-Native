@@ -4,7 +4,7 @@
 
 **Cliente:** El Encanto Campestre · Vereda Las Huacas, Timbío, Cauca  
 **Asignatura:** Electiva V · Desarrollo Móvil (agosto – noviembre 2026)  
-**Versión:** 1.0 Definitiva · **Fecha:** Septiembre 2026  
+**Versión:** 1.1 · **Fecha:** 16 de octubre de 2026
 **Documentos base:** `Sprint0_Analisis_y_Diseno.md` v0.2 · `Decisiones_Pendientes_y_Riesgos.md` v0.3 · `Plan_de_Sprints.md` v0.2 · `Backlog_Jira.md` v0.1
 
 ---
@@ -64,11 +64,11 @@
 
 Las siguientes reglas, acordadas en el proceso de toma de decisiones, son de cumplimiento estricto en los servicios del sistema:
 
-- **RN-01 (Duración de Reserva):** 90 minutos para grupos de hasta 4 personas; 120 minutos para grupos de 5 o más personas.
+- **RN-01 (Duración de Reserva):** duración configurable de 90 minutos para grupos de hasta 4 personas y 120 minutos para grupos de 5 o más personas.
 - **RN-02 (Granularidad y Franjas):** Los horarios de servicio y las franjas horarias son dinámicos, configurados por el administrador en la base de datos (no constantes fijas en el código).
 - **RN-03 (Tolerancia de Llegada):** Margen máximo de 30 minutos sobre la hora reservada. Superado el margen sin check-in, el sistema marca `NO_ASISTIO`. No hay reembolsos por inasistencia.
-- **RN-04 (Ventana de Cancelación):** El comensal puede cancelar su reserva hasta 1 hora antes de la franja horaria pactada.
-- **RN-05 (Anticipación de Reserva):** Anticipación máxima de 3 meses. Anticipación mínima de 1 hora, siempre y cuando la solicitud se realice antes de las 13:00 del día del servicio; por debajo de ese límite se deriva a atención presencial directa.
+- **RN-04 (Ventana de Cancelación):** El comensal puede cancelar una reserva confirmada mientras falten al menos 60 minutos para la franja pactada; exactamente a 60 minutos todavía puede hacerlo.
+- **RN-05 (Anticipación de Reserva):** La fecha puede reservarse hasta 3 meses calendario desde hoy. La franja debe comenzar al menos 60 minutos después de la solicitud. No hay corte fijo a las 13:00; con menos de 60 minutos se deriva a atención presencial directa.
 - **RN-06 (Pedido Anticipado Obligatorio y Opcional):**
   - Si la reserva es para **8 o más personas**, la selección de platos en la app es **obligatoria** antes de generar la solicitud.
   - Para grupos de **1 a 7 personas**, el pedido de platos es **opcional**.
@@ -126,11 +126,11 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-RES06** | Registro de solicitud inicial   | Inserción de la reserva en estado `SOLICITADA` generando un código alfanumérico corto y legible de 6 caracteres (ej. `ENC-482`).             |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES07** | Pantalla de pago y WhatsApp     | Resumen con instrucciones bancarias (Nequi/PSE) y botón de acción que abre WhatsApp con mensaje predeterminado y código de reserva.          |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES08** | Alerta al dueño por solicitud   | Notificación push y correo al teléfono de los dueños cuando entra una nueva solicitud, incluso si la app está cerrada en segundo plano.      |   **M**   | Sprint 5 | EP-09     |
-| **RF-RES09** | Aprobación y rechazo manual     | Interfaz para que el dueño acepte la reserva (pasa a `CONFIRMADA`) o la rechace (pasa a `RECHAZADA`), exigiendo motivo en caso de rechazo.   |   **M**   | Sprint 3 | EP-06     |
+| **RF-RES09** | Aprobación y rechazo manual     | Interfaz para que el dueño acepte la reserva (pasa a `CONFIRMADA`) o la rechace (pasa a `RECHAZADA`), exigiendo motivo. El rechazo es terminal; para intentarlo otra vez, el comensal crea una solicitud nueva. |   **M**   | Sprint 3 | EP-06     |
 | **RF-RES10** | Notificación al comensal        | Notificación push y por correo al comensal informando la confirmación o el rechazo (con su motivo) de su solicitud.                          |   **M**   | Sprint 5 | EP-09     |
 | **RF-RES11** | Historial de reservas           | Vista para el comensal donde consulta sus solicitudes activas, confirmadas, pasadas y canceladas.                                            |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES12** | Cancelación por el comensal     | Acción que permite cancelar una reserva en estado `SOLICITADA` o `CONFIRMADA` siempre que falte más de 1 hora para el servicio.              |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES13** | Expiración desatendida          | Tarea programada (cron) que pasa a `EXPIRADA` aquellas solicitudes que no recibieron aprobación o comprobante en el plazo parametrizado.     |   **S**   | Sprint 5 | EP-06     |
+| **RF-RES12** | Cancelación por el comensal     | El comensal puede retirar una solicitud `SOLICITADA`; una reserva `CONFIRMADA` se puede cancelar si faltan al menos 60 minutos (incluida la igualdad exacta).              |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES13** | Expiración desatendida          | Tarea programada que pasa a `EXPIRADA` una solicitud no confirmada a las 12 horas de su creación. El comprobante se coordina por WhatsApp y el sistema solo considera la revisión/confirmación registrada por un dueño. |   **S**   | Sprint 5 | EP-06     |
 | **RF-RES14** | Inasistencia por tolerancia     | Tarea programada que marca `NO_ASISTIO` a las reservas confirmadas tras 30 minutos del inicio de su franja sin registro de llegada.          |   **S**   | Sprint 5 | EP-06     |
 | **RF-RES15** | Adición posterior de platos     | Opción para que el comensal agregue platos a una reserva ya confirmada, generando un saldo excedente a transferir y comprobante.             |   **S**   | Sprint 5 | EP-05     |
 | **RF-RES16** | Reemplazo de platos             | Permuta de platos confirmados por otros de igual o mayor valor sin devolución de dinero.                                                     |   **C**   | Backlog  | —         |
@@ -253,10 +253,11 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 | `SOLICITADA`   | Dueño rechaza solicitud               | Dueño (`ADMIN`)    | `RECHAZADA`    | Obligatorio especificar motivo    |
 | `SOLICITADA`   | Expira tiempo límite sin confirmación | Sistema (Cron)     | `EXPIRADA`     | Superada ventana límite de espera |
 | `SOLICITADA`   | Comensal desiste de la solicitud      | Comensal           | `CANCELADA`    | Solicitud aún no confirmada       |
-| `CONFIRMADA`   | Comensal cancela con antelación       | Comensal           | `CANCELADA`    | Tiempo restante > 1 hora          |
+| `CONFIRMADA`   | Comensal cancela con antelación       | Comensal           | `CANCELADA`    | Tiempo restante >= 60 minutos     |
 | `CONFIRMADA`   | Personal registra llegada en salón    | Personal (`STAFF`) | `EN_CURSO`     | Registro de check-in en agenda    |
 | `CONFIRMADA`   | Se superan 30 min de tolerancia       | Sistema (Cron)     | `NO_ASISTIO`   | No hubo check-in en franja        |
 | `EN_CURSO`     | Finaliza la atención en el salón      | Personal / Dueño   | `COMPLETADA`   | Servicio concluido                |
+| `RECHAZADA`    | —                                     | —                  | —              | Estado terminal; para reintentar se crea otra solicitud |
 
 ---
 
@@ -398,6 +399,6 @@ Dada la capacidad de ~52 horas por sprint (3 integrantes), los Sprints 3 y 5 tie
 
 ## 10. Registro de ajustes y sincronización del documento
 
-El 15 de octubre acordamos que podemos modificar tareas, alcance y distribución durante el desarrollo, dejando la corrección directamente en Jira y en los documentos afectados. Seguimos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos decisión, motivo, criterios vigentes, responsable, sprint y referencias a archivos/commit. Los recortes de la sección 9 son opciones disponibles, no cambios aplicados automáticamente.
+El 15 de octubre acordamos que podemos modificar tareas, alcance y distribución durante el desarrollo, dejando la corrección directamente en Jira y en los documentos afectados. Seguimos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos decisión, motivo, criterios vigentes, responsable, sprint y referencias a archivos/commit. El 16 de octubre confirmamos rechazo terminal, expiración a las 12 horas, reglas de duración/anticipación y el límite exacto de cancelación; también fijamos el identificador Android y el comportamiento del teclado. Estos acuerdos no significan que las historias de reserva ya estén implementadas.
 
-El responsable del ajuste mantiene el aviso **«Pendiente actualizar requisitos en Drive y Word local»** con los RF/RNF o secciones afectadas y la corrección concreta. Actualizamos a mano `docs/Requisitos_del_Sistema.docx` y el documento de Drive; solo retiramos el pendiente al confirmar ambos. Esta sección se añadió al Markdown: falta copiarla a esos documentos y revisar allí la referencia al dominio de desarrollo y las dos conexiones SSH. Jira EC-14, EC-29 y EC-72 contienen el recordatorio; los cambios de esta revisión no alteran reglas funcionales de reservas ni carta.
+El responsable del ajuste mantiene el aviso **«Pendiente actualizar requisitos en Drive y Word local»** con los RF/RNF o secciones afectadas y la corrección concreta. Actualizamos a mano `docs/Requisitos_del_Sistema.docx` y el documento de Drive; solo retiramos el pendiente al confirmar ambos. El registro de Jira de esta ronda todavía no se actualizó porque falló el controlador de escritorio; falta reflejar las reglas de RN-01, RN-04, RN-05 y RF-RES09, RF-RES12, RF-RES13, además de las decisiones G-9, G-10 y G-14. En Word y Drive debemos copiar esos cambios y reemplazar las descripciones anteriores; no damos por cumplido el recordatorio hasta confirmar ambas copias.

@@ -352,6 +352,7 @@ Ofrecer solo horarios que existen de verdad para la fecha consultada.
 **Criterios de aceptación**
 
 - Las franjas se generan a partir del calendario, la duracion y la granularidad configuradas
+- La duracion es 90 minutos hasta 4 comensales y 120 minutos desde 5; solo se ofrecen fechas hasta 3 meses calendario y franjas con al menos 60 minutos de anticipacion, sin corte fijo a las 13:00
 - Una fecha cerrada no ofrece franjas y lo explica
 - En dias solo por reserva se exige el minimo de personas configurado
 - Las franjas sin aforo restante se presentan como no seleccionables
@@ -421,6 +422,8 @@ Centralizar las transiciones validas en el servicio de dominio.
 **Criterios de aceptación**
 
 - Las transiciones siguen el diagrama de Sprint0 §9.4
+- `RECHAZADA` es terminal; para intentarlo otra vez, el comensal crea una solicitud nueva
+- `SOLICITADA` puede pasar a `EXPIRADA` al cumplirse 12 horas sin confirmacion del dueño
 - Una transicion invalida se rechaza con un error de negocio explicito
 - La validacion vive en el servicio de dominio, no en el controlador ni en la interfaz
 - Hay pruebas unitarias por cada transicion valida e invalida
@@ -435,8 +438,8 @@ Que el comensal siga el estado de su solicitud y pueda desistir a tiempo.
 
 - La lista separa proximas e historial, con las solicitudes pendientes arriba
 - El detalle muestra el estado, el codigo, el pedido y el motivo de rechazo si aplica
-- Se puede cancelar hasta una hora antes de la reserva
-- Fuera de la ventana, la accion aparece deshabilitada explicando el motivo
+- Una solicitud `SOLICITADA` se puede retirar; una reserva `CONFIRMADA` se puede cancelar cuando faltan 60 minutos o mas
+- La cancelacion esta permitida exactamente a 60 minutos; a los 59 queda deshabilitada y explica el motivo
 
 ### Permitir adicionar platos a una reserva aprobada
 
@@ -471,6 +474,7 @@ Que el dueno resuelva las solicitudes desde el telefono, entre servicio y servic
 - Se muestra el numero de cancelaciones previas del usuario como alerta discreta
 - Aprobar cambia el estado a CONFIRMADA y notifica al comensal
 - Rechazar exige un motivo, cambia el estado a RECHAZADA y notifica con ese motivo
+- `RECHAZADA` es terminal; el comensal debe crear una solicitud nueva para intentarlo de nuevo
 - Las solicitudes proximas a expirar se resaltan
 
 ### Construir la agenda del dia y el marcado de llegada
@@ -698,6 +702,7 @@ Evitar que la bandeja del dueno se llene de solicitudes muertas.
 **Criterios de aceptación**
 
 - Una tarea programada expira las solicitudes que superan el plazo configurado
+- El plazo es de 12 horas desde la creacion; si el comprobante llega por WhatsApp, la solicitud solo deja de expirar cuando el dueño registra la confirmacion
 - Otra tarea marca NO_ASISTIO tras los 30 minutos de tolerancia
 - El comensal recibe aviso cuando su solicitud expira
 - Las tareas son idempotentes y no reprocesan registros ya resueltos

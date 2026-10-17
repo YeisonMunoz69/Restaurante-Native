@@ -115,19 +115,20 @@ El `PUT` reemplaza la configuración completa, no hace un parche. Al editar cons
 
 **Validamos en interfaz:** elegimos una foto, esperamos progreso, guardamos y la vemos en detalle después de reabrir. Ordenamos/eliminamos una y comprobamos el resultado. Rechazamos una undécima, un archivo inválido y un fallo de red con mensajes claros. Añadir dependencias/permisos requiere explicar el cambio, no actualizar todo el monorepo.
 
-## 4. Antes de programar reservas: decisiones concretas
+## 4. Políticas de reservas para las historias de Alex
 
-No resolvemos contradicciones copiando el seed. Abrimos una consulta concreta a Yeison y registramos la respuesta en [decisiones](Decisiones_Pendientes_y_Riesgos.md), requisitos y configuración que corresponda.
+El 16 de octubre cerramos las precisiones que antes figuraban como preguntas. En cada historia seguimos [Decisiones_Pendientes_y_Riesgos.md](Decisiones_Pendientes_y_Riesgos.md) y validamos el criterio en API y móvil; no reabrimos ni cambiamos estos acuerdos por copiar el seed anterior.
 
-| Tema                | Acuerdo/documento                                  | Código actual o punto que falta cerrar                                                                                             |
-| ------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Anticipación máxima | B-5: tres meses                                    | Prisma/seed: 60 días; definimos meses calendario o días y sus límites antes de cambiar datos                                       |
-| Anticipación mínima | B-6: una hora y solicitud antes de las 13:00       | Prisma/seed: 120 minutos; documentamos qué instante controla el corte y probamos 12:59/13:00                                       |
-| Duración            | B-1: 90 min hasta cuatro personas, 120 desde cinco | `Restaurant.duracionReservaMin` solo representa una duración; shared tiene ambas. Acordamos cómo configurarlas sin duplicar reglas |
-| Cancelación         | B-4: hasta una hora antes                          | Aclaramos igualdad exacta; probamos 59, 60 y 61 minutos, sin una regla distinta en móvil y API                                     |
-| Expiración          | El estado existe; tiempo todavía por confirmar     | Seed usa 24 h, no lo convertimos en acuerdo del cliente. Automatización corresponde a Sprint 5                                     |
-| Estados compartidos | Prisma incluye `EXPIRADA`                          | Falta en `packages/shared/src/constants/index.ts`; alineamos contrato y pruebas al implementar estados                             |
-| Sede                | Producto de sede única                             | No inventamos `Reservation.restaurantId` en un filtro; mantenemos el alcance o acordamos migración por separado                    |
+| Tema                | Acuerdo vigente                                                                                  | Cómo lo comprobamos al implementar                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Anticipación máxima | Hasta 3 meses calendario desde hoy                                                               | Cubrimos el límite y el cambio de mes; no usamos una aproximación fija de 90 días                  |
+| Anticipación mínima | La franja inicia al menos 60 minutos después de la solicitud; no hay corte fijo a las 13:00      | Rechazamos menos de 60 minutos y aceptamos exactamente 60                                          |
+| Duración            | Configurable: 90 min hasta 4 personas y 120 min desde 5                                          | La generación de franjas elige la duración según el grupo                                          |
+| Cancelación         | `SOLICITADA` se puede retirar; `CONFIRMADA` se puede cancelar cuando faltan 60 min o más          | Probamos confirmadas a 59, 60 y 61 minutos                                                         |
+| Expiración          | `SOLICITADA` vence tras 12 horas si sigue sin confirmarse                                         | El comprobante se revisa por WhatsApp; la aplicación solo conoce la confirmación que registra el dueño |
+| Rechazo             | `RECHAZADA` es terminal; no hay edición ni reapertura                                             | Para reintentar, el comensal registra otra solicitud                                               |
+| Estado compartido   | Prisma permite `EXPIRADA`                                                                          | EC-37 debe alinear el contrato compartido y cubrir todas las transiciones con pruebas             |
+| Sede                | El producto actual tiene una sede                                                               | No añadimos filtros de `Reservation.restaurantId` que el modelo aún no tiene                      |
 
 Ya tenemos decisiones que **sí aplicamos**: pedido opcional con menos de ocho personas y obligatorio desde ocho; pago externo y comprobante por WhatsApp; aprobación manual; Mirador, motos y pesca no se reservan en la app. No construimos pasarela ni carga de comprobantes por suposición.
 

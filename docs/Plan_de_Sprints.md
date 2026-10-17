@@ -156,7 +156,7 @@ El reparto vigente distribuye EC-22/23/24 a Alex, EC-25/28/29 a Fabián y EC-26/
 |    [ ]    | Pruebas de aforo y de transiciones de estado                                 | RNF-12                     |   5    | Yeison      |
 | **Total** |                                                                              |                            | **62** |             |
 
-**Situación real:** en `dev` no hay módulo funcional de reservas y el botón móvil de nueva reserva no tiene acción. Distribuimos motor/total a Fabián, interfaz del comensal a Alex y estados/administración a Yeison, según Encargos_Equipo.md. Antes de A07 cerramos las diferencias de anticipación/duración entre acuerdos y Prisma/seed, y alineamos `EXPIRADA` en shared. No resolvemos esas diferencias por suposición.
+**Situación real:** en `dev` no hay módulo funcional de reservas y el botón móvil de nueva reserva no tiene acción. Las decisiones de anticipación, duración, expiración, cancelación y rechazo quedaron cerradas el 16 de octubre; una rama de Yeison alinea documentación, Prisma/seed y sus valores persistidos. Esto aún no implementa la generación de franjas, la máquina de estados, el formulario ni el cron. Distribuimos motor/total a Fabián, interfaz del comensal a Alex y estados/administración a Yeison, según Encargos_Equipo.md. EC-37 también debe alinear `EXPIRADA` en shared y cubrir transiciones; EC-31 y EC-38 deben probar los límites exactos acordados.
 
 **Si hay que recortar:** podemos proponer diferir la agenda, pero lo acordamos explícitamente antes de quitar criterios. No damos por entregadas notificaciones, expiración automática ni inasistencia: siguen en Sprint 5.
 

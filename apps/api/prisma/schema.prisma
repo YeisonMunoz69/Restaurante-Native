@@ -132,14 +132,15 @@ model Restaurant {
   telefono                 String
   whatsapp                 String
   aforoTotal               Int      @map("aforo_total")
-  duracionReservaMin       Int      @default(90) @map("duracion_reserva_min")
+  duracionReservaHasta4Min Int      @default(90) @map("duracion_reserva_hasta_4_min")
+  duracionReservaDesde5Min Int      @default(120) @map("duracion_reserva_desde_5_min")
   granularidadMin          Int      @default(30) @map("granularidad_min")
   toleranciaMin            Int      @default(30) @map("tolerancia_min")
   ventanaCancelacionMin    Int      @default(60) @map("ventana_cancelacion_min")
-  anticipacionMaxDias      Int      @default(60) @map("anticipacion_max_dias")
-  anticipacionMinMin       Int      @default(120) @map("anticipacion_min_min")
+  anticipacionMaxMeses     Int      @default(3) @map("anticipacion_max_meses")
+  anticipacionMinMin       Int      @default(60) @map("anticipacion_min_min")
   minPersonasEntreSemana   Int      @default(15) @map("min_personas_entre_semana")
-  horasExpiracionSolicitud Int      @default(24) @map("horas_expiracion_solicitud")
+  horasExpiracionSolicitud Int      @default(12) @map("horas_expiracion_solicitud")
   createdAt                DateTime @default(now()) @map("creado_en")
   updatedAt                DateTime @updatedAt @map("actualizado_en")
 
