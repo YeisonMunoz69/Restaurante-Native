@@ -54,7 +54,7 @@ const decodeJwtPayload = (token: string): any => {
     }
 
     return JSON.parse(output);
-  } catch {
+  } catch (error) {
     console.error('Error al decodificar el payload del JWT:', error);
     return null;
   }
