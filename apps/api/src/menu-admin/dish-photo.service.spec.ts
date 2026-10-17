@@ -62,6 +62,7 @@ describe('DishPhotoService', () => {
     expect(storage.upload).toHaveBeenCalledTimes(2);
     expect(photo).toMatchObject({ id: 'photo-id', orden: 0, principal: true });
     expect(photo.path).toContain('/public/platos/');
+    expect(photo.path).toMatch(/\/\d{13}-[a-f0-9-]+\.webp$/);
   });
 
   it('limpia los archivos nuevos si la galería ya alcanzó el máximo', async () => {

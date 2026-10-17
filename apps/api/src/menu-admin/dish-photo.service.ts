@@ -50,7 +50,8 @@ export class DishPhotoService {
         error instanceof Error ? error.message : 'La foto no es válida',
       );
     }
-    const stem = `platos/${dishId}/${randomUUID()}`;
+    // Versiono la ruta con la fecha de carga; no reutilizo una URL cacheada para otra foto.
+    const stem = `platos/${dishId}/${Date.now()}-${randomUUID()}`;
     const imagePath = `${stem}.webp`;
     const previewPath = `${stem}-og.webp`;
     const uploaded: string[] = [];
