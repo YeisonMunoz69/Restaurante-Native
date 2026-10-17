@@ -4,6 +4,8 @@
 
 **Actualización del 16 de octubre:** retomamos con el celular de Fabián la validación que habíamos aplazado. Compilamos ARM64 e instalamos el APK en Samsung SM-G780G, Android 13, sin Android Studio. Probamos guardado, recarga, copia cancelada/confirmada, retirada de excepciones, errores de conexión/fecha/hora y cierre con advertencia de dos reservas. La entrega funcional está integrada por [PR #8](https://github.com/YeisonMunoz69/Restaurante-Native/pull/8), merge `b1e0cf1`. Dejamos la evidencia nueva y las limitaciones en [el acta del celular](evidencias/atencion-celular-2026-10-16/README.md); mantenemos EC-28/29 En curso hasta sus criterios externos pendientes.
 
+**Estado posterior:** el recorrido de esta página es únicamente el del panel EC-28/29 integrado en PR #8. Una ejecución posterior agregó carta y flujo de reservas en una rama local, probó el ciclo principal en el S21 y sigue sin integrar a `dev`; no cambia la autoría ni cierra la aceptación del panel. Ver [Plan_de_Sprints.md](Plan_de_Sprints.md) y [Reservas_EC31_EC40.md](Reservas_EC31_EC40.md) para la evidencia vigente.
+
 Reutilizamos el backend de calendario integrado en PR #2. La API pública de menú está integrada por PR #6 (`f8271b9`), y la administración de disponibilidad por PR #7 (`19c5d93`). [CI/CD de EC-28](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/38843229932) pasó build/test y despliegue; verificamos salud HTTPS y 401 de la nueva ruta administrativa sin token.
 
 ## Acceso y conexión compartida
@@ -79,4 +81,4 @@ Pendientes para completar aceptación:
 
 Para repetir con el celular no necesitamos Android Studio. Comprobamos USB y ABI, compilamos con `:app:assembleDebug -PreactNativeArchitectures=arm64-v8a --max-workers=2` y usamos API/PostgreSQL locales aislados. Configuramos `adb reverse tcp:8081 tcp:8081` para Metro y `adb reverse tcp:3038 tcp:3038` para `http://127.0.0.1:3038/api/v1` antes del login. El APK x86_64 del emulador no sirve como evidencia ARM64. No ejecutamos escrituras de QA en la VPS.
 
-EC-29 sigue En curso hasta panel integrado y aceptación completa. EC-28 sigue En curso hasta panel/recorrido y consumo final. No iniciamos EC-31/32/34. **Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/ADR-010 y RF-ADM06/HU-05, copia efectiva confirmada, acceso/configuración compartida, responsable Fabián de A04/A05 y secciones 8/10.**
+En el corte de esta guía, EC-29 seguía En curso hasta aceptación completa y EC-28 esperaba el recorrido final de carta; tampoco se habían iniciado EC-31/32/34. Ese último punto quedó superado por la implementación posterior descrita en `Reservas_EC31_EC40.md`, pero no por ello se cierran las historias: siguen pendientes revisión, integración y aceptación. **Drive y Word local aún requieren sincronización manual de RF-ADM03/ADR-010, RF-ADM06/HU-05, configuración compartida, responsables y secciones 8/10.**

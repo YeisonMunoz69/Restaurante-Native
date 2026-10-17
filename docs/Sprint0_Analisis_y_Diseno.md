@@ -1025,7 +1025,7 @@ Este último punto es el que sostiene la preparación para los parciales y convi
 
 ## 18. Decisiones y trabajo pendiente
 
-Las decisiones de los bloques F y H se registran en `Decisiones_Pendientes_y_Riesgos.md`; el registro distingue acuerdos ya cerrados del trabajo que aún falta implementar. El 16 de octubre cerramos las precisiones de reservas y Android. Esto no da por terminado Sprint 3 ni Sprint 5: las historias y sus pruebas siguen pendientes hasta que exista evidencia funcional.
+Las decisiones de los bloques F y H se registran en `Decisiones_Pendientes_y_Riesgos.md`; el registro distingue acuerdos cerrados de su implementación. El 16 de octubre cerramos las precisiones de reservas y Android. En esta fecha las historias de Sprint 2/3 tienen código y evidencia parcial en una rama local; siguen pendientes los escenarios de aceptación anotados en `Plan_de_Sprints.md`, la integración a `dev` y la aceptación formal. Sprint 5 permanece fuera de este alcance.
 
 ---
 

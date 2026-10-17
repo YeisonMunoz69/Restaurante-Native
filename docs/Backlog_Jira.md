@@ -10,11 +10,11 @@
 
 Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
-**Revisión del 16 de octubre:** mantenemos las estimaciones originales y registramos implementación local en [el plan](Plan_de_Sprints.md). EC-25 sigue cerrada en Jira/`dev`; en esta rama están implementadas carta EC-22/23/24, administración EC-26/27/30 y reservas EC-31–40, pero no las marcamos `Listo`: falta integrar, aceptar en Android y actualizar Jira con evidencia. El dueño debe confirmar el recorrido; las actividades conservan sus responsables originales, sin atribuirles nuestros commits.
+**Revisión del 16 de octubre:** mantenemos las estimaciones originales y registramos implementación local en [el plan](Plan_de_Sprints.md). EC-25 sigue cerrada en Jira/`dev`; en esta rama están implementadas carta EC-22/23/24, administración EC-26/27/30 y reservas EC-31–40. Pasaron 187 pruebas API, 47 móviles, integración HTTP local y el recorrido principal de reserva/administración en S21 con fixtures desechables. No las marcamos `Listo`: falta revisar e integrar la rama a `dev`, aceptación del equipo, probar Storage real y actualizar Jira con evidencia. Las actividades conservan sus responsables originales; no atribuimos los commits a los compañeros.
 
 **Corte de estado:** 16 de octubre de 2026. Usamos `[x]` solo para historias integradas y aceptadas, `[~]` para implementación en rama o aceptación incompleta y `[ ]` para pendiente. Los puntos del resumen siguen siendo estimaciones originales. `Backlog_Jira.csv` conserva el importable original y no es un reporte sincronizado; los cambios de estado deben hacerse directamente en Jira después de revisión.
 
-**Evidencia del 16 de octubre:** EC-28/29 conserva el panel integrado por PR #8 (`b1e0cf1`) y el recorrido Android previo con PostgreSQL aislado, en [el acta](evidencias/atencion-celular-2026-10-16/README.md). En la rama actual pasan 187 pruebas API con PostgreSQL temporal y 46 móviles; EC-31–40 ya tiene implementación de backend y cliente, descrita en [Reservas_EC31_EC40.md](Reservas_EC31_EC40.md). En el S21 se inspeccionaron visualmente las pestañas y encabezados; falta probar reservas/admin contra API local con datos y roles de QA, revisar/mergear la rama y actualizar los estados de Jira. No se cambiaron estados de Jira en este corte. La carga real de fotos depende de configurar un bucket de Supabase Storage.
+**Evidencia del 16 de octubre:** EC-28/29 conserva el panel integrado por PR #8 (`b1e0cf1`) y el recorrido Android previo con PostgreSQL aislado, en [el acta](evidencias/atencion-celular-2026-10-16/README.md). En esta rama pasan 187 pruebas API con PostgreSQL temporal y 47 móviles; EC-31–40 está implementada y documentada en [Reservas_EC31_EC40.md](Reservas_EC31_EC40.md). El S21 completó una solicitud con pedido y su revisión administrativa hasta cierre, contra una API y datos ficticios locales; el selector de fechas también se corrigió y verificó. Sigue pendiente revisar e integrar la rama, completar aceptación y actualizar Jira. No se cambiaron estados de Jira en este corte. La carga real de fotos depende de configurar un bucket de Supabase Storage.
 
 ---
 
@@ -742,7 +742,7 @@ Que la autorizacion viva en el servidor y no dependa de la interfaz.
 - [x] Un usuario sin rol suficiente recibe 403, aunque la pantalla estuviera visible
 - [x] Hay una prueba que verifica el rechazo por rol insuficiente
 
-La guardia y su rechazo 403 están probados. A medida que se incorporen módulos funcionales en los sprints siguientes, cada endpoint administrativo debe declarar explícitamente sus roles permitidos; el módulo de menú aún no está cerrado.
+La guardia y su rechazo 403 están probados. Cada endpoint administrativo debe declarar explícitamente sus roles permitidos; el módulo de menú de Sprint 2 ya incluye esa comprobación y sus pruebas. El estado actual de integración y aceptación se resume al inicio de este documento.
 
 ### Implementar TOTP y proteger las acciones sensibles
 

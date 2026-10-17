@@ -54,18 +54,19 @@ Verificamos en esta rama:
 - `npm run build --workspace=@encanto/shared`: correcto.
 - `npm run build --workspace=api` y `npm run lint --workspace=api`: correctos.
 - `npx vitest run --no-file-parallelism` desde `apps/api` con PostgreSQL local desechable: **20 suites, 187 pruebas aprobadas**, incluidas cuatro suites de integración que aplican migraciones en esquemas aleatorios.
-- `npm run test --workspace=@encanto/mobile`: **16 suites, 46 pruebas aprobadas**.
+- `npm run test --workspace=@encanto/mobile`: **16 suites, 47 pruebas aprobadas**, incluida una regresión para cambiar de semana en el selector de fechas.
 - `npx tsc --noEmit -p apps/mobile/tsconfig.json`: correcto.
 - ESLint dirigido a las pantallas/servicios nuevos o modificados: cero errores y 36 avisos (`no-void` y estilos inline). El lint global móvil también pasa: cero errores y 51 avisos, principalmente `no-void`, estilos inline y componentes anidados de navegación.
-- `apps/mobile/android/gradlew.bat assembleDebug`: correcto. Instalamos la APK y Metro completó el bundle. En el S21 renderizaron las pestañas Carta, Mis reservas, Próximamente y Ajustes; verificamos el espacio de encabezados. No completamos un recorrido conectado de reservas/admin porque no configuramos API local con restaurante, usuario y rol de QA.
-- Docker construyó la imagen, aplicó las seis migraciones en una red/DB temporal privadas y el health respondió `status=ok`, `database=connected`. Los contenedores/red de prueba se retiraron al finalizar.
+- `apps/mobile/android/gradlew.bat assembleDebug`: correcto. En el S21 configuramos temporalmente la API local por `adb reverse`, iniciamos sesión con un usuario ficticio y completamos una reserva para el 23 de octubre con pedido anticipado. Apareció en Mis reservas como `SOLICITADA`; el usuario ADMIN la aprobó, la agenda la mostró, y se registró llegada y cierre. También se verificó carta pública y administración de disponibilidad general, revirtiendo el cambio de disponibilidad al final. Al cambiar de semana se detectó que la fecha seleccionada quedaba fuera de la semana visible; se corrigió, se agregó una prueba y en el S21 se comprobó que la fecha enviada coincide con la fecha visible.
+- Un smoke HTTP local cubrió 16 operaciones: registro/login/rol, `/auth/me`, categorías/platos, calendario, franjas, creación/ticket, mis reservas, 403 para un comensal que intenta usar administración, aprobación, agenda y cancelación. Los access tokens no se imprimieron.
+- Docker aplicó las seis migraciones a una PostgreSQL desechable y `/api/v1/health` respondió `status=ok`, `database=connected`. La API y el contenedor de QA usan el puerto local 3038/55434, no Supabase. Las operaciones y fixtures de QA se retirarán con el contenedor; no se tocó la base compartida ni la VPS.
 
 No usamos la base Supabase compartida ni escribimos datos en la VPS. La prueba Postgres requiere la base exclusivamente local `encanto_ec25_test`; nunca apuntar a `DATABASE_URL` de Supabase.
 
 ## Qué falta para cerrar
 
 1. Revisar la rama y comparar con los avances publicados de cada persona; integrar el código a `dev` mediante PR y esperar CI/CD.
-2. Repetir en Android el recorrido de comensal y ADMIN/STAFF usando una API local de prueba, sin datos reales; confirmar navegación, tamaños pequeños/grandes, copia/WhatsApp y permisos.
+2. Completar aceptación Android con casos restantes: reserva sin pedido y grupo desde ocho personas, rechazo con motivo, cancelación y límite de 60 minutos, conflicto de aforo/concurrencia e inasistencia después de tolerancia. La solicitud, aprobación, llegada y cierre ya se recorrieron en S21; no volver a presentarlos como no probados.
 3. Configurar un bucket público de fotos y `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_STORAGE_BUCKET` solo en el entorno de ejecución. Luego probar una carga, reorden, principal, eliminación y URL pública. Nunca incluir la service-role key en la app ni en Git.
-4. Actualizar los estados y comentarios de EC-22–40 en Jira con esta evidencia después de aceptación. El CSV del repositorio es una plantilla importable, no se sincroniza automáticamente.
+4. Actualizar los estados y comentarios de EC-22–40 en Jira con esta evidencia después de revisión e integración/aceptación. El CSV del repositorio es una plantilla importable, no se sincroniza automáticamente.
 5. Mantener el login Google global, las subpantallas completas de Ajustes, avisos push, recordatorios y vencimiento automático para su alcance futuro de Sprint 5.

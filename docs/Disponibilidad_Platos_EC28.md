@@ -61,6 +61,6 @@ La ejecución actual pasó **20 suites y 187 pruebas API**; la misma corrida inc
 
 ## Coordinación
 
-Responsables Jira EC-28/29: Fabián; EC-26/27/30: Yeison; EC-22/23/24: Alex. La rama actual incluye la implementación adicional, sin cambiar esa autoría. Acordamos acceso ADMIN en Ajustes y selector compartido antes del login, manteniendo las cinco pestañas y autenticación existente hasta el cambio futuro de Google. La suite local no sustituye aceptación Android ni prueba real de Storage.
+Responsables Jira EC-28/29: Fabián; EC-26/27/30: Yeison; EC-22/23/24: Alex. La rama actual incluye implementación adicional sin cambiar esa autoría. En el S21 se comprobó que la carta y el panel cargan, y se alternó la disponibilidad general de un plato y se restauró su valor. Esto no cubre todavía la copia por fecha y sus excepciones en el teléfono, una carga real a Storage ni la aceptación de EC-28/29. Se mantienen las cinco pestañas y la autenticación actual hasta el cambio futuro de Google.
 
 Registramos copia/configuración en Jira EC-28, comentario `10040`. **Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/ADR-010, copia de disponibilidad efectiva con previsualización/confirmación; configuración compartida de entorno/sede; sección 8 reparto y sección 10 control de cambios.** Editar Markdown no demuestra actualización de esos documentos.

@@ -168,11 +168,11 @@ Bloque completado y archivado en la carpeta `design/`.
 
 ---
 
-## H · Pendientes que faltan por cerrar
+## H · Precisiones cerradas y riesgos de verificación
 
 Las reglas de reserva ya están decididas. Antes de cerrar las historias de reservas comprobamos que API, móvil, esquema y pruebas respeten estos acuerdos; el seed anterior no sustituye la decisión del equipo.
 
-**Aclaración de lectura, 16 de octubre de 2026:** las reglas de duración y anticipación ya están acordadas en B-1, B-5 y B-6, y también constan en RN-01 y RN-05 de los requisitos. H-10, H-11 y H-12 no significan que esas reglas de negocio no existan: registran precisiones de implementación que siguen abiertas. H-10 debe alinear el límite de tres meses y el corte de las 13:00 con la configuración y sus pruebas; H-11 debe resolver cómo representar las duraciones de 90/120 minutos si el modelo conserva un único valor configurable; H-12 debe fijar el límite exacto de cancelación en el instante de 60 minutos. El valor de 60 días del seed no reemplaza por sí mismo el acuerdo de tres meses.
+**Aclaración de lectura, 16 de octubre de 2026:** las reglas de duración, anticipación y cancelación están acordadas en B-1, B-5, B-6 y en RN-01/RN-05. H-10, H-11 y H-12 registran precisiones ya resueltas; la tabla indica su implementación y la evidencia disponible. El seed anterior de 60 días no reemplaza el máximo acordado de tres meses calendario. Que una decisión esté cerrada no implica que la historia esté integrada o aceptada: eso se controla en el plan de sprints.
 
 | #       | Pregunta                                                                                               | Por qué importa                                                                                                                        |
 | ------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -187,7 +187,7 @@ Las reglas de reserva ya están decididas. Antes de cerrar las historias de rese
 | H-9 ✅  | G-9, G-10, G-14                                                                                        | Ícono temporal por ahora, paquete `co.encantocampestre.app` y formulario desplazable junto al teclado                                  |
 | H-10 ✅ | Tres meses calendario y mínimo de una hora, sin corte de las 13:00                                      | Implementado y probado en la rama actual; todavía no integrado en `dev`                                                               |
 | H-11 ✅ | B-1 distingue duraciones de 90/120 minutos, pero Restaurant guardaba una sola                           | El esquema conserva dos valores configurables: hasta 4 personas y desde 5; motor verificado en la rama actual                         |
-| H-12 ✅ | ¿La cancelación exactamente a 60 minutos está permitida?                                               | Sí: 60 minutos exactos permite cancelar; 59 no y 61 sí; probado en el servicio y aún pendiente de aceptación física                   |
+| H-12 ✅ | ¿La cancelación exactamente a 60 minutos está permitida?                                               | Sí: 60 minutos exactos permite cancelar; 59 no y 61 sí; el límite está probado en servicio. En S21 se probó una cancelación futura, no el borde exacto de 60 minutos |
 
 ---
 
@@ -196,9 +196,9 @@ Las reglas de reserva ya están decididas. Antes de cerrar las historias de rese
 Los siguientes puntos del documento de Sprint 0 quedaron desactualizados con las decisiones del equipo. Se listan para no perderlos de vista.
 
 1. **La reserva ahora incluye pedido de platos.** Deja de ser "mesa para N personas" y pasa a ser reserva con ticket y total. Aparecen entidades nuevas: pedido, línea de pedido y ticket.
-2. **La confirmación es manual y depende de un pago externo.** El estado inicial es `SOLICITADA`, no `PENDIENTE`. Prisma ya incluye `RECHAZADA` y `EXPIRADA`; falta implementar el flujo y alinear `EXPIRADA` en el enum compartido.
+2. **La confirmación es manual y depende de un pago externo.** El estado inicial es `SOLICITADA`, no `PENDIENTE`. Prisma y el enum compartido incluyen `RECHAZADA` y `EXPIRADA`; el flujo correspondiente está implementado en la rama actual, aún pendiente de integración y aceptación.
 3. **WhatsApp vuelve al flujo operativo**, como canal de comprobante y coordinación de la zona VIP. No gestiona la reserva, pero sí la habilita.
 4. **La disponibilidad se simplifica.** Con aforo por franja en lugar de asignación mesa a mesa, la restricción de exclusión en la base de datos pierde protagonismo y el Sprint 3 se descarga bastante.
 5. **Entra un módulo de noticias** que no estaba previsto, más una pantalla de "Próximamente".
 6. **La navegación pasa de cuatro a cinco destinos**, con Noticias en el botón central.
-7. **Cerramos las precisiones operativas el 16 de octubre:** rechazo terminal y nueva solicitud para reintentar; expiración a las 12 horas si no se confirma; duración configurable de 90/120 minutos; anticipación de tres meses calendario y mínimo de 60 minutos sin corte a las 13:00; cancelación permitida al llegar exactamente a 60 minutos. Estas son reglas acordadas, no una afirmación de que ya exista el módulo de reservas.
+7. **Cerramos las precisiones operativas el 16 de octubre:** rechazo terminal y nueva solicitud para reintentar; expiración perezosa a las 12 horas si no se confirma; duración configurable de 90/120 minutos; anticipación de tres meses calendario y mínimo de 60 minutos sin corte a las 13:00; cancelación permitida al llegar exactamente a 60 minutos. El flujo de reservas está implementado y probado en la rama de trabajo, pero todavía no integrado ni aceptado en `dev`.
