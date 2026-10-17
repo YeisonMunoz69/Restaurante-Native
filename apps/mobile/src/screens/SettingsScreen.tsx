@@ -17,6 +17,8 @@ import { ConnectionForm } from '../components/ConnectionForm';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { Action } from '../components/attention/Controls';
 import { AttentionScreen } from './AttentionScreen';
+import { MenuAdminScreen } from './MenuAdminScreen';
+import { AdminReservationsScreen } from './AdminReservationsScreen';
 import { useConnection } from '../context/ConnectionContext';
 import {
   Moon,
@@ -44,7 +46,7 @@ export const SettingsScreen: React.FC = () => {
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
-  const [attention, setAttention] = useState(false);
+  const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | null>(null);
 
   // Valido los campos con el mismo esquema compartido por la API.
   const handleSubmit = async () => {
@@ -74,8 +76,12 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
-  if (attention && user?.rol === 'ADMIN')
-    return <AttentionScreen onBack={() => setAttention(false)} />;
+  if (adminView === 'attention' && user?.rol === 'ADMIN')
+    return <AttentionScreen onBack={() => setAdminView(null)} />;
+  if (adminView === 'menu' && user?.rol === 'ADMIN')
+    return <MenuAdminScreen onBack={() => setAdminView(null)} />;
+  if (adminView === 'reservations' && (user?.rol === 'ADMIN' || user?.rol === 'STAFF'))
+    return <AdminReservationsScreen onBack={() => setAdminView(null)} />;
   return (
     <KeyboardAwareScrollView
       style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
@@ -102,10 +108,17 @@ export const SettingsScreen: React.FC = () => {
 
       {!isAuthenticated && !isLoading && <ConnectionForm />}
       {user?.rol === 'ADMIN' && (
-        <Action
-          label={t('attention.title')}
-          onPress={() => setAttention(true)}
-        />
+        <View>
+          <Action label={t('menuAdmin.title')} onPress={() => setAdminView('menu')} />
+          <Action label={t('reservations.adminTitle')} onPress={() => setAdminView('reservations')} />
+          <Action
+            label={t('attention.title')}
+            onPress={() => setAdminView('attention')}
+          />
+        </View>
+      )}
+      {user?.rol === 'STAFF' && (
+        <Action label={t('reservations.agenda')} onPress={() => setAdminView('reservations')} />
       )}
 
       {/* Presento el estado de cuenta y el formulario de autenticacion. */}
