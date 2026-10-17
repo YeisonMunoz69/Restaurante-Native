@@ -4,8 +4,10 @@
 
 **Cliente:** El Encanto Campestre · Vereda Las Huacas, Timbío, Cauca  
 **Asignatura:** Electiva V · Desarrollo Móvil (agosto – noviembre 2026)  
-**Versión:** 1.0 Definitiva · **Fecha:** Septiembre 2026  
-**Documentos base:** `Sprint0_Analisis_y_Diseno.md` v0.2 · `Decisiones_Pendientes_y_Riesgos.md` v0.3 · `Plan_de_Sprints.md` v0.2 · `Backlog_Jira.md` v0.1
+**Versión:** 1.2 · **Fecha:** 16 de octubre de 2026
+**Documentos base:** `Sprint0_Analisis_y_Diseno.md` v0.2 · `Decisiones_Pendientes_y_Riesgos.md` v0.7 · `Plan_de_Sprints.md` · `Backlog_Jira.md` v0.1
+
+**Cambio solicitado el 16 de octubre:** Google como único proveedor y bloqueo global antes de iniciar sesión; Ajustes se dividirá en subpantallas. El cambio queda documentado localmente para Sprint 5, pendiente de registrar en Jira y copiar manualmente a Drive y `Requisitos_del_Sistema.docx`. El inicio de sesión correo/contraseña que se construyó en Sprint 1 describe la versión anterior, no el objetivo nuevo.
 
 ---
 
@@ -52,10 +54,10 @@
 
 | Actor                       | Descripción y Nivel de Acceso                                                                                                                                                                         | Método de Autenticación                                                         |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Visitante**               | Usuario no autenticado. Consulta carta del día, detalle de platos, muro de noticias e información general de ubicación y contacto.                                                                    | Sin credenciales                                                                |
-| **Comensal**                | Cliente registrado. Crea solicitudes de reserva con pedido, consulta su historial, cancela reservas vigentes, marca favoritos y configura preferencias de notificación.                               | Correo electrónico y contraseña (hash Argon2id)                                 |
-| **Personal (Staff)**        | Empleado del restaurante. Consulta la agenda operativa del día, filtra reservas confirmadas y registra el check-in (llegada) o inasistencia de comensales.                                            | Correo y contraseña con rol `STAFF`                                             |
-| **Dueño (Administrador)**   | Propietario o administrador general. Aprueba o rechaza solicitudes de reserva, gestiona la carta y disponibilidad, administra el calendario anual, publica noticias y modifica parámetros operativos. | Correo y contraseña con rol `ADMIN`, más verificación TOTP en acciones críticas |
+| **Visitante**               | Usuario sin sesión. Solo puede ver la pantalla de acceso; no entra a carta, noticias, reservas ni otros servicios de la app.                                                                         | Debe iniciar sesión con Google                                                 |
+| **Comensal**                | Cliente autenticado. Crea solicitudes de reserva con pedido, consulta su historial, cancela reservas vigentes, marca favoritos y configura preferencias de notificación.                              | Google; la API valida la identidad y emite la sesión propia                    |
+| **Personal (Staff)**        | Empleado autorizado. Consulta la agenda operativa del día, filtra reservas confirmadas y registra el check-in o inasistencia de comensales.                                                        | Google vinculado a una cuenta con rol `STAFF` asignado en servidor               |
+| **Dueño (Administrador)**   | Propietario autorizado. Aprueba o rechaza solicitudes, gestiona carta/disponibilidad/calendario/noticias y modifica parámetros operativos.                                                         | Google vinculado a rol `ADMIN`, más TOTP en acciones críticas                   |
 | **Sistema (Cron / Daemon)** | Procesos automatizados del backend para expiración de solicitudes sin comprobar, disparo de recordatorios y marcado de inasistencias por tolerancia.                                                  | Clave interna de servicio / JWT de sistema                                      |
 
 ---
@@ -64,11 +66,11 @@
 
 Las siguientes reglas, acordadas en el proceso de toma de decisiones, son de cumplimiento estricto en los servicios del sistema:
 
-- **RN-01 (Duración de Reserva):** 90 minutos para grupos de hasta 4 personas; 120 minutos para grupos de 5 o más personas.
+- **RN-01 (Duración de Reserva):** duración configurable de 90 minutos para grupos de hasta 4 personas y 120 minutos para grupos de 5 o más personas.
 - **RN-02 (Granularidad y Franjas):** Los horarios de servicio y las franjas horarias son dinámicos, configurados por el administrador en la base de datos (no constantes fijas en el código).
 - **RN-03 (Tolerancia de Llegada):** Margen máximo de 30 minutos sobre la hora reservada. Superado el margen sin check-in, el sistema marca `NO_ASISTIO`. No hay reembolsos por inasistencia.
-- **RN-04 (Ventana de Cancelación):** El comensal puede cancelar su reserva hasta 1 hora antes de la franja horaria pactada.
-- **RN-05 (Anticipación de Reserva):** Anticipación máxima de 3 meses. Anticipación mínima de 1 hora, siempre y cuando la solicitud se realice antes de las 13:00 del día del servicio; por debajo de ese límite se deriva a atención presencial directa.
+- **RN-04 (Ventana de Cancelación):** El comensal puede cancelar una reserva confirmada mientras falten al menos 60 minutos para la franja pactada; exactamente a 60 minutos todavía puede hacerlo.
+- **RN-05 (Anticipación de Reserva):** La fecha puede reservarse hasta 3 meses calendario desde hoy. La franja debe comenzar al menos 60 minutos después de la solicitud. No hay corte fijo a las 13:00; con menos de 60 minutos se deriva a atención presencial directa.
 - **RN-06 (Pedido Anticipado Obligatorio y Opcional):**
   - Si la reserva es para **8 o más personas**, la selección de platos en la app es **obligatoria** antes de generar la solicitud.
   - Para grupos de **1 a 7 personas**, el pedido de platos es **opcional**.
@@ -91,14 +93,14 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 
 | ID           | Nombre del Requisito          | Descripción y Regla Operativa                                                                                                                 | Prioridad |  Sprint  | Ref. Jira |
 | ------------ | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | :-------: | :------: | --------- |
-| **RF-AUT01** | Registro de cuenta            | Registrar comensales capturando nombre completo, correo electrónico, número telefónico y contraseña con hash Argon2id.                        |   **M**   | Sprint 1 | EP-02     |
-| **RF-AUT02** | Verificación de correo        | Envío de código numérico temporal por correo electrónico vía servicio Resend para confirmar la titularidad de la cuenta.                      |   **S**   | Sprint 5 | EP-02     |
-| **RF-AUT03** | Inicio de sesión y tokens     | Autenticación con emisión de JWT de acceso de corta duración (15 min) y token de refresco rotatorio (7 días) resguardado en Keystore.         |   **M**   | Sprint 1 | EP-02     |
+| **RF-AUT01** | Alta o vínculo de cuenta       | Crear o vincular la cuenta a partir de la identidad Google verificada. No se registra ni almacena una contraseña propia; el teléfono se completa cuando sea necesario para reservar.                |   **M**   | Sprint 5 | EP-02     |
+| **RF-AUT02** | Verificación de correo        | Pendiente de revisar en Jira: no añadimos verificación propia si la identidad Google ya quedó verificada; cualquier comprobación se basa en la respuesta de Google. | **S** | Revisar | EP-02 |
+| **RF-AUT03** | Inicio Google y tokens        | Aceptar Google como único proveedor; la API verifica el token de identidad y emite JWT de acceso (15 min) y refresco rotatorio (7 días), resguardado en Keystore. No confiamos identidad ni rol enviados por el cliente. | **M** | Sprint 5 | EP-02 |
 | **RF-AUT04** | Cierre de sesión              | Revocación inmediata del token de refresco en la base de datos y eliminación del almacenamiento seguro en el dispositivo móvil.               |   **M**   | Sprint 1 | EP-02     |
-| **RF-AUT05** | Recuperación de contraseña    | Solicitud y validación de código OTP enviado al correo del comensal para redefinir credenciales de acceso de forma segura.                    |   **S**   | Sprint 5 | EP-02     |
+| **RF-AUT05** | Recuperación de contraseña    | Pendiente de revisar en Jira: la contraseña pertenece a Google; no construimos una recuperación de contraseña propia mientras Google sea el único proveedor.        | **S** | Revisar | EP-02 |
 | **RF-AUT06** | Configuración de 2FA TOTP     | Vinculación de segundo factor mediante aplicación de autenticación (Google Authenticator) exclusiva para usuarios con rol de Dueño (`ADMIN`). |   **S**   | Sprint 5 | EP-10     |
 | **RF-AUT07** | Guardia de acciones sensibles | Exigencia de token TOTP válido al dueño antes de ejecutar acciones de alto impacto (modificar parámetros globales, borrar cuentas).           |   **S**   | Sprint 5 | EP-10     |
-| **RF-AUT08** | Navegación pública sin sesión | Permitir explorar la carta, noticias e información sin iniciar sesión; requerir autenticación únicamente al pulsar "Solicitar reserva".       |   **M**   | Sprint 1 | EP-02     |
+| **RF-AUT08** | Acceso global con sesión      | Sin sesión solo se muestra el acceso Google. Las cinco pestañas, servicios y enlaces profundos esperan autenticación; cerrar sesión elimina los tokens locales y vuelve al acceso. La API conserva sus propias guardias. | **M** | Sprint 5 | EP-02 |
 | **RF-AUT09** | Advertencia de caducidad      | Diálogo modal interactivo que avisa 2 minutos antes de que expire la sesión si la aplicación se encuentra en primer plano activo.             |   **S**   | Sprint 5 | EP-02     |
 
 ### 4.2 Módulo de Carta Digital y Disponibilidad (MEN)
@@ -126,11 +128,11 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-RES06** | Registro de solicitud inicial   | Inserción de la reserva en estado `SOLICITADA` generando un código alfanumérico corto y legible de 6 caracteres (ej. `ENC-482`).             |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES07** | Pantalla de pago y WhatsApp     | Resumen con instrucciones bancarias (Nequi/PSE) y botón de acción que abre WhatsApp con mensaje predeterminado y código de reserva.          |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES08** | Alerta al dueño por solicitud   | Notificación push y correo al teléfono de los dueños cuando entra una nueva solicitud, incluso si la app está cerrada en segundo plano.      |   **M**   | Sprint 5 | EP-09     |
-| **RF-RES09** | Aprobación y rechazo manual     | Interfaz para que el dueño acepte la reserva (pasa a `CONFIRMADA`) o la rechace (pasa a `RECHAZADA`), exigiendo motivo en caso de rechazo.   |   **M**   | Sprint 3 | EP-06     |
+| **RF-RES09** | Aprobación y rechazo manual     | Interfaz para que el dueño acepte la reserva (pasa a `CONFIRMADA`) o la rechace (pasa a `RECHAZADA`), exigiendo motivo. El rechazo es terminal; para intentarlo otra vez, el comensal crea una solicitud nueva. |   **M**   | Sprint 3 | EP-06     |
 | **RF-RES10** | Notificación al comensal        | Notificación push y por correo al comensal informando la confirmación o el rechazo (con su motivo) de su solicitud.                          |   **M**   | Sprint 5 | EP-09     |
 | **RF-RES11** | Historial de reservas           | Vista para el comensal donde consulta sus solicitudes activas, confirmadas, pasadas y canceladas.                                            |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES12** | Cancelación por el comensal     | Acción que permite cancelar una reserva en estado `SOLICITADA` o `CONFIRMADA` siempre que falte más de 1 hora para el servicio.              |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES13** | Expiración desatendida          | Tarea programada (cron) que pasa a `EXPIRADA` aquellas solicitudes que no recibieron aprobación o comprobante en el plazo parametrizado.     |   **S**   | Sprint 5 | EP-06     |
+| **RF-RES12** | Cancelación por el comensal     | El comensal puede retirar una solicitud `SOLICITADA`; una reserva `CONFIRMADA` se puede cancelar si faltan al menos 60 minutos (incluida la igualdad exacta).              |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES13** | Expiración desatendida          | Tarea programada que pasa a `EXPIRADA` una solicitud no confirmada a las 12 horas de su creación. El comprobante se coordina por WhatsApp y el sistema solo considera la revisión/confirmación registrada por un dueño. |   **S**   | Sprint 5 | EP-06     |
 | **RF-RES14** | Inasistencia por tolerancia     | Tarea programada que marca `NO_ASISTIO` a las reservas confirmadas tras 30 minutos del inicio de su franja sin registro de llegada.          |   **S**   | Sprint 5 | EP-06     |
 | **RF-RES15** | Adición posterior de platos     | Opción para que el comensal agregue platos a una reserva ya confirmada, generando un saldo excedente a transferir y comprobante.             |   **S**   | Sprint 5 | EP-05     |
 | **RF-RES16** | Reemplazo de platos             | Permuta de platos confirmados por otros de igual o mayor valor sin devolución de dinero.                                                     |   **C**   | Backlog  | —         |
@@ -181,6 +183,7 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 | **RF-INF06** | Pantalla Próximamente        | Tarjetas informativas con estética de marca anunciando la pista de motos y la zona de pesca deportiva.                                        |   **S**   | Sprint 4 | EP-07     |
 | **RF-INF07** | Registro de tokens push      | Registro y actualización del token de Firebase Cloud Messaging asociado al dispositivo del usuario.                                           |   **M**   | Sprint 5 | EP-09     |
 | **RF-INF08** | Preferencias de notificación | Pantalla en perfil para que el comensal active o silencie notificaciones de noticias o recordatorios.                                         |   **S**   | Sprint 5 | EP-09     |
+| **RF-INF09** | Subpantallas de Ajustes       | Organizar Ajustes en Perfil, Preferencias, Aplicación, Cuenta y seguridad, e Información/ayuda; conservar el retorno visible y los cinco destinos principales. | **S** | Sprint 5 | EP-02 |
 
 ---
 
@@ -253,10 +256,11 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 | `SOLICITADA`   | Dueño rechaza solicitud               | Dueño (`ADMIN`)    | `RECHAZADA`    | Obligatorio especificar motivo    |
 | `SOLICITADA`   | Expira tiempo límite sin confirmación | Sistema (Cron)     | `EXPIRADA`     | Superada ventana límite de espera |
 | `SOLICITADA`   | Comensal desiste de la solicitud      | Comensal           | `CANCELADA`    | Solicitud aún no confirmada       |
-| `CONFIRMADA`   | Comensal cancela con antelación       | Comensal           | `CANCELADA`    | Tiempo restante > 1 hora          |
+| `CONFIRMADA`   | Comensal cancela con antelación       | Comensal           | `CANCELADA`    | Tiempo restante >= 60 minutos     |
 | `CONFIRMADA`   | Personal registra llegada en salón    | Personal (`STAFF`) | `EN_CURSO`     | Registro de check-in en agenda    |
 | `CONFIRMADA`   | Se superan 30 min de tolerancia       | Sistema (Cron)     | `NO_ASISTIO`   | No hubo check-in en franja        |
 | `EN_CURSO`     | Finaliza la atención en el salón      | Personal / Dueño   | `COMPLETADA`   | Servicio concluido                |
+| `RECHAZADA`    | —                                     | —                  | —              | Estado terminal; para reintentar se crea otra solicitud |
 
 ---
 
@@ -264,15 +268,16 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 
 | Requisito      | Descripción Sintética             | Decisión Vinculante | Épica Jira | Sprint Asignado | Política de Recorte / Fallback           |
 | -------------- | --------------------------------- | :-----------------: | :--------: | :-------------: | ---------------------------------------- |
-| **RF-AUT01**   | Registro de cuenta                |       C-6, E        |   EP-02    |  **Sprint 1**   | Núcleo del sistema (No recortable)       |
-| **RF-AUT02**   | Verificación por correo           |         C-3         |   EP-02    |  **Sprint 5**   | Se puede diferir validación obligatoria  |
-| **RF-AUT03**   | Login con tokens rotatorios       |    C-16, RNF-06     |   EP-02    |  **Sprint 1**   | Núcleo del sistema (No recortable)       |
+| **RF-AUT01**   | Alta/vínculo de cuenta Google     |       C-6, E        |   EP-02    |  **Sprint 5**   | Cuenta basada en identidad verificada; no contraseña propia |
+| **RF-AUT02**   | Verificación por correo           |         C-3         |   EP-02    |  **Revisar**    | Confirmar en Jira si se retira al usar Google |
+| **RF-AUT03**   | Login Google y tokens rotatorios  |    C-16, RNF-06     |   EP-02    |  **Sprint 5**   | La API verifica Google y emite JWT propios |
 | **RF-AUT04**   | Logout e invalidación             |        C-16         |   EP-02    |  **Sprint 1**   | Núcleo del sistema (No recortable)       |
-| **RF-AUT05**   | Recuperación de contraseña        |         C-3         |   EP-02    |  **Sprint 5**   | Segundo nivel de seguridad               |
+| **RF-AUT05**   | Recuperación de contraseña        |         C-3         |   EP-02    |  **Revisar**    | No duplicar recuperación que ofrece Google |
 | **RF-AUT06**   | 2FA TOTP para Dueño               |       ADR-007       |   EP-10    |  **Sprint 5**   | Opcional si desborda capacidad           |
 | **RF-AUT07**   | Guardia de acciones críticas      |       ADR-007       |   EP-10    |  **Sprint 5**   | Opcional si desborda capacidad           |
-| **RF-AUT08**   | Navegación anónima inicial        |         A-1         |   EP-02    |  **Sprint 1**   | Núcleo del sistema (No recortable)       |
+| **RF-AUT08**   | Acceso global con sesión          |         A-1         |   EP-02    |  **Sprint 5**   | Sin sesión solo queda visible el acceso |
 | **RF-AUT09**   | Alerta caducidad de sesión        |         G-4         |   EP-02    |  **Sprint 5**   | Refinamiento de experiencia              |
+| **RF-INF09**   | Subpantallas de Ajustes           |         G-19        |   EP-02    |  **Sprint 5**   | Categorías y navegación interna; pendiente Jira |
 | **RF-MEN01**   | Carta visual por categorías       |      A-5, F-5       |   EP-03    |  **Sprint 2**   | Núcleo del sistema (No recortable)       |
 | **RF-MEN02**   | Platos de próximo día hábil       |      P-1, G-8       |   EP-03    |  **Sprint 2**   | Esencia de la pantalla de inicio         |
 | **RF-MEN03**   | Ficha de plato con 10 fotos       |      C-7, C-8       |   EP-03    |  **Sprint 2**   | Reducir fotos iniciales si excede        |
@@ -346,7 +351,8 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 
 - **Foco:** Configuración del monorepo, contenedores Docker, esquema relacional en Prisma/Supabase, pipeline de i18n sin literales y ciclo de autenticación seguro (Argon2id + Keystore).
 - **Entregables:** App React Native con 5 tabs iniciales, API NestJS respondiendo en `/api/v1`, Swagger en `/api/docs`, despliegue inicial en VPS.
-- **Requisitos cubiertos:** `RF-AUT01`, `RF-AUT03`, `RF-AUT04`, `RF-AUT08`, `RF-ADM05`, `RNF-03`, `RNF-04`, `RNF-05`, `RNF-06`, `RNF-07`, `RNF-08`, `RNF-12`, `RNF-14`.
+- **Requisitos cubiertos en su versión original:** `RF-AUT01`, `RF-AUT03`, `RF-AUT04`, `RF-AUT08`, `RF-ADM05`, `RNF-03`, `RNF-04`, `RNF-05`, `RNF-06`, `RNF-07`, `RNF-08`, `RNF-12`, `RNF-14`.
+- **Nota de alcance:** Sprint 1 implementó el acceso anterior con correo/contraseña y navegación pública. El acuerdo del 16 de octubre lo reemplaza como objetivo futuro; Google y el bloqueo global quedan propuestos para Sprint 5, no se reabre retrospectivamente el cierre técnico de Sprint 1. RF-AUT02/RF-AUT05 quedan para revisión en Jira, no los contamos en la nueva estimación.
 
 ### Sprint 2: Carta Digital, Fotografías y Calendario (58 puntos)
 
@@ -398,6 +404,6 @@ Dada la capacidad de ~52 horas por sprint (3 integrantes), los Sprints 3 y 5 tie
 
 ## 10. Registro de ajustes y sincronización del documento
 
-El 15 de octubre acordamos que podemos modificar tareas, alcance y distribución durante el desarrollo, dejando la corrección directamente en Jira y en los documentos afectados. Seguimos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos decisión, motivo, criterios vigentes, responsable, sprint y referencias a archivos/commit. Los recortes de la sección 9 son opciones disponibles, no cambios aplicados automáticamente.
+El 15 de octubre acordamos que podemos modificar tareas, alcance y distribución durante el desarrollo, dejando la corrección directamente en Jira y en los documentos afectados. Seguimos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos decisión, motivo, criterios vigentes, responsable, sprint y referencias a archivos/commit. El 16 de octubre confirmamos rechazo terminal, expiración a las 12 horas, reglas de duración/anticipación y el límite exacto de cancelación; también fijamos el identificador Android y el comportamiento del teclado. Estos acuerdos no significan que las historias de reserva ya estén implementadas.
 
-El responsable del ajuste mantiene el aviso **«Pendiente actualizar requisitos en Drive y Word local»** con los RF/RNF o secciones afectadas y la corrección concreta. Actualizamos a mano `docs/Requisitos_del_Sistema.docx` y el documento de Drive; solo retiramos el pendiente al confirmar ambos. Esta sección se añadió al Markdown: falta copiarla a esos documentos y revisar allí la referencia al dominio de desarrollo y las dos conexiones SSH. Jira EC-14, EC-29 y EC-72 contienen el recordatorio; los cambios de esta revisión no alteran reglas funcionales de reservas ni carta.
+El responsable del ajuste mantiene el aviso **«Pendiente actualizar requisitos en Drive y Word local»** con los RF/RNF o secciones afectadas y la corrección concreta. Actualizamos a mano `docs/Requisitos_del_Sistema.docx` y el documento de Drive; solo retiramos el pendiente al confirmar ambos. El registro de Jira de esta ronda todavía no se actualizó porque falló el controlador de escritorio; falta reflejar las reglas de RN-01, RN-04, RN-05 y RF-RES09, RF-RES12, RF-RES13, además de las decisiones G-9, G-10 y G-14. En Word y Drive debemos copiar esos cambios y reemplazar las descripciones anteriores; no damos por cumplido el recordatorio hasta confirmar ambas copias.

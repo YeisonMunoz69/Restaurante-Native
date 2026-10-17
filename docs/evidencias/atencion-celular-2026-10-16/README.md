@@ -17,7 +17,7 @@ cd apps/mobile/android
 
 El resultado fue `BUILD SUCCESSFUL`. Instalamos el APK debug con `adb install -r`, sin desinstalar ni borrar datos. SHA-256 del APK nativo instalado: `6e1bc37431bce9fea392aa9abaccc753069e410847ea5026d79ede89b51bb431`. El JavaScript lo sirvió Metro del checkout, incluido el ajuste de navegación; ese hash no representa un APK release con JavaScript empaquetado.
 
-Arrancamos `attention-android-qa.ts` contra PostgreSQL 17 local desechable, puerto exclusivo y esquema aleatorio. El helper aplicó las migraciones existentes y generó el restaurante, dos platos, ADMIN y dos reservas de prueba. Los secretos y el archivo de conexión quedaron fuera del repositorio. El teléfono usó `http://127.0.0.1:3038/api/v1` mediante `adb reverse`; Metro usó 8081. Las reservas solo sirven como datos de prueba del aviso: no implementamos flujos de reservas ni aforo.
+Arrancamos `attention-android-qa.ts` contra PostgreSQL 17 local desechable, puerto exclusivo y esquema aleatorio. El helper aplicó las migraciones existentes y generó el restaurante, dos platos, ADMIN y dos reservas de prueba. Los secretos y el archivo de conexión quedaron fuera del repositorio. El teléfono usó `http://127.0.0.1:3038/api/v1` mediante `adb reverse`; Metro usó 8081. **En esta sesión inicial**, las reservas solo servían como datos de prueba del aviso: todavía no recorrimos el flujo de reservas ni el aforo. La sesión posterior está resumida al final de esta página.
 
 ## Resultados observados
 
@@ -46,6 +46,10 @@ La entrega integrada ya tenía **164 pruebas API**, incluidas **21 de PostgreSQL
 
 Las capturas finales usan gestos: Fabián quitó los tres botones durante la prueba. Observamos su superposición inicial y corregimos el cálculo del espacio inferior, pero no repetimos el recorrido final con tres botones. No declaramos esa variante probada ni extendemos la evidencia a otros equipos/iOS. Las aperturas y la detención del proceso las hizo Fabián porque la revisión automática había bloqueado esas acciones por ADB; no eludimos el bloqueo.
 
-**EC-29 sigue En curso:** falta aceptación explícita con el dueño del recorrido y sus criterios. **EC-28 sigue En curso:** además falta que Alex conecte EC-22 y demuestre en la carta del comensal los cambios de fecha. La carta que aparece al iniciar este APK conserva los datos de muestra de esa pantalla; no la presentamos como consumo de EC-25 ni la implementamos en paralelo. EC-25 ya está integrado y Listo. No empezamos EC-31/32/34.
+**Estado en el corte original de este informe:** EC-29 seguía En curso hasta la aceptación explícita y EC-28 esperaba que Alex conectara la carta; la pantalla inicial de aquel APK aún mostraba datos de muestra. EC-25 estaba integrada y no se habían iniciado EC-31/32/34. La rama posterior reemplazó esa situación de implementación, no la aceptación: revisar el estado vigente y la evidencia adicional al final de este documento y en `Plan_de_Sprints.md`.
 
 **Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/ADR-010 y RF-ADM06/HU-05, copia efectiva confirmada, acceso/configuración compartida, responsable Fabián de A04/A05 y secciones 8/10.**
+
+## Actualización posterior del 16 de octubre
+
+La prueba descrita arriba es el corte de calendario/disponibilidad hecho con el Samsung de Fabián y no cubría reservas. En una sesión posterior, desde el S21 de Yeison y contra otra API/PostgreSQL local desechable, se recorrió una reserva con pedido anticipado, su aparición en Mis reservas y las acciones ADMIN de aprobación, llegada y cierre. También se cargaron la carta y el panel, se cambió la disponibilidad general de un plato y se restauró. Esa sesión no repitió la copia de excepciones por fecha ni probó un bucket real de Storage. El resumen reproducible está en [Reservas_EC31_EC40.md](../../Reservas_EC31_EC40.md); el corte y los límites generales están en [Plan_de_Sprints.md](../../Plan_de_Sprints.md).

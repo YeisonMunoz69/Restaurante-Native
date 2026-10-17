@@ -1,14 +1,18 @@
 # Entregas pendientes de Alex: carta y reservas
 
-**Reparto vigente del 15 de octubre:** este catálogo ya no es una lista completa a cargo de Alex. Aplicamos [Encargos_Equipo.md](Encargos_Equipo.md): Alex EC-22/23/24 y luego EC-33/35/38; Fabián EC-25/28/29 y luego EC-31/32/34; Yeison EC-26/27/30 y luego EC-37/36/39, coordinando EC-40 al final. Conservamos las fichas como referencia compartida. A01/A04/A05 las lleva Fabián; A03/A06 y operación administrativa, Yeison. Las menciones posteriores al reparto anterior son históricas; el prompt vigente está en Encargos_Equipo.md, no encargamos toda la API y el móvil a Alex.
+**Estado actualizado al 16 de octubre de 2026:** EC-22/23/24 y EC-33/35/38 están implementadas en `yeison/ajusta-encabezados-y-auth-plan`, todavía sin integrar en `dev`. Pasan 187 pruebas API, 47 móviles, TypeScript, build Android, Docker aislado e integración HTTP. En S21 se recorrieron carta y reserva: selección de fecha/franja, pedido, ticket, Mis reservas y revisión ADMIN hasta completar la atención. Se corrigió la selección al avanzar de semana. Alex conserva las historias en Jira: debe comparar sus avances, revisar criterios y ayudar con la aceptación; publica solo diferencias propias, sin duplicar la implementación ni atribuirse estos commits. Aún faltan escenarios límite, Storage real, merge y aceptación del equipo. Ver [Encargos_Equipo.md](Encargos_Equipo.md) y [contrato EC-31–40](Reservas_EC31_EC40.md).
 
-**Actualización de integración, 15 de octubre:** el backend de calendario de Fabián se incorpora a la base del equipo mediante su PR #2; verificamos el resultado publicado en `dev` y Actions antes de comenzar A05. El reparto detallado A00–A09 se conserva. Si ya tenemos avances, primero los publicamos y contrastamos sus criterios; no repetimos implementaciones ni marcamos historias completas por tener solo archivos locales. Usamos el procedimiento y los prompts actualizados de [Encargos_Equipo.md](Encargos_Equipo.md).
+**Reparto vigente:** Alex EC-22/23/24 y EC-33/35/38; Fabián EC-25/28/29 y EC-31/32/34; Yeison EC-26/27/30 y EC-36/37/39/40. Este reparto no cambia por implementar tareas ajenas con autorización del equipo. Las historias no están cerradas en Jira por pasar pruebas locales: falta revisión, aceptación e integración a `dev`.
 
-**Corte: 9 de octubre de 2026.** Revisamos `dev` en `0e27cb4`. Este documento reemplaza el reparto inicial de Sprint 2: encargamos a Alex las entregas siguientes de backend y móvil, por partes. No significa que ya estén implementadas ni cambia el alcance académico acordado.
+**Decisión futura:** el acceso único con Google, la protección global de las cinco pestañas y las subpantallas de Ajustes siguen en el alcance solicitado para Sprint 5, no están implementados ni sincronizados todavía en Jira. Las instrucciones históricas de Sprint 2/3 que describen navegación pública no adelantan ni sustituyen ese cambio.
 
-**Revisión del 15 de octubre:** asignamos a Alex EC-14, EC-22 a EC-28 y EC-30 a EC-40 según este reparto. El calendario EC-29 tiene a Fabián como responsable de coordinar su cierre, con A05 a cargo de Alex. El repositorio aún no muestra una rama o PR de menú de Alex; antes de repetir trabajo comprobamos sus avances locales. Podemos ajustar estas entregas con la corrección registrada en Jira y la sincronización de [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos), recordando los requisitos manuales de Drive/Word.
+**Corte inicial del 9 de octubre de 2026 (histórico):** revisamos `dev` en `0e27cb4`. Este documento reemplaza el reparto inicial de Sprint 2; su estado actual se describe en el corte del 16 de octubre y en el plan vigente.
 
-## 1. Desde dónde empezamos
+**Revisión del 16 de octubre:** Alex conserva EC-22/23/24 y EC-33/35/38; Fabián EC-25/28/29 y EC-31/32/34; Yeison EC-26/27/30 y EC-37/36/39, con EC-40 coordinada. Antes de duplicar, cada quien revisa y publica avances de su rama. El cambio futuro de autenticación se mantiene pendiente de Jira y de sincronizar requisitos manuales de Drive/Word.
+
+## 1. Foto previa a esta implementación (histórica)
+
+La siguiente tabla conserva la auditoría anterior al trabajo de esta rama. **No describe el estado actual del código**; el estado vigente está en el corte de arriba y en el plan de sprints.
 
 | Parte                | Lo que encontramos                                                                                                                  | Lo que todavía no podemos dar por entregado                                                    |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -115,19 +119,20 @@ El `PUT` reemplaza la configuración completa, no hace un parche. Al editar cons
 
 **Validamos en interfaz:** elegimos una foto, esperamos progreso, guardamos y la vemos en detalle después de reabrir. Ordenamos/eliminamos una y comprobamos el resultado. Rechazamos una undécima, un archivo inválido y un fallo de red con mensajes claros. Añadir dependencias/permisos requiere explicar el cambio, no actualizar todo el monorepo.
 
-## 4. Antes de programar reservas: decisiones concretas
+## 4. Políticas de reservas para las historias de Alex
 
-No resolvemos contradicciones copiando el seed. Abrimos una consulta concreta a Yeison y registramos la respuesta en [decisiones](Decisiones_Pendientes_y_Riesgos.md), requisitos y configuración que corresponda.
+El 16 de octubre cerramos las precisiones que antes figuraban como preguntas. En cada historia seguimos [Decisiones_Pendientes_y_Riesgos.md](Decisiones_Pendientes_y_Riesgos.md) y validamos el criterio en API y móvil; no reabrimos ni cambiamos estos acuerdos por copiar el seed anterior.
 
-| Tema                | Acuerdo/documento                                  | Código actual o punto que falta cerrar                                                                                             |
-| ------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Anticipación máxima | B-5: tres meses                                    | Prisma/seed: 60 días; definimos meses calendario o días y sus límites antes de cambiar datos                                       |
-| Anticipación mínima | B-6: una hora y solicitud antes de las 13:00       | Prisma/seed: 120 minutos; documentamos qué instante controla el corte y probamos 12:59/13:00                                       |
-| Duración            | B-1: 90 min hasta cuatro personas, 120 desde cinco | `Restaurant.duracionReservaMin` solo representa una duración; shared tiene ambas. Acordamos cómo configurarlas sin duplicar reglas |
-| Cancelación         | B-4: hasta una hora antes                          | Aclaramos igualdad exacta; probamos 59, 60 y 61 minutos, sin una regla distinta en móvil y API                                     |
-| Expiración          | El estado existe; tiempo todavía por confirmar     | Seed usa 24 h, no lo convertimos en acuerdo del cliente. Automatización corresponde a Sprint 5                                     |
-| Estados compartidos | Prisma incluye `EXPIRADA`                          | Falta en `packages/shared/src/constants/index.ts`; alineamos contrato y pruebas al implementar estados                             |
-| Sede                | Producto de sede única                             | No inventamos `Reservation.restaurantId` en un filtro; mantenemos el alcance o acordamos migración por separado                    |
+| Tema                | Acuerdo vigente                                                                                  | Cómo lo comprobamos al implementar                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Anticipación máxima | Hasta 3 meses calendario desde hoy                                                               | Cubrimos el límite y el cambio de mes; no usamos una aproximación fija de 90 días                  |
+| Anticipación mínima | La franja inicia al menos 60 minutos después de la solicitud; no hay corte fijo a las 13:00      | Rechazamos menos de 60 minutos y aceptamos exactamente 60                                          |
+| Duración            | Configurable: 90 min hasta 4 personas y 120 min desde 5                                          | La generación de franjas elige la duración según el grupo                                          |
+| Cancelación         | `SOLICITADA` se puede retirar; `CONFIRMADA` se puede cancelar cuando faltan 60 min o más          | Probamos confirmadas a 59, 60 y 61 minutos                                                         |
+| Expiración          | `SOLICITADA` vence tras 12 horas si sigue sin confirmarse                                         | El comprobante se revisa por WhatsApp; la aplicación solo conoce la confirmación que registra el dueño |
+| Rechazo             | `RECHAZADA` es terminal; no hay edición ni reapertura                                             | Para reintentar, el comensal registra otra solicitud                                               |
+| Estado compartido   | Prisma permite `EXPIRADA`                                                                          | La rama actual alinea el contrato compartido y prueba transiciones; falta integrar y aceptar      |
+| Sede                | El producto actual tiene una sede                                                               | No añadimos filtros de `Reservation.restaurantId` que el modelo aún no tiene                      |
 
 Ya tenemos decisiones que **sí aplicamos**: pedido opcional con menos de ocho personas y obligatorio desde ocho; pago externo y comprobante por WhatsApp; aprobación manual; Mirador, motos y pesca no se reservan en la app. No construimos pasarela ni carga de comprobantes por suposición.
 
@@ -146,7 +151,7 @@ Ya tenemos decisiones que **sí aplicamos**: pedido opcional con menos de ocho p
 
 ### A08. Reserva, ticket e historial del comensal
 
-- Conectamos «Nueva reserva». Permitimos explorar carta sin cuenta y pedimos iniciar sesión antes de enviar una reserva, conservando el contexto de forma segura.
+- Conectamos «Nueva reserva». Durante Sprint 3 se conserva el acceso público existente a carta; el cambio solicitado para Sprint 5 sustituye ese comportamiento: desde su integración ninguna pestaña ni servicio móvil queda disponible sin sesión Google. No adelantamos ese cambio a Sprint 3.
 - Implementamos fecha/personas, franja, pedido y resumen. Para menos de ocho personas permitimos omitir pedido; desde ocho explicamos que es obligatorio. No mostramos platos de hoy si la reserva es para otra fecha.
 - Al enviar desactivamos doble toque; un error conserva el formulario y no anuncia éxito. Solo mostramos solicitud enviada cuando recibimos código/estado del servidor.
 - Mostramos ticket copiable, total del servidor, instrucciones de pago externo y acción WhatsApp al contacto configurado. No incrustamos teléfono de prueba como negocio definitivo. La pantalla explica que falta aprobación del dueño.

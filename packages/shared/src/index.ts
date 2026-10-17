@@ -15,3 +15,9 @@ export * from './schemas/menu.schema';
 
 // Administramos excepciones por fecha sin cambiar la disponibilidad general.
 export * from './schemas/dish-availability.schema';
+
+// Compartimos los formularios protegidos de administración de la carta.
+export * from './schemas/menu-admin.schema';
+
+// Compartimos reglas y respuestas del flujo de reservas.
+export * from './schemas/reservation.schema';

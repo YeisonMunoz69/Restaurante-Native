@@ -1,18 +1,28 @@
 # Backlog para Jira — El Encanto Campestre
 
+**Cierre en curso, 16 de octubre:** Yeison asume las actividades restantes de Sprint 2 por autorización del usuario; conservamos la autoría de las entregas anteriores. La reasignación remota sigue pendiente. Pasan 195 pruebas API con PostgreSQL real aislado, sin omisiones, y 47 móviles. Readiness ahora rechaza la ausencia de `platos.activo`; incorporamos conflicto 409 de cargas simultáneas, versión de fotos por fecha e indicador visible de galería. La carta HTTPS real ya fue recorrida en S21. La integración y el despliegue posteriores a estas correcciones aún están pendientes.
+
+**EC-27, bloqueo externo confirmado por el usuario:** no dispone del acceso completo a Supabase y pide aplazar esa parte. Conservamos código y pruebas; trasladamos el seguimiento previsto al backlog de integración de Storage, a cargo de Yeison. Falta registrar ese traslado en Jira antes de cerrar el sprint; no se marca la historia como Listo. Pendiente actualizar requisitos en Drive y Word local: RF-ADM02/plan de entrega, prueba real de carga aplazada por acceso; sección 8, responsabilidad del cierre asumida por Yeison. Las tablas originales siguientes son históricas, no un reporte de estado remoto.
+
 **Reparto vigente del 15 de octubre:** sustituimos la concentración en Alex por los bloques y dependencias de [Encargos_Equipo.md](Encargos_Equipo.md). Sprint 2 tiene tres historias por persona; Sprint 3, tres por persona y EC-40 de integración coordinada por Yeison. Conservamos criterios, puntos, fechas y entregas existentes; las referencias posteriores al reparto anterior no son el encargo actual.
 
+**Cambio solicitado el 16 de octubre, pendiente de Jira:** Google como único proveedor de autenticación, acceso global obligatorio y subpantallas en Ajustes para Sprint 5. No modificamos el CSV importable ni afirmamos haber creado actividades; antes de programar se deben crear/ajustar las historias, responsables y estimaciones en Jira. La revisión incluye retirar o diferir verificación y recuperación de contraseñas propias si Google administra las credenciales.
+
 ### Épicas, historias y criterios de aceptación
+
+**Comprobación posterior del 16 de octubre:** probamos EC-22/23/24 en S21 con la sede real y HTTPS dev: carta, detalle/foto/precio y aviso de día cerrado. La falta de ID real indicada en los cortes siguientes ya está resuelta; [guardamos capturas y resultados](evidencias/carta-dev-s21-2026-10-16/README.md). La API nueva necesita sus migraciones: health pasó pero menú falló por `platos.activo` ausente en la base compartida. El único contenedor local quedó con la API compatible con el esquema vigente y menú HTTP 200. PR #10 sigue sin merge; faltan Storage real y actualización de Jira. El usuario pidió asignar a Yeison las tareas restantes que está asumiendo; no afirmamos que esa reasignación ya se haya guardado.
 
 **Versión:** 0.1 · **Generado:** 20 de agosto de 2026
 
 Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
-**Revisión del 15 de octubre:** los responsables vigentes están en Jira y [el plan](Plan_de_Sprints.md). EC-14 y EC-29 quedan En curso; EC-72 registra la verificación complementaria de CI/CD/Deploy key en Sprint 4, sin puntos nuevos, porque EC-21 no es accesible con nuestra sesión. Las tablas de estimación siguientes conservan el plan original; no son un recuento en vivo de Jira. Los cambios de alcance siguen [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos), con corrección directa en la actividad y recordatorio de requisitos en Drive/Word.
+**Revisión del 16 de octubre:** mantenemos las estimaciones originales y registramos implementación local en [el plan](Plan_de_Sprints.md). EC-25 sigue cerrada en Jira/`dev`; en esta rama están implementadas carta EC-22/23/24, administración EC-26/27/30 y reservas EC-31–40. La PR #10 entrega el subconjunto de carta móvil: borrador hacia `dev`, mergeable, CI de build/pruebas verde, sin reviews; su descripción deja pendiente validar el `restauranteId` real y las fotos del entorno dev en el S21. Pasaron 187 pruebas API, 47 móviles, integración HTTP local y el recorrido principal de reserva/administración en S21 con fixtures desechables. No las marcamos `Listo`: falta esa aceptación real, integrar el resto de la rama, probar Storage real y actualizar Jira con evidencia. Las actividades conservan sus responsables actuales; no atribuimos commits a los compañeros.
 
-**Corte de estado:** 9 de octubre de 2026. Usamos `[x]` para criterios comprobados, `[~]` para una historia parcial o publicada sin integrar/aceptar y `[ ]` para trabajo pendiente en `dev`. Los puntos del resumen siguen siendo estimaciones originales, no puntos aceptados automáticamente. El reparto actualizado y la validación de interfaz están en [Tareas_Alex.md](Tareas_Alex.md); el CSV conserva el importable original, no es un reporte sincronizado del avance actual.
+**Corte de estado:** 16 de octubre de 2026. Usamos `[x]` solo para historias integradas y aceptadas, `[~]` para implementación en rama o aceptación incompleta y `[ ]` para pendiente. Los puntos del resumen siguen siendo estimaciones originales. `Backlog_Jira.csv` conserva el importable original y no es un reporte sincronizado; los cambios de estado deben hacerse directamente en Jira después de revisión.
 
-**Evidencia adicional del 16 de octubre:** probamos EC-28/29 en el celular de Fabián con API/PostgreSQL local aislados: guardado/recarga, precedencia, copia cancelada/confirmada, errores y cierre advertido sin modificar reservas. Panel integrado por PR #8 (`b1e0cf1`), con [acta y capturas](evidencias/atencion-celular-2026-10-16/README.md). Ambas historias siguen En curso hasta aceptación del dueño y, en EC-28, consumo visual de la carta EC-22 de Alex. No cerramos Sprint 2 ni iniciamos reservas. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/ADR-010, RF-ADM06/HU-05, configuración compartida y secciones 8/10.
+**Evidencia del 16 de octubre:** EC-28/29 conserva el panel integrado por PR #8 (`b1e0cf1`) y el recorrido Android previo con PostgreSQL aislado, en [el acta](evidencias/atencion-celular-2026-10-16/README.md). En esta rama pasan 187 pruebas API con PostgreSQL temporal y 47 móviles; EC-31–40 está implementada y documentada en [Reservas_EC31_EC40.md](Reservas_EC31_EC40.md). El S21 completó una solicitud con pedido y su revisión administrativa hasta cierre, contra una API y datos ficticios locales; el selector de fechas también se corrigió y verificó. La PR #10 cubre EC-22/23/24, pero permanece en borrador, sin review ni merge; falta la aceptación en S21 con el ID real de dev. También sigue pendiente integrar el resto de la rama, probar Storage real y actualizar Jira. No se cambiaron estados de Jira en este corte. La carga real de fotos depende de configurar un bucket de Supabase Storage.
+
+**Verificación Docker adicional del 16 de octubre:** el paso de CI de runtime se ejecutó localmente y pasó migraciones, health HTTP del host y dentro del contenedor, coincidencia de ID de imagen, comando `node dist/main.js` y ausencia de montajes. El S21 cargó el plato de prueba desde esa API en Docker; el APK usado fue `debug`, porque el intento `release` falló en Ninja/CMake de Windows. No cambiamos estados de Jira: la rama sigue sin integrar, falta Storage real para EC-27 y la aceptación del equipo. Los contenedores/DB locales son sólo fixtures temporales, sin volúmenes persistentes, y se eliminan al cerrar la verificación.
 
 ---
 
@@ -193,7 +203,7 @@ Consulta de la carta por parte del comensal. La carta depende de la fecha: muest
 
 _6 historias · 34 puntos_
 
-### Mostrar la carta agrupada por categorias
+### [~] Mostrar la carta agrupada por categorias
 
 `Sprint 2` · `8 pts` · `Highest` · `movil` · `RF-MEN01, RF-MEN06`
 
@@ -206,7 +216,7 @@ Que el comensal recorra la carta con comodidad y llegue al detalle en un toque.
 - La lista esta virtualizada y se desplaza con fluidez con al menos 100 platos
 - Los platos no disponibles para la fecha consultada se presentan atenuados y con insignia
 
-### Presentar en el inicio los platos del proximo dia de atencion
+### [~] Presentar en el inicio los platos del proximo dia de atencion
 
 `Sprint 2` · `5 pts` · `Highest` · `movil` · `RF-MEN02`
 
@@ -219,7 +229,7 @@ Que al abrir la aplicacion se sepa cuando abren y que habra de comer.
 - Se puede cambiar la fecha consultada y la carta se actualiza
 - Si la fecha esta cerrada, se explica y se ofrece la siguiente fecha abierta
 
-### Construir el detalle de plato con galeria de hasta 10 fotos
+### [~] Construir el detalle de plato con galeria de hasta 10 fotos
 
 `Sprint 2` · `5 pts` · `High` · `movil` · `RF-MEN03`
 
@@ -232,13 +242,13 @@ Presentar el plato con la mayor fuerza visual posible.
 - La pantalla se ve correcta cuando se abre en frio desde un enlace externo
 - El retroceso lleva a la carta y no cierra la aplicacion
 
-### Exponer la API de menu
+### [x] Exponer la API de menu
 
 `Sprint 2` · `5 pts` · `High` · `backend` · `RF-MEN01 a RF-MEN06`
 
 Servir la carta al cliente movil resolviendo la disponibilidad por fecha.
 
-**EC-25, corte actualizado 15 de octubre:** PR #6 integrado con merge `f8271b9`, CI/CD dev 38840180341 correcto y cuatro rutas HTTPS verificadas con datos reales. Jira Listo, comentario 10039. Contratos en [API_Menu_EC25.md](API_Menu_EC25.md), evidencia en [Entrega_EC25.md](Entrega_EC25.md). EC-28 sigue En curso: API/copia efectiva confirmada integrada por PR #7 (`19c5d93`), panel y aceptación Android en curso. EC-29 conserva su backend integrado y sigue En curso hasta panel y aceptación, a cargo de Fabián. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/copia efectiva confirmada, configuración compartida y secciones 8/10.
+**EC-25:** PR #6 integrado con merge `f8271b9`; CI/CD dev 38840180341 y cuatro rutas HTTPS verificadas con datos reales. Jira Listo, comentario 10039. Contrato en [API_Menu_EC25.md](API_Menu_EC25.md), evidencia en [Entrega_EC25.md](Entrega_EC25.md). Los paneles EC-28/29 están en `dev` por PR #8; sus criterios siguen parciales hasta la aceptación indicada arriba.
 
 **Criterios de aceptación**
 
@@ -280,7 +290,7 @@ Todo lo que el dueño mantiene para que la carta y el calendario reflejen la ope
 
 _4 historias · 32 puntos_
 
-### Administrar categorias y platos
+### [~] Administrar categorias y platos
 
 `Sprint 2` · `8 pts` · `Highest` · `movil,backend` · `RF-ADM01, RF-ADM02, RF-ADM04`
 
@@ -293,7 +303,7 @@ Que el dueno mantenga la carta sin depender de terceros.
 - La disponibilidad general de un plato se alterna desde la lista, sin abrir el detalle
 - Un plato con favoritos o lineas de pedido se desactiva en lugar de eliminarse, y se informa
 
-### Cargar y procesar fotografias de platos
+### [~] Cargar y procesar fotografias de platos
 
 `Sprint 2` · `8 pts` · `High` · `backend` · `RF-ADM02, C-7`
 
@@ -307,7 +317,7 @@ Resolver el almacenamiento de imagenes y dejar lista la variante para compartir.
 - La URL de la imagen se versiona con un fragmento derivado de la fecha de actualizacion
 - Una imagen demasiado pesada produce un mensaje explicativo, no un fallo silencioso
 
-### Gestionar la disponibilidad de platos por fecha
+### [~] Gestionar la disponibilidad de platos por fecha
 
 `Sprint 2` · `8 pts` · `Highest` · `movil,backend` · `RF-ADM03, ADR-010`
 
@@ -343,7 +353,7 @@ Cálculo de franjas, validación de aforo y flujo de solicitud con pedido opcion
 
 _8 historias · 49 puntos_
 
-### Calcular las franjas horarias disponibles
+### [~] Calcular las franjas horarias disponibles
 
 `Sprint 3` · `8 pts` · `Highest` · `backend,movil` · `RF-RES01, RF-RES02, RF-RES17`
 
@@ -352,11 +362,12 @@ Ofrecer solo horarios que existen de verdad para la fecha consultada.
 **Criterios de aceptación**
 
 - Las franjas se generan a partir del calendario, la duracion y la granularidad configuradas
+- La duracion es 90 minutos hasta 4 comensales y 120 minutos desde 5; solo se ofrecen fechas hasta 3 meses calendario y franjas con al menos 60 minutos de anticipacion, sin corte fijo a las 13:00
 - Una fecha cerrada no ofrece franjas y lo explica
 - En dias solo por reserva se exige el minimo de personas configurado
 - Las franjas sin aforo restante se presentan como no seleccionables
 
-### Validar el aforo dentro de una transaccion serializable
+### [~] Validar el aforo dentro de una transaccion serializable
 
 `Sprint 3` · `5 pts` · `Highest` · `backend` · `ADR-005`
 
@@ -369,7 +380,7 @@ Impedir que dos solicitudes concurrentes superen la capacidad del restaurante.
 - Un conflicto se traduce en un mensaje de negocio, no en un error tecnico
 - Existe una prueba que lanza dos solicitudes concurrentes por el ultimo cupo y verifica que solo una prospera
 
-### Construir el flujo de reserva en cuatro pasos
+### [~] Construir el flujo de reserva en cuatro pasos
 
 `Sprint 3` · `13 pts` · `Highest` · `movil` · `RF-RES03 a RF-RES06`
 
@@ -385,7 +396,7 @@ Llevar al comensal desde la fecha hasta el envio de la solicitud. Subtareas suge
 - El boton fisico de retroceso de Android retrocede paso a paso, sin salir del flujo
 - La interfaz no usa lenguaje ni patrones de comercio electronico: sin carrito ni checkout
 
-### Calcular el total y generar el ticket de la reserva
+### [~] Calcular el total y generar el ticket de la reserva
 
 `Sprint 3` · `5 pts` · `High` · `backend` · `RF-RES05, RF-RES18`
 
@@ -398,7 +409,7 @@ Producir el detalle que el dueno pegara en el grupo de cocina.
 - El ticket se genera en texto plano legible, con codigo, fecha, franja, comensales y detalle
 - Una reserva sin pedido tambien genera ticket, sin lineas
 
-### Disenar la pantalla de solicitud enviada con instrucciones de pago
+### [~] Disenar la pantalla de solicitud enviada con instrucciones de pago
 
 `Sprint 3` · `3 pts` · `Highest` · `movil` · `RF-RES07`
 
@@ -412,7 +423,7 @@ Dejar claro que la reserva todavia no esta confirmada y que falta un paso humano
 - Un aviso explica que la reserva queda confirmada cuando el restaurante verifique el pago
 - El icono y el titulo comunican envio, no exito
 
-### Implementar la maquina de estados de la reserva
+### [~] Implementar la maquina de estados de la reserva
 
 `Sprint 3` · `5 pts` · `High` · `backend` · `Sprint0 §9.4`
 
@@ -421,11 +432,13 @@ Centralizar las transiciones validas en el servicio de dominio.
 **Criterios de aceptación**
 
 - Las transiciones siguen el diagrama de Sprint0 §9.4
+- `RECHAZADA` es terminal; para intentarlo otra vez, el comensal crea una solicitud nueva
+- `SOLICITADA` puede pasar a `EXPIRADA` al cumplirse 12 horas sin confirmacion del dueño
 - Una transicion invalida se rechaza con un error de negocio explicito
 - La validacion vive en el servicio de dominio, no en el controlador ni en la interfaz
 - Hay pruebas unitarias por cada transicion valida e invalida
 
-### Construir mis reservas, detalle y cancelacion
+### [~] Construir mis reservas, detalle y cancelacion
 
 `Sprint 3` · `5 pts` · `High` · `movil,backend` · `RF-RES11, RF-RES12`
 
@@ -435,8 +448,8 @@ Que el comensal siga el estado de su solicitud y pueda desistir a tiempo.
 
 - La lista separa proximas e historial, con las solicitudes pendientes arriba
 - El detalle muestra el estado, el codigo, el pedido y el motivo de rechazo si aplica
-- Se puede cancelar hasta una hora antes de la reserva
-- Fuera de la ventana, la accion aparece deshabilitada explicando el motivo
+- Una solicitud `SOLICITADA` se puede retirar; una reserva `CONFIRMADA` se puede cancelar cuando faltan 60 minutos o mas
+- La cancelacion esta permitida exactamente a 60 minutos; a los 59 queda deshabilitada y explica el motivo
 
 ### Permitir adicionar platos a una reserva aprobada
 
@@ -459,7 +472,7 @@ Lo que hace el dueño y el personal: revisar solicitudes, aprobar o rechazar tra
 
 _2 historias · 13 puntos_
 
-### Construir la bandeja de solicitudes con aprobacion y rechazo
+### [~] Construir la bandeja de solicitudes con aprobacion y rechazo
 
 `Sprint 3` · `8 pts` · `Highest` · `movil,backend` · `RF-RES09, RF-ADM08, RF-ADM11`
 
@@ -471,9 +484,10 @@ Que el dueno resuelva las solicitudes desde el telefono, entre servicio y servic
 - Se muestra el numero de cancelaciones previas del usuario como alerta discreta
 - Aprobar cambia el estado a CONFIRMADA y notifica al comensal
 - Rechazar exige un motivo, cambia el estado a RECHAZADA y notifica con ese motivo
+- `RECHAZADA` es terminal; el comensal debe crear una solicitud nueva para intentarlo de nuevo
 - Las solicitudes proximas a expirar se resaltan
 
-### Construir la agenda del dia y el marcado de llegada
+### [~] Construir la agenda del dia y el marcado de llegada
 
 `Sprint 3` · `5 pts` · `High` · `movil,backend` · `RF-ADM09, RF-ADM10`
 
@@ -698,6 +712,7 @@ Evitar que la bandeja del dueno se llene de solicitudes muertas.
 **Criterios de aceptación**
 
 - Una tarea programada expira las solicitudes que superan el plazo configurado
+- El plazo es de 12 horas desde la creacion; si el comprobante llega por WhatsApp, la solicitud solo deja de expirar cuando el dueño registra la confirmacion
 - Otra tarea marca NO_ASISTIO tras los 30 minutos de tolerancia
 - El comensal recibe aviso cuando su solicitud expira
 - Las tareas son idempotentes y no reprocesan registros ya resueltos
@@ -735,7 +750,7 @@ Que la autorizacion viva en el servidor y no dependa de la interfaz.
 - [x] Un usuario sin rol suficiente recibe 403, aunque la pantalla estuviera visible
 - [x] Hay una prueba que verifica el rechazo por rol insuficiente
 
-La guardia y su rechazo 403 están probados. A medida que se incorporen módulos funcionales en los sprints siguientes, cada endpoint administrativo debe declarar explícitamente sus roles permitidos; el módulo de menú aún no está cerrado.
+La guardia y su rechazo 403 están probados. Cada endpoint administrativo debe declarar explícitamente sus roles permitidos; el módulo de menú de Sprint 2 ya incluye esa comprobación y sus pruebas. El estado actual de integración y aceptación se resume al inicio de este documento.
 
 ### Implementar TOTP y proteger las acciones sensibles
 
@@ -770,7 +785,9 @@ Blindar la regla de precedencia, que es facil de romper sin darse cuenta.
 - Hay una prueba que verifica que la carta filtra por la fecha elegida y no por la del dia actual
 - Las pruebas corren en local con una base de datos de prueba
 
-### Cubrir con pruebas el aforo y las transiciones de estado
+### [~] Cubrir con pruebas el aforo y las transiciones de estado
+
+Implementado y probado en la rama actual (187 pruebas API en 20 suites, incluida integración con PostgreSQL aislado); permanece sin cerrar en Jira hasta revisión, aceptación móvil e integración a `dev`.
 
 `Sprint 3` · `5 pts` · `Medium` · `backend,calidad` · `RNF-12`
 

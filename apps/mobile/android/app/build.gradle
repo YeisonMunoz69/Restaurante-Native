@@ -94,9 +94,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.helloworld"
+    namespace "co.encantocampestre.app"
     defaultConfig {
-        applicationId "com.helloworld"
+        applicationId "co.encantocampestre.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

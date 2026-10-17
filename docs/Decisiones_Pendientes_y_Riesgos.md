@@ -2,11 +2,13 @@
 
 ### App móvil — El Encanto Campestre
 
-**Versión:** 0.5 · **Actualizado:** 15 de octubre de 2026
+**Versión:** 0.7 · **Actualizado:** 16 de octubre de 2026
 
 Registramos lo acordado y lo distinguimos de lo implementado. Las filas con `⬜` siguen abiertas. Actualizamos ramas, revisión y pendientes ya resueltos en los requisitos, sin cambiar por nuestra cuenta las reglas del cliente. El reparto vigente está en [Tareas_Alex.md](Tareas_Alex.md).
 
-El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejando la corrección en Jira y en los documentos afectados. Aplicamos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos dónde cambió y recordamos actualizar manualmente los requisitos de Drive y `docs/Requisitos_del_Sistema.docx`. Está pendiente incorporar a esos documentos la sección de gestión de cambios y responsable de sincronización; en esta revisión no modificamos requisitos funcionales del restaurante.
+El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejando la corrección en Jira y en los documentos afectados. Aplicamos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos dónde cambió y recordamos actualizar manualmente los requisitos de Drive y `docs/Requisitos_del_Sistema.docx`. El 16 de octubre cerramos las reglas operativas de reservas y tres decisiones de Android que estaban pendientes. También se pidió Google como proveedor único y un acceso global para el Sprint 5, además de ordenar Ajustes en subpantallas. Jira queda por sincronizar: estas decisiones describen el alcance solicitado, no su implementación ni cambios ya guardados en Jira o en los documentos manuales.
+
+**Estado de implementación al 16 de octubre:** las reglas H-10–H-12 están codificadas y probadas en la rama `yeison/ajusta-encabezados-y-auth-plan`, aún no integrada en `dev`. El cambio futuro de Google y la reorganización de Ajustes sigue pendiente de planificación en Jira y de actualizar los requisitos manuales; no se incluyó en este trabajo.
 
 ---
 
@@ -43,12 +45,12 @@ El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejand
 
 | #    | Tema                   | Decisión                                                                                                                                                                                                                 |
 | ---- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| B-1  | Duración de la reserva | 90 min hasta 4 personas · 120 min para grupos mayores                                                                                                                                                                    |
+| B-1  | Duración de la reserva | 90 min hasta 4 personas · 120 min desde 5 personas                                                                                                                                                                       |
 | B-2  | Horarios y franjas     | Los define el administrador desde su panel; no son valores fijos del código                                                                                                                                              |
 | B-3  | Tolerancia de llegada  | 30 min. Con pago hecho, el sistema envía recordatorios y ofrece cancelar sin reembolso, derivando al chat                                                                                                                |
-| B-4  | Ventana de cancelación | Hasta 1 hora antes                                                                                                                                                                                                       |
+| B-4  | Ventana de cancelación | Se permite cancelar hasta el instante en que falte 1 hora para la franja; exactamente 60 minutos antes todavía está permitido                                                                                             |
 | B-5  | Anticipación máxima    | 3 meses. Reciben grupos empresariales que reservan con antelación                                                                                                                                                        |
-| B-6  | Anticipación mínima    | 1 hora, y solo antes de las 13:00. Por debajo de eso se sugiere ir directo al restaurante                                                                                                                                |
+| B-6  | Anticipación mínima    | Al menos 1 hora antes del inicio de la franja. No hay corte fijo a las 13:00; si falta menos de 1 hora se sugiere ir directamente al restaurante                                                                          |
 | B-7  | Pedido anticipado      | Desde 8 personas se seleccionan los platos en la app, se arma la lista y se separa mesa. Se puede adicionar después de confirmado pagando el excedente. Sin reembolsos; sí cambios por productos de igual o mayor precio |
 | B-8  | Combinación de mesas   | Sin tope de dos: se unen las que hagan falta, hasta mesas de 40 personas                                                                                                                                                 |
 | B-9  | Confirmación           | Manual. Cada reserva la acepta un dueño después de verificar el pago. Puede haber varias cuentas con ese rol                                                                                                             |
@@ -152,46 +154,51 @@ Bloque completado y archivado en la carpeta `design/`.
 | G-6     | Textos                          | Centralizados en archivos de recursos. Cero valores fijos en código ni en interfaz                                                                                    |
 | G-7     | Formatos                        | Moneda COP · fechas `dd/mm/aaaa` en español                                                                                                                           |
 | G-8     | Pantalla de inicio y navegación | Inicio con la comida: platos disponibles según lo que marque el administrador. Luego Reservas, botón central de Noticias, Próximamente y Ajustes con sus subpantallas |
-| G-9 ⬜  | Ícono y presentación            | Por decidir. Existen marcas del restaurante pero sin digitalizar en buena calidad                                                                                     |
-| G-10 ⬜ | Identificador del paquete       | Sin definir. Sugerencia: `co.encantocampestre.app`. Cambiarlo después obliga a rehacer Firebase y los App Links                                                       |
+| G-9 ✅  | Ícono y presentación            | Usamos el ícono temporal disponible; lo sustituimos cuando el restaurante entregue su arte digital en buena calidad                                                |
+| G-10 ✅ | Identificador del paquete       | `co.encantocampestre.app`; lo fijamos antes de configurar Firebase y Android App Links                                                                               |
 | G-11    | Fotografías pesadas             | Se comprimen en el backend, en su servicio                                                                                                                            |
 | G-12    | Retroceso                       | Botón en la esquina superior izquierda, visible en toda subpantalla                                                                                                   |
 | G-13    | Rotación                        | Siempre vertical                                                                                                                                                      |
-| G-14 ⬜ | Teclado sobre los campos        | Sin definir. Sugerencia: manejo único desde el sistema de componentes, con la acción principal desplazándose con el contenido                                         |
+| G-14 ✅ | Teclado sobre los campos        | Los formularios se desplazan y su acción principal permanece dentro del contenido desplazable junto al teclado                                                       |
 | G-15    | Datos de ejemplo                | Los redacta el administrador                                                                                                                                          |
 | G-16    | Copia de seguridad              | Mensual, en Supabase o en Google Drive                                                                                                                                |
 | G-17    | Cuentas de prueba               | `yeison@encanto.com` · `fabian@encanto.com` · `alex@encanto.com`                                                                                                      |
+| G-18    | Inicio de sesión                | Google será el único proveedor en la primera versión de autenticación revisada; sin sesión no se abre ninguna pestaña ni servicio. Los roles se asignan en servidor, no desde el perfil móvil. Sprint 5; pendiente Jira y revisión de RF-AUT02/RF-AUT05. |
+| G-19    | Organización de Ajustes          | Conservamos las cinco pestañas y separamos Ajustes en Perfil, Preferencias, Aplicación, Cuenta y seguridad, e Información/ayuda, con navegación interna y retroceso visible. Sprint 5; pendiente Jira. |
 
 ---
 
-## H · Pendientes que faltan por cerrar
+## H · Precisiones cerradas y riesgos de verificación
 
-Podemos avanzar con carta y calendario. Las diferencias de reglas de reserva sí deben resolverse antes de A07; no copiamos el seed como si fuera un acuerdo nuevo del cliente.
+Las reglas de reserva ya están decididas. Antes de cerrar las historias de reservas comprobamos que API, móvil, esquema y pruebas respeten estos acuerdos; el seed anterior no sustituye la decisión del equipo.
+
+**Aclaración de lectura, 16 de octubre de 2026:** las reglas de duración, anticipación y cancelación están acordadas en B-1, B-5, B-6 y en RN-01/RN-05. H-10, H-11 y H-12 registran precisiones ya resueltas; la tabla indica su implementación y la evidencia disponible. El seed anterior de 60 días no reemplaza el máximo acordado de tres meses calendario. Que una decisión esté cerrada no implica que la historia esté integrada o aceptada: eso se controla en el plan de sprints.
 
 | #       | Pregunta                                                                                               | Por qué importa                                                                                                                        |
 | ------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
 | H-1 ✅  | Pedido opcional por debajo de ocho personas; obligatorio desde ocho                                    | Lo recogemos de B-7 y requisitos; lo validamos también en servidor                                                                     |
 | H-2 ✅  | Comprobante por WhatsApp y pago externo, no carga en la app                                            | Conservamos el flujo acordado; no construimos una pasarela                                                                             |
-| H-3 ⬜  | Rechazo con motivo ya definido y `RECHAZADA` existe en Prisma; falta acordar si hay corrección/reenvío | No inventamos esa acción. Las notificaciones siguen en Sprint 5                                                                        |
-| H-4 ⬜  | ¿Cuánto tiempo espera una reserva sin comprobante antes de expirar?                                    | Sin esto, las solicitudes sin pago se acumulan en el panel                                                                             |
-| H-5 ⬜  | ¿La adición de platos tras la confirmación se hace en la app o por WhatsApp?                           | Define si el pedido es editable después de aprobado                                                                                    |
-| H-6 ⬜  | ¿Las noticias generan notificación push?                                                               | Afecta el módulo de notificaciones del Sprint 5                                                                                        |
-| H-7 ✅  | Reglas semanales y excepciones por fecha, según modelos y Sprint 2                                     | Fabián lo publicó en PR #2; faltan integración y panel móvil. Esto no afirma que genere automáticamente todos los festivos             |
+| H-3 ✅  | ¿Qué hace el comensal si el dueño rechaza la solicitud?                                                 | El rechazo es terminal; para intentarlo de nuevo, el comensal crea una solicitud nueva                                                 |
+| H-4 ✅  | ¿Cuánto tiempo espera una reserva sin comprobante antes de expirar?                                    | Vence a las 12 horas si un dueño no la confirma tras revisar el pago externo; WhatsApp no informa por sí solo a la aplicación          |
+| H-5 ✅  | ¿La adición de platos tras la confirmación se hace en la app o por WhatsApp?                           | La adición se solicita desde la app; WhatsApp sigue siendo canal de coordinación, según `RF-RES15`                                     |
+| H-6 ✅  | ¿Las noticias generan notificación push?                                                               | Sí, a usuarios que hayan dado consentimiento, según `RF-NOT05`                                                                         |
+| H-7 ✅  | Reglas semanales y excepciones por fecha, según modelos y Sprint 2                                     | Backend y panel integrados en PR #2/#8 con evidencia Android previa; no se afirma que genere automáticamente todos los festivos      |
 | H-8 ✅  | Bloque F completo                                                                                      | ✅ Resuelto y cerrado en la carpeta `design/`                                                                                          |
-| H-9 ⬜  | G-9, G-10, G-14                                                                                        | Ícono, identificador definitivo y teclado; C-20 ya describe las pruebas existentes                                                     |
-| H-10 ⬜ | B-5 dice tres meses y B-6 una hora; Prisma/seed usan 60 días y 120 minutos                             | Confirmamos valores y significado de meses/corte de las 13:00 antes de implementar reservas; después alineamos configuración y pruebas |
-| H-11 ⬜ | B-1 distingue duraciones de 90/120 minutos, pero Restaurant guarda una sola duración                   | Acordamos representación configurable; no añadimos columnas por suposición                                                             |
-| H-12 ⬜ | ¿La cancelación exactamente a 60 minutos está permitida?                                               | Dejamos el mismo límite en API/móvil y lo probamos a 59/60/61 minutos                                                                  |
+| H-9 ✅  | G-9, G-10, G-14                                                                                        | Ícono temporal por ahora, paquete `co.encantocampestre.app` y formulario desplazable junto al teclado                                  |
+| H-10 ✅ | Tres meses calendario y mínimo de una hora, sin corte de las 13:00                                      | Implementado y probado en la rama actual; todavía no integrado en `dev`                                                               |
+| H-11 ✅ | B-1 distingue duraciones de 90/120 minutos, pero Restaurant guardaba una sola                           | El esquema conserva dos valores configurables: hasta 4 personas y desde 5; motor verificado en la rama actual                         |
+| H-12 ✅ | ¿La cancelación exactamente a 60 minutos está permitida?                                               | Sí: 60 minutos exactos permite cancelar; 59 no y 61 sí; el límite está probado en servicio. En S21 se probó una cancelación futura, no el borde exacto de 60 minutos |
 
 ---
 
 ## I · Lo que estos acuerdos cambian respecto al diseño original
 
-Seis puntos del documento de Sprint 0 quedaron desactualizados con esta ronda. Se listan para no perderlos de vista.
+Los siguientes puntos del documento de Sprint 0 quedaron desactualizados con las decisiones del equipo. Se listan para no perderlos de vista.
 
 1. **La reserva ahora incluye pedido de platos.** Deja de ser "mesa para N personas" y pasa a ser reserva con ticket y total. Aparecen entidades nuevas: pedido, línea de pedido y ticket.
-2. **La confirmación es manual y depende de un pago externo.** El estado inicial es `SOLICITADA`, no `PENDIENTE`. Prisma ya incluye `RECHAZADA` y `EXPIRADA`; falta implementar el flujo y alinear `EXPIRADA` en el enum compartido.
+2. **La confirmación es manual y depende de un pago externo.** El estado inicial es `SOLICITADA`, no `PENDIENTE`. Prisma y el enum compartido incluyen `RECHAZADA` y `EXPIRADA`; el flujo correspondiente está implementado en la rama actual, aún pendiente de integración y aceptación.
 3. **WhatsApp vuelve al flujo operativo**, como canal de comprobante y coordinación de la zona VIP. No gestiona la reserva, pero sí la habilita.
 4. **La disponibilidad se simplifica.** Con aforo por franja en lugar de asignación mesa a mesa, la restricción de exclusión en la base de datos pierde protagonismo y el Sprint 3 se descarga bastante.
 5. **Entra un módulo de noticias** que no estaba previsto, más una pantalla de "Próximamente".
 6. **La navegación pasa de cuatro a cinco destinos**, con Noticias en el botón central.
+7. **Cerramos las precisiones operativas el 16 de octubre:** rechazo terminal y nueva solicitud para reintentar; expiración perezosa a las 12 horas si no se confirma; duración configurable de 90/120 minutos; anticipación de tres meses calendario y mínimo de 60 minutos sin corte a las 13:00; cancelación permitida al llegar exactamente a 60 minutos. El flujo de reservas está implementado y probado en la rama de trabajo, pero todavía no integrado ni aceptado en `dev`.

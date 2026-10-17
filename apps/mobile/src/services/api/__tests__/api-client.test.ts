@@ -1,11 +1,10 @@
-import { apiClient, onSessionExpired } from '../api-client';
+import { onSessionExpired } from '../api-client';
 import {
   setInMemoryAccessToken,
   getInMemoryAccessToken,
   saveRefreshToken,
   getRefreshToken,
 } from '../../auth/token-storage';
-import axios from 'axios';
 
 // simulamos axios para controlar las respuestas de red
 jest.mock('axios', () => {

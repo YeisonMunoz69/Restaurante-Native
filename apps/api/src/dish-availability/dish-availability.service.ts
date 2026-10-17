@@ -83,6 +83,7 @@ export class DishAvailabilityService {
       async (db) => {
         await this.restaurant(db, query.restauranteId);
         const where = {
+          activo: true,
           category: { restaurantId: query.restauranteId, activa: true },
         };
         const total = await db.dish.count({ where });
@@ -178,6 +179,7 @@ export class DishAvailabilityService {
       await this.restaurant(db, restauranteId);
       const rows = await db.dish.findMany({
         where: {
+          activo: true,
           id: { in: input.cambios.map((item) => item.platoId) },
           category: { restaurantId: restauranteId, activa: true },
         },
@@ -200,7 +202,10 @@ export class DishAvailabilityService {
     return this.write(async (db) => {
       await this.restaurant(db, restauranteId);
       const rows = await db.dish.findMany({
-        where: { category: { restaurantId: restauranteId, activa: true } },
+        where: {
+          activo: true,
+          category: { restaurantId: restauranteId, activa: true },
+        },
         select: availabilitySelect([input.origen, input.destino]),
         orderBy: { id: 'asc' },
         take: 1001,

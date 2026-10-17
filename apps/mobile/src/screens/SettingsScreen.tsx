@@ -3,19 +3,22 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Switch,
   ActivityIndicator,
   TextInput,
+  useWindowDimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { LoginSchema, RegisterSchema } from '@encanto/shared';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { ConnectionForm } from '../components/ConnectionForm';
+import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { Action } from '../components/attention/Controls';
 import { AttentionScreen } from './AttentionScreen';
+import { MenuAdminScreen } from './MenuAdminScreen';
+import { AdminReservationsScreen } from './AdminReservationsScreen';
 import { useConnection } from '../context/ConnectionContext';
 import {
   Moon,
@@ -27,6 +30,7 @@ import {
   User,
   LogOut,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // pantalla de ajustes con gestion de tema, idioma y estado de autenticacion segura
 export const SettingsScreen: React.FC = () => {
@@ -36,13 +40,15 @@ export const SettingsScreen: React.FC = () => {
   const { user, isAuthenticated, isLoading, login, register, logout } =
     useAuth();
   const { isSaving } = useConnection();
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<'login' | 'register'>('login');
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
-  const [attention, setAttention] = useState(false);
+  const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | null>(null);
 
   // Valido los campos con el mismo esquema compartido por la API.
   const handleSubmit = async () => {
@@ -72,23 +78,50 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
-  if (attention && user?.rol === 'ADMIN') return <AttentionScreen onBack={() => setAttention(false)} />;
+  if (adminView === 'attention' && user?.rol === 'ADMIN')
+    return <AttentionScreen onBack={() => setAdminView(null)} />;
+  if (adminView === 'menu' && user?.rol === 'ADMIN')
+    return <MenuAdminScreen onBack={() => setAdminView(null)} />;
+  if (adminView === 'reservations' && (user?.rol === 'ADMIN' || user?.rol === 'STAFF'))
+    return <AdminReservationsScreen onBack={() => setAdminView(null)} />;
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
       contentContainerStyle={[
         styles.scrollContent,
-        { padding: spacing.margenLateral },
+        {
+          padding: spacing.margenLateral,
+          paddingTop: insets.top + spacing.l,
+        },
       ]}
     >
       <View style={styles.header}>
-        <Text style={[typography.display, { color: colors.texto.primario }]}>
+        <Text
+          style={[
+            typography.display,
+            width < 360 ? styles.tituloCompacto : undefined,
+            width >= 600 ? styles.tituloAmplio : undefined,
+            { color: colors.texto.primario },
+          ]}
+        >
           {t('settings.title')}
         </Text>
       </View>
 
       {!isAuthenticated && !isLoading && <ConnectionForm />}
-      {user?.rol === 'ADMIN' && <Action label={t('attention.title')} onPress={() => setAttention(true)} />}
+      {user?.rol === 'ADMIN' && (
+        <View>
+          <Action label={t('menuAdmin.title')} onPress={() => setAdminView('menu')} />
+          <Action label={t('reservations.adminTitle')} onPress={() => setAdminView('reservations')} />
+          <Action
+            label={t('attention.title')}
+            onPress={() => setAdminView('attention')}
+          />
+        </View>
+      )}
+      {user?.rol === 'STAFF' && (
+        <Action label={t('reservations.agenda')} onPress={() => setAdminView('reservations')} />
+      )}
 
       {/* Presento el estado de cuenta y el formulario de autenticacion. */}
       <View
@@ -536,7 +569,7 @@ export const SettingsScreen: React.FC = () => {
           </View>
         </View>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 
@@ -546,9 +579,20 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
   },
   header: {
-    marginTop: 10,
+    marginTop: 0,
+  },
+  tituloCompacto: {
+    fontSize: 26,
+    lineHeight: 32,
+  },
+  tituloAmplio: {
+    fontSize: 32,
+    lineHeight: 40,
   },
   seccion: {
     borderWidth: 1,

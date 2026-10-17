@@ -1,20 +1,25 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
-import { Pin, Newspaper } from 'lucide-react-native';
+import { Pin } from 'lucide-react-native';
 
 // pantalla de noticias correspondiente al boton central de la navegacion
 export const NewsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <ScrollView
       style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
       contentContainerStyle={[
         styles.scrollContent,
-        { padding: spacing.margenLateral },
+        {
+          paddingHorizontal: spacing.margenLateral,
+          paddingTop: insets.top + spacing.l,
+        },
       ]}
     >
       <View style={styles.header}>
@@ -87,7 +92,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   header: {
-    marginTop: 10,
+    marginTop: 0,
   },
   tarjetaNoticia: {
     borderWidth: 1.5,

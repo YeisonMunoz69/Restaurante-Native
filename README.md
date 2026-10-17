@@ -81,9 +81,14 @@ Elegimos una sola instancia para no ocupar dos veces el puerto 3000.
 Con Docker:
 
 ```powershell
+# Solo si el .env está en otro checkout/worktree, indico su ruta y no copio secretos.
+$apiEnvPath = Read-Host 'Ruta completa al archivo .env'
+$env:API_RUNTIME_ENV_FILE = (Resolve-Path -LiteralPath $apiEnvPath).Path.Replace('\', '/')
 docker compose -f apps/api/docker-compose.yml up -d
 docker logs -f encanto_api_dev
 ```
+
+Si ejecuto desde la raíz del mismo checkout y tengo `apps/api/.env`, omito las dos primeras líneas: Compose usa ese archivo por defecto. Si definí `API_RUNTIME_ENV_FILE`, lo dejo en esa terminal hasta detener el servicio con `docker compose -f apps/api/docker-compose.yml down`; luego lo retiro con `Remove-Item Env:API_RUNTIME_ENV_FILE`. La comprobación de salud consulta `/api/v1/health`, así confirmo también que la API alcanza PostgreSQL, no solo que responde HTTP.
 
 O directamente con Node:
 

@@ -3,7 +3,7 @@
 ### App móvil de carta digital, reservas y noticias — El Encanto Campestre
 
 **Asignatura:** Electiva V — Desarrollo Móvil · **Periodo:** agosto – noviembre 2026
-**Versión:** 0.2 · **Actualizado:** 20 de agosto de 2026
+**Versión:** 0.3 · **Actualizado:** 16 de octubre de 2026
 
 > Versión revisada tras la ronda de decisiones con el cliente. Los cambios de fondo respecto de la 0.1 están listados en §17.
 
@@ -149,11 +149,11 @@ Prioridad MoSCoW: **M** imprescindible · **S** deseable · **C** opcional.
 | RF-RES06 | Registrar la solicitud en estado `SOLICITADA` y generar un código legible                        | M     |
 | RF-RES07 | Presentar las instrucciones de pago y una acción para enviar el comprobante por WhatsApp         | M     |
 | RF-RES08 | Notificar al dueño la llegada de una solicitud, por push y por correo, con la aplicación cerrada | M     |
-| RF-RES09 | Permitir al dueño aprobar o rechazar la solicitud, con motivo en el rechazo                      | M     |
+| RF-RES09 | Permitir al dueño aprobar o rechazar la solicitud con motivo; el rechazo es terminal y para reintentar se crea otra solicitud | M     |
 | RF-RES10 | Notificar al comensal la aprobación o el rechazo                                                 | M     |
 | RF-RES11 | Consultar el historial de reservas del comensal                                                  | M     |
-| RF-RES12 | Cancelar hasta una hora antes de la reserva                                                      | M     |
-| RF-RES13 | Expirar automáticamente las solicitudes sin aprobar transcurrido el plazo configurado            | S     |
+| RF-RES12 | Cancelar una solicitud pendiente; una reserva confirmada se cancela hasta 60 minutos antes inclusive | M     |
+| RF-RES13 | Expirar solicitudes no confirmadas 12 horas después de su creación                               | S     |
 | RF-RES14 | Marcar inasistencia transcurridos 30 minutos de tolerancia                                       | S     |
 | RF-RES15 | Adicionar platos a una reserva aprobada, calculando el excedente a pagar                         | S     |
 | RF-RES16 | Permitir cambios de plato por otro de igual o mayor precio, sin reembolso                        | C     |
@@ -343,11 +343,12 @@ erDiagram
         text telefono
         text whatsapp
         int aforo_total
-        int duracion_reserva_min
+        int duracion_reserva_hasta_4_min
+        int duracion_reserva_desde_5_min
         int granularidad_min
         int tolerancia_min
         int ventana_cancelacion_min
-        int anticipacion_max_dias
+        int anticipacion_max_meses
         int anticipacion_min_min
         int min_personas_entre_semana
         int horas_expiracion_solicitud
@@ -595,6 +596,8 @@ stateDiagram-v2
 ```
 
 > La diferencia con un sistema de reservas convencional está en que `SOLICITADA` es el estado inicial de **toda** reserva y su salida depende de una verificación humana externa al sistema. Es un buen ejemplo para explicar por qué las transiciones se validan en el servicio de dominio y no en el controlador.
+
+> El 16 de octubre concretamos las reglas de operación: `RECHAZADA` es terminal y se reintenta con una solicitud nueva; `SOLICITADA` vence a las 12 horas si el dueño no registra su confirmación tras revisar el pago por WhatsApp; las duraciones configurables son 90 minutos hasta 4 personas y 120 desde 5; se aceptan fechas hasta tres meses calendario y franjas con al menos 60 minutos de anticipación, sin corte fijo a las 13:00. Una reserva `CONFIRMADA` se puede cancelar cuando faltan exactamente 60 minutos o más.
 
 ---
 
@@ -1020,14 +1023,9 @@ Este último punto es el que sostiene la preparación para los parciales y convi
 
 ---
 
-## 18. Puntos abiertos
+## 18. Decisiones y trabajo pendiente
 
-Se detallan en `Decisiones_Pendientes_y_Riesgos.md`, bloques F y H. Los que más condicionan la construcción:
-
-- Si el comprobante de pago se sube en la app o solo se envía por WhatsApp (H-2).
-- Cómo se marca el calendario anual: día por día o por reglas (H-7).
-- Si las noticias generan notificación push (H-6).
-- El bloque de diseño completo (F-1 a F-7).
+Las decisiones de los bloques F y H se registran en `Decisiones_Pendientes_y_Riesgos.md`; el registro distingue acuerdos cerrados de su implementación. El 16 de octubre cerramos las precisiones de reservas y Android. En esta fecha las historias de Sprint 2/3 tienen código y evidencia parcial en una rama local; siguen pendientes los escenarios de aceptación anotados en `Plan_de_Sprints.md`, la integración a `dev` y la aceptación formal. Sprint 5 permanece fuera de este alcance.
 
 ---
 

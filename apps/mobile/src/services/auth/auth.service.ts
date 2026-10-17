@@ -144,7 +144,7 @@ export const restoreSession = async (): Promise<AuthSession | null> => {
     };
 
     return { user, accessToken };
-  } catch (error) {
+  } catch {
     console.log('No se pudo restaurar la sesion previa, se iniciara como invitado.');
     await clearTokens();
     return null;

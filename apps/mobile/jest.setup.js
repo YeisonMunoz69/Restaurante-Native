@@ -1,5 +1,11 @@
 /* eslint-disable no-undef */
 
+// Evito cargar el módulo nativo del portapapeles cuando pruebo componentes en Node.
+jest.mock('@react-native-clipboard/clipboard', () => ({
+  setString: jest.fn(),
+  getString: jest.fn(() => Promise.resolve('')),
+}));
+
 // simulacion basica de react-native-keychain para el entorno de pruebas unitarias
 jest.mock(
   'react-native-keychain',

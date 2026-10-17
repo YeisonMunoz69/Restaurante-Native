@@ -75,10 +75,11 @@ describe('Menú público con Prisma simulado', () => {
     });
   });
 
-  it('conserva orden estable por categoría/plato y no filtra los no disponibles', async () => {
+  it('conserva orden estable, incluye no disponibles y excluye platos inactivos', async () => {
     await menu.dishes(dated);
     const call = db.dish.findMany.mock.calls[0][0];
     expect(call.where).toEqual({
+      activo: true,
       category: { restaurantId: menuRestaurantId, activa: true },
     });
     expect(call.orderBy).toEqual([
@@ -108,6 +109,7 @@ describe('Menú público con Prisma simulado', () => {
     });
     expect(db.dish.findFirst.mock.calls[0][0].where).toEqual({
       id: menuDishId,
+      activo: true,
       category: { restaurantId: menuRestaurantId, activa: true },
     });
     db.dish.findFirst.mockResolvedValue(null);
@@ -127,7 +129,10 @@ describe('Menú público con Prisma simulado', () => {
     expect(db.dietaryTag.count.mock.calls[0][0].where).toEqual({
       dishes: {
         some: {
-          dish: { category: { restaurantId: menuRestaurantId, activa: true } },
+          dish: {
+            activo: true,
+            category: { restaurantId: menuRestaurantId, activa: true },
+          },
         },
       },
     });

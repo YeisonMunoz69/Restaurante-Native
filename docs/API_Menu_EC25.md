@@ -1,5 +1,7 @@
 # EC-25: contrato y API pública de menú
 
+**Estado al 16 de octubre de 2026:** EC-25 está integrada en `dev` (PR #6) y marcada Listo en Jira. Esta página conserva su contrato y evidencia histórica. En la rama `yeison/ajusta-encabezados-y-auth-plan` se añadieron la carta móvil EC-22/23/24 y administración/disponibilidad/fotos EC-26/27; esos cambios aún no están en `dev`. EC-28/29 siguen sujetos a aceptación. El resumen actual de código, pruebas y límites está en [Plan_de_Sprints.md](Plan_de_Sprints.md).
+
 Publicamos A01 de [Tareas_Alex.md](Tareas_Alex.md) para desbloquear EC-22/23/24 de Alex y EC-26 de Yeison. Fabián confirmó el 15 de octubre de 2026 que `precio` se entregue como **número en COP**, no cadena decimal. Mantenemos las cuatro rutas acordadas, fecha obligatoria para platos/detalle y paginación estable. Los únicos cambios de integración son un export en el índice de shared y el import de MenuModule en AppModule; conservamos CalendarModule y autenticación. No cambiamos navegación.
 
 ## Auditoría e integración previa
@@ -111,22 +113,40 @@ Las pruebas con dobles están separadas de `test/menu.postgres.spec.ts`. Esta ú
 
 Creamos un esquema aleatorio `ec25_<uuid>`, aplicamos las dos migraciones existentes con URLs locales explícitas y cargamos fixtures propios. Al terminar eliminamos exclusivamente ese esquema generado y desconectamos los clientes. No ejecutamos seed, migrate reset, db push ni limpieza de una base compartida. Probamos además el rechazo de URLs Supabase, bases/usuarios incorrectos y parámetros que alteren el destino.
 
-Desde PowerShell, con Docker activo y Node 22 actualizado, podemos crear un contenedor dedicado (usuario y contraseña ficticios, exclusivos de prueba):
+Repetición validada en PowerShell, con Docker y Node 22. Para ejecutar también las integraciones de reservas usamos el mismo contenedor PostgreSQL aislado y ambas variables de prueba:
 
 ```powershell
-docker run --detach --rm --name encanto-ec25-pg-test --publish 127.0.0.1::5432 --env POSTGRES_USER=encanto_test --env POSTGRES_PASSWORD=encanto_local_test --env POSTGRES_DB=encanto_ec25_test postgres:17-alpine
-$menuTestPort = (docker port encanto-ec25-pg-test 5432/tcp).Split(':')[-1].Trim()
-docker exec encanto-ec25-pg-test pg_isready -U encanto_test -d encanto_ec25_test
-$env:ENCANTO_MENU_TEST_DATABASE_URL = "postgresql://encanto_test:encanto_local_test@127.0.0.1:$menuTestPort/encanto_ec25_test"
-npm run test --workspace=api
-Remove-Item Env:ENCANTO_MENU_TEST_DATABASE_URL
-docker stop encanto-ec25-pg-test
+$ErrorActionPreference = 'Stop'
+$containerStarted = $false
+try {
+docker run --detach --rm --name encanto-sprint23-pg-test --publish 127.0.0.1:55432:5432 --env POSTGRES_USER=encanto_test --env POSTGRES_HOST_AUTH_METHOD=trust --env POSTGRES_DB=encanto_ec25_test postgres:16-alpine postgres -c "listen_addresses=*"
+if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar PostgreSQL desechable' }
+$containerStarted = $true
+$ready = $false
+for ($i = 0; $i -lt 30; $i++) {
+  docker exec encanto-sprint23-pg-test pg_isready -U encanto_test -d encanto_ec25_test
+  if ($LASTEXITCODE -eq 0) { $ready = $true; break }
+  Start-Sleep -Seconds 1
+}
+if (-not $ready) { throw 'PostgreSQL desechable no quedó listo' }
+$testDbUrl = 'postgresql://encanto_test@127.0.0.1:55432/encanto_ec25_test'
+$env:ENCANTO_MENU_TEST_DATABASE_URL = $testDbUrl
+$env:RESERVATION_TEST_DATABASE_URL = $testDbUrl
+Push-Location apps/api
+try {
+  npx vitest run --no-file-parallelism
+  if ($LASTEXITCODE -ne 0) { throw 'Falló Vitest API' }
+} finally { Pop-Location }
+} finally {
+  Remove-Item Env:ENCANTO_MENU_TEST_DATABASE_URL, Env:RESERVATION_TEST_DATABASE_URL -ErrorAction SilentlyContinue
+  if ($containerStarted) { docker stop encanto-sprint23-pg-test | Out-Null }
+}
 ```
 
-Esperamos `pg_isready` antes de ejecutar las pruebas. `--rm` retira solo ese contenedor al detenerlo; no usamos volúmenes compartidos ni `docker compose down` sobre otros proyectos. El test concurrente escribe desde otra conexión entre count y findMany y comprueba que la respuesta conserva la fotografía anterior. La reconexión consulta los datos realmente persistidos. Estas pruebas no demuestran aceptación móvil ni escrituras de EC-28.
+Si el puerto 55432 está ocupado, no detenemos otro contenedor: elegimos un puerto TCP local libre distinto de 5432 y cambiamos tanto `--publish` como la URL. La imagen se fija en `postgres:16-alpine`; `listen_addresses=*` habilita conexiones desde el contenedor de pruebas. El helper valida host, usuario y base; cada suite crea y elimina solo su esquema aleatorio. No usamos `DATABASE_URL`/`DIRECT_URL` del proyecto, seed, reset ni `db push`. La ejecución registrada pasó **20 suites y 187 pruebas**. No demuestra aceptación Android ni una escritura real en Supabase Storage.
 
 ## Alcance, Jira y requisitos manuales
 
-EC-25 permanece En curso hasta revisión, merge y criterios completos. EC-28 no se da por implementada por resolver lectura por fecha en esta API; falta su administración. EC-29 permanece En curso por panel y aceptación. El acuerdo de `precio` numérico es representación técnica del contrato, sin ampliar RF de carta ni cambiar negocio o dependencias.
+EC-25 quedó integrada y cerrada en Jira. En la rama actual está implementada la administración complementaria y el cliente móvil, pero EC-26/27/28/29 no se cierran hasta integrar a `dev`, probar Storage cuando esté configurado y completar la aceptación. El acuerdo de `precio` numérico es representación técnica del contrato, sin ampliar RF de carta ni cambiar negocio.
 
 **Pendiente actualizar requisitos en Drive y Word local:** sección 8, reparto vigente EC-25/28/29 a Fabián, EC-22/23/24 a Alex y EC-26/27/30 a Yeison; sección 10, gestión de cambios y responsable de sincronización. No afirmamos que editar este Markdown actualice Drive o `docs/Requisitos_del_Sistema.docx`.

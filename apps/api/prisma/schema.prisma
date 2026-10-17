@@ -80,19 +80,23 @@ model User {
   totpSecretCifrado String?  @map("totp_secret_cifrado")
   totpHabilitado    Boolean  @default(false) @map("totp_habilitado")
   cancelaciones     Int      @default(0)
+  inasistencias     Int      @default(0)
   activo            Boolean  @default(true)
   createdAt         DateTime @default(now()) @map("creado_en")
   updatedAt         DateTime @updatedAt @map("actualizado_en")
 
   // relaciones con las demás entidades
-  reservations         Reservation[]            @relation("UsuarioReservas")
-  approvedReservations Reservation[]            @relation("AdminAprobaciones")
-  refreshTokens        RefreshToken[]
-  notifications        Notification[]
-  notificationPrefs    NotificationPreference[]
-  auditLogs            AuditLog[]
-  newsPosts            NewsPost[]
-  favoriteDishes       Dish[]                   @relation("UserFavorites")
+  reservations          Reservation[]            @relation("UsuarioReservas")
+  approvedReservations  Reservation[]            @relation("AdminAprobaciones")
+  arrivedReservations   Reservation[]            @relation("PersonalLlegadas")
+  missedReservations    Reservation[]            @relation("PersonalInasistencias")
+  completedReservations Reservation[]            @relation("PersonalCierres")
+  refreshTokens         RefreshToken[]
+  notifications         Notification[]
+  notificationPrefs     NotificationPreference[]
+  auditLogs             AuditLog[]
+  newsPosts             NewsPost[]
+  favoriteDishes        Dish[]                   @relation("UserFavorites")
 
   @@map("usuarios")
 }
@@ -132,14 +136,15 @@ model Restaurant {
   telefono                 String
   whatsapp                 String
   aforoTotal               Int      @map("aforo_total")
-  duracionReservaMin       Int      @default(90) @map("duracion_reserva_min")
+  duracionReservaHasta4Min Int      @default(90) @map("duracion_reserva_hasta_4_min")
+  duracionReservaDesde5Min Int      @default(120) @map("duracion_reserva_desde_5_min")
   granularidadMin          Int      @default(30) @map("granularidad_min")
   toleranciaMin            Int      @default(30) @map("tolerancia_min")
   ventanaCancelacionMin    Int      @default(60) @map("ventana_cancelacion_min")
-  anticipacionMaxDias      Int      @default(60) @map("anticipacion_max_dias")
-  anticipacionMinMin       Int      @default(120) @map("anticipacion_min_min")
+  anticipacionMaxMeses     Int      @default(3) @map("anticipacion_max_meses")
+  anticipacionMinMin       Int      @default(60) @map("anticipacion_min_min")
   minPersonasEntreSemana   Int      @default(15) @map("min_personas_entre_semana")
-  horasExpiracionSolicitud Int      @default(24) @map("horas_expiracion_solicitud")
+  horasExpiracionSolicitud Int      @default(12) @map("horas_expiracion_solicitud")
   createdAt                DateTime @default(now()) @map("creado_en")
   updatedAt                DateTime @updatedAt @map("actualizado_en")
 
@@ -229,6 +234,7 @@ model Dish {
   precio           Decimal  @db.Decimal(12, 2)
   alergenos        String?
   disponible       Boolean  @default(true)
+  activo           Boolean  @default(true)
   destacado        Boolean  @default(false)
   orden            Int      @default(0)
   createdAt        DateTime @default(now()) @map("creado_en")
@@ -365,30 +371,42 @@ model TimeSlot {
 
 // gestiono cada solicitud de reserva solicitada por un comensal y aprobada por el dueño
 model Reservation {
-  id            String            @id @default(uuid())
-  usuarioId     String            @map("usuario_id")
-  codigo        String            @unique
-  fecha         DateTime          @db.Date
-  horaInicio    String            @map("hora_inicio")
-  horaFin       String            @map("hora_fin")
-  numComensales Int               @map("num_comensales")
-  estado        ReservationStatus @default(SOLICITADA)
-  total         Decimal           @default(0) @db.Decimal(12, 2)
-  nota          String?
-  motivoRechazo String?           @map("motivo_rechazo")
-  aprobadaPorId String?           @map("aprobada_por_id")
-  aprobadaEn    DateTime?         @map("aprobada_en")
-  createdAt     DateTime          @default(now()) @map("creada_en")
-  updatedAt     DateTime          @updatedAt @map("actualizada_en")
+  id              String            @id @default(uuid())
+  usuarioId       String            @map("usuario_id")
+  codigo          String            @unique
+  fecha           DateTime          @db.Date
+  horaInicio      String            @map("hora_inicio")
+  horaFin         String            @map("hora_fin")
+  numComensales   Int               @map("num_comensales")
+  estado          ReservationStatus @default(SOLICITADA)
+  total           Decimal           @default(0) @db.Decimal(12, 2)
+  nota            String?
+  motivoRechazo   String?           @map("motivo_rechazo")
+  aprobadaPorId   String?           @map("aprobada_por_id")
+  aprobadaEn      DateTime?         @map("aprobada_en")
+  llegadaPorId    String?           @map("llegada_por_id")
+  llegadaEn       DateTime?         @map("llegada_en")
+  inasistioPorId  String?           @map("inasistio_por_id")
+  inasistioEn     DateTime?         @map("inasistio_en")
+  completadaPorId String?           @map("completada_por_id")
+  completadaEn    DateTime?         @map("completada_en")
+  createdAt       DateTime          @default(now()) @map("creada_en")
+  updatedAt       DateTime          @updatedAt @map("actualizada_en")
 
   usuario       User              @relation("UsuarioReservas", fields: [usuarioId], references: [id], onDelete: Restrict)
   aprobadaPor   User?             @relation("AdminAprobaciones", fields: [aprobadaPorId], references: [id], onDelete: SetNull)
+  llegadaPor    User?             @relation("PersonalLlegadas", fields: [llegadaPorId], references: [id], onDelete: SetNull)
+  inasistioPor  User?             @relation("PersonalInasistencias", fields: [inasistioPorId], references: [id], onDelete: SetNull)
+  completadaPor User?             @relation("PersonalCierres", fields: [completadaPorId], references: [id], onDelete: SetNull)
   lines         ReservationLine[]
   notifications Notification[]
 
   // índices frecuentes de §9.3 para consulta rápida por fecha/estado y reservas por usuario
   @@index([fecha, estado])
   @@index([usuarioId, createdAt(sort: Desc)])
+  @@index([llegadaPorId])
+  @@index([inasistioPorId])
+  @@index([completadaPorId])
   @@map("reservas")
 }
 
