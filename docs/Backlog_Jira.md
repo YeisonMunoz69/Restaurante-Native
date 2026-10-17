@@ -6,6 +6,8 @@
 
 ### Épicas, historias y criterios de aceptación
 
+**Comprobación posterior del 16 de octubre:** probamos EC-22/23/24 en S21 con la sede real y HTTPS dev: carta, detalle/foto/precio y aviso de día cerrado. La falta de ID real indicada en los cortes siguientes ya está resuelta; [guardamos capturas y resultados](evidencias/carta-dev-s21-2026-10-16/README.md). La API nueva necesita sus migraciones: health pasó pero menú falló por `platos.activo` ausente en la base compartida. El único contenedor local quedó con la API compatible con el esquema vigente y menú HTTP 200. PR #10 sigue sin merge; faltan Storage real y actualización de Jira. El usuario pidió asignar a Yeison las tareas restantes que está asumiendo; no afirmamos que esa reasignación ya se haya guardado.
+
 **Versión:** 0.1 · **Generado:** 20 de agosto de 2026
 
 Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
