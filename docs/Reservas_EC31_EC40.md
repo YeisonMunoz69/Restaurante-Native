@@ -56,7 +56,7 @@ Verificamos en esta rama:
 - `npx vitest run --no-file-parallelism` desde `apps/api` con PostgreSQL local desechable: **20 suites, 187 pruebas aprobadas**, incluidas cuatro suites de integración que aplican migraciones en esquemas aleatorios.
 - `npm run test --workspace=@encanto/mobile`: **16 suites, 46 pruebas aprobadas**.
 - `npx tsc --noEmit -p apps/mobile/tsconfig.json`: correcto.
-- ESLint dirigido a las pantallas/servicios nuevos o modificados: cero errores y 36 avisos (`no-void` y estilos inline). El lint global móvil conserva cinco errores previos en `NewsScreen`, `api-client`, su prueba, `auth.service` y `ThemeContext`.
+- ESLint dirigido a las pantallas/servicios nuevos o modificados: cero errores y 36 avisos (`no-void` y estilos inline). El lint global móvil también pasa: cero errores y 51 avisos, principalmente `no-void`, estilos inline y componentes anidados de navegación.
 - `apps/mobile/android/gradlew.bat assembleDebug`: correcto. Instalamos la APK y Metro completó el bundle. En el S21 renderizaron las pestañas Carta, Mis reservas, Próximamente y Ajustes; verificamos el espacio de encabezados. No completamos un recorrido conectado de reservas/admin porque no configuramos API local con restaurante, usuario y rol de QA.
 - Docker construyó la imagen, aplicó las seis migraciones en una red/DB temporal privadas y el health respondió `status=ok`, `database=connected`. Los contenedores/red de prueba se retiraron al finalizar.
 

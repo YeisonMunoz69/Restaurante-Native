@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme/ThemeContext';
-import { Pin, Newspaper } from 'lucide-react-native';
+import { Pin } from 'lucide-react-native';
 
 // pantalla de noticias correspondiente al boton central de la navegacion
 export const NewsScreen: React.FC = () => {

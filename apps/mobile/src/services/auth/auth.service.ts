@@ -54,7 +54,7 @@ const decodeJwtPayload = (token: string): any => {
     }
 
     return JSON.parse(output);
-  } catch (error) {
+  } catch {
     console.error('Error al decodificar el payload del JWT:', error);
     return null;
   }
@@ -144,7 +144,7 @@ export const restoreSession = async (): Promise<AuthSession | null> => {
     };
 
     return { user, accessToken };
-  } catch (error) {
+  } catch {
     console.log('No se pudo restaurar la sesion previa, se iniciara como invitado.');
     await clearTokens();
     return null;
