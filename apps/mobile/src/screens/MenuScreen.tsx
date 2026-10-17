@@ -83,6 +83,7 @@ export const MenuScreen: React.FC = () => {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [dishes, setDishes] = useState<MenuDish[]>([]);
   const [fecha, setFecha] = useState<string | null>(null);
+  const [nextOpenDate, setNextOpenDate] = useState<string | null>(null);
   const [dayOpen, setDayOpen] = useState<boolean | null>(null);
   const [noNextOpenDay, setNoNextOpenDay] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -100,6 +101,7 @@ export const MenuScreen: React.FC = () => {
     setCategories([]);
     setDishes([]);
     setFecha(null);
+    setNextOpenDate(null);
     setDayOpen(null);
     setNoNextOpenDay(false);
     setError(null);
@@ -119,6 +121,7 @@ export const MenuScreen: React.FC = () => {
       if (currentRequest !== requestNumber.current) return;
       setCategories(loadedCategories);
       setNoNextOpenDay(next.dia === null);
+      setNextOpenDate(next.dia?.fecha ?? null);
       const initialDate = next.dia?.fecha ?? todayInBogota();
       setFecha(initialDate);
       const [firstPage, initialDay] = await Promise.all([
@@ -298,7 +301,11 @@ export const MenuScreen: React.FC = () => {
                     { color: colors.marca.primario },
                   ]}
                 >
-                  {t('menu.nextOpenDay')}
+                  {t(
+                    fecha === nextOpenDate
+                      ? 'menu.nextOpenDay'
+                      : 'menu.selectedDate',
+                  )}
                 </Text>
                 <Text
                   accessibilityRole="header"

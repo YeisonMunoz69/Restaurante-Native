@@ -135,6 +135,7 @@ describe('MenuScreen', () => {
     });
 
     expect(api.dishes).toHaveBeenCalledWith(restaurantId, '2031-02-23', 1);
+    expect(textValues(tree!)).toContain('menu.nextOpenDay');
     expect(textValues(tree!)).toContain('Sopa de prueba');
     expect(textValues(tree!)).not.toContain('Sancocho de Gallina Criolla');
 
@@ -175,6 +176,8 @@ describe('MenuScreen', () => {
     expect(api.dishes).toHaveBeenLastCalledWith(restaurantId, '2031-02-24', 1);
     expect(api.day).toHaveBeenCalledWith(restaurantId, '2031-02-24');
     expect(textValues(tree!)).toContain('menu.dayClosed');
+    expect(textValues(tree!)).toContain('menu.selectedDate');
+    expect(textValues(tree!)).not.toContain('menu.nextOpenDay');
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
