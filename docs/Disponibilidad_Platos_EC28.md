@@ -1,6 +1,6 @@
 # Disponibilidad de platos por fecha · EC-28
 
-**Corte del 16 de octubre de 2026:** el backend/copia de disponibilidad de Fabián continúa integrado en `dev` (PR #7); el panel y su evidencia previa están en PR #8. Esta rama añade el cliente de carta, administración y disponibilidad, pero aún no se integra ni se cierra EC-28/29. La foto actual de pruebas/aceptación figura en [Plan_de_Sprints.md](Plan_de_Sprints.md).
+**Corte de cierre del 16 de octubre de 2026:** conservamos API/copia de Fabián (PR #7), panel y evidencia física (PR #8). PR #11 integró la carta conectada y la exclusión de platos con baja lógica. Yeison asume el cierre de EC-28/29 en Jira; conservamos la autoría de Fabián. Los estados finales y el despliegue están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md).
 
 Implementamos excepciones de `DishSchedule` sobre el esquema existente. Una excepción `true` o `false` prevalece sobre `Dish.disponible`; quitarla restaura el valor general. No cambiamos esquema ni administramos aforo.
 

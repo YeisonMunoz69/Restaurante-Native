@@ -1,6 +1,8 @@
 # Encargos e integración del equipo
 
-El reparto de Jira se conserva. **Corte actualizado el 16 de octubre:** la rama `yeison/ajusta-encabezados-y-auth-plan`, basada en `dev` (`47a1e0e`), contiene implementación para EC-22–40. La hicieron Yeison y sus agentes de trabajo con autorización del equipo; los commits no se atribuyen a Alex ni a Fabián. Pasan 187 pruebas API y 47 móviles, build compartido/API/Android, integración HTTP con PostgreSQL aislado y health de Docker. En S21 se probó la carta, una reserva de comensal y su operación como ADMIN hasta completarla; también se corrigió y verificó el selector de semana. Faltan comparar avances personales, revisar e integrar por PR a `dev`, sincronizar Jira tras aceptación y configurar Storage para probar la carga real de fotos. No se hizo push, merge ni cambio de estado en Jira.
+**Corte de cierre del 16 de octubre:** integramos PR #11 en `dev`, merge `0245146`, conservando el subconjunto de PR #10 y todos los commits posteriores. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles. Registramos en Jira que Yeison asume EC-22/23/24/26/27/28/29/30; EC-25 conserva a Fabián. EC-22 mantiene pendiente la prueba física con 100 platos y EC-27 la validación real de Storage, ambas sin Listo. Los resultados de VPS, estados finales y registro del sprint están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md). Este corte prevalece sobre las notas históricas siguientes.
+
+Conservamos la autoría de Fabián y el reparto histórico de Alex. La reasignación de Sprint 2 fue un encargo explícito de Yeison; no modifica automáticamente las responsabilidades de Sprint 3. Las instrucciones históricas de no reasignar quedan sustituidas para estas actividades por este corte.
 
 ## Primero recuperamos los avances que ya existen
 

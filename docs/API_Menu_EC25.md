@@ -1,6 +1,6 @@
 # EC-25: contrato y API pública de menú
 
-**Estado al 16 de octubre de 2026:** EC-25 está integrada en `dev` (PR #6) y marcada Listo en Jira. Esta página conserva su contrato y evidencia histórica. En la rama `yeison/ajusta-encabezados-y-auth-plan` se añadieron la carta móvil EC-22/23/24 y administración/disponibilidad/fotos EC-26/27; esos cambios aún no están en `dev`. EC-28/29 siguen sujetos a aceptación. El resumen actual de código, pruebas y límites está en [Plan_de_Sprints.md](Plan_de_Sprints.md).
+**Estado al cierre del 16 de octubre de 2026:** conservamos EC-25 integrada por PR #6 y Listo, responsable Fabián. PR #11 integró la carta móvil y administración; no cambió este contrato público. EC-27 conserva pendiente Storage real y EC-22 la prueba física con 100 platos. El estado de EC-28/29 y el contraste de la VPS están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md).
 
 Publicamos A01 de [Tareas_Alex.md](Tareas_Alex.md) para desbloquear EC-22/23/24 de Alex y EC-26 de Yeison. Fabián confirmó el 15 de octubre de 2026 que `precio` se entregue como **número en COP**, no cadena decimal. Mantenemos las cuatro rutas acordadas, fecha obligatoria para platos/detalle y paginación estable. Los únicos cambios de integración son un export en el índice de shared y el import de MenuModule en AppModule; conservamos CalendarModule y autenticación. No cambiamos navegación.
 

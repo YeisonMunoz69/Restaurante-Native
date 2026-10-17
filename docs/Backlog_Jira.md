@@ -1,28 +1,30 @@
 # Backlog para Jira — El Encanto Campestre
 
-**Cierre en curso, 16 de octubre:** Yeison asume las actividades restantes de Sprint 2 por autorización del usuario; conservamos la autoría de las entregas anteriores. La reasignación remota sigue pendiente. Pasan 195 pruebas API con PostgreSQL real aislado, sin omisiones, y 47 móviles. Readiness ahora rechaza la ausencia de `platos.activo`; incorporamos conflicto 409 de cargas simultáneas, versión de fotos por fecha e indicador visible de galería. La carta HTTPS real ya fue recorrida en S21. La integración y el despliegue posteriores a estas correcciones aún están pendientes.
+**Corte de cierre del 16 de octubre:** integramos PR #11 en `dev`, merge `0245146`, conservando el subconjunto de PR #10 y todos los commits posteriores. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles. Registramos en Jira que Yeison asume EC-22/23/24/26/27/28/29/30; EC-25 conserva a Fabián. EC-22 mantiene pendiente la prueba física con 100 platos y EC-27 la validación real de Storage, ambas sin Listo. Los resultados de VPS, estados finales y registro del sprint están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md). Este corte prevalece sobre las notas históricas siguientes.
 
-**EC-27, bloqueo externo confirmado por el usuario:** no dispone del acceso completo a Supabase y pide aplazar esa parte. Conservamos código y pruebas; trasladamos el seguimiento previsto al backlog de integración de Storage, a cargo de Yeison. Falta registrar ese traslado en Jira antes de cerrar el sprint; no se marca la historia como Listo. Pendiente actualizar requisitos en Drive y Word local: RF-ADM02/plan de entrega, prueba real de carga aplazada por acceso; sección 8, responsabilidad del cierre asumida por Yeison. Las tablas originales siguientes son históricas, no un reporte de estado remoto.
+**EC-27, aplazamiento registrado:** la movimos al backlog del tablero 167, En curso y a cargo de Yeison, por falta de acceso completo a Supabase Storage. Conservamos código, criterios y ocho puntos; falta validar carga real, variantes, orden/principal, eliminación y limpieza de errores/concurrencia. No contamos las fotos de ejemplo como cargas nuevas. EC-22 conserva sus ocho puntos y el criterio físico de al menos 100 platos. Pendiente actualizar requisitos en Drive y Word local: RF-ADM02/plan de entrega, Storage aplazado; RF-MEN01/RNF-01, aceptación física pendiente; sección 8, Yeison asume el cierre restante. El CSV conserva el importable original y no representa estados remotos actuales.
 
-**Reparto vigente del 15 de octubre:** sustituimos la concentración en Alex por los bloques y dependencias de [Encargos_Equipo.md](Encargos_Equipo.md). Sprint 2 tiene tres historias por persona; Sprint 3, tres por persona y EC-40 de integración coordinada por Yeison. Conservamos criterios, puntos, fechas y entregas existentes; las referencias posteriores al reparto anterior no son el encargo actual.
+**Reparto histórico del 15 de octubre:** sustituimos la concentración en Alex por los bloques y dependencias de [Encargos_Equipo.md](Encargos_Equipo.md). Sprint 2 tiene tres historias por persona; Sprint 3, tres por persona y EC-40 de integración coordinada por Yeison. Conservamos criterios, puntos, fechas y entregas existentes; las referencias posteriores al reparto anterior no son el encargo actual.
 
 **Cambio solicitado el 16 de octubre, pendiente de Jira:** Google como único proveedor de autenticación, acceso global obligatorio y subpantallas en Ajustes para Sprint 5. No modificamos el CSV importable ni afirmamos haber creado actividades; antes de programar se deben crear/ajustar las historias, responsables y estimaciones en Jira. La revisión incluye retirar o diferir verificación y recuperación de contraseñas propias si Google administra las credenciales.
 
+**Cierre administrativo:** Sprint 2 quedó cerrado en Jira (287), siete historias Listo y 42 puntos del alcance original aceptados técnicamente. EC-22 y EC-27 conservan 16 puntos en backlog, En curso y a cargo de Yeison. Ver el acta para los comentarios y el corte remoto.
+
 ### Épicas, historias y criterios de aceptación
 
-**Comprobación posterior del 16 de octubre:** probamos EC-22/23/24 en S21 con la sede real y HTTPS dev: carta, detalle/foto/precio y aviso de día cerrado. La falta de ID real indicada en los cortes siguientes ya está resuelta; [guardamos capturas y resultados](evidencias/carta-dev-s21-2026-10-16/README.md). La API nueva necesita sus migraciones: health pasó pero menú falló por `platos.activo` ausente en la base compartida. El único contenedor local quedó con la API compatible con el esquema vigente y menú HTTP 200. PR #10 sigue sin merge; faltan Storage real y actualización de Jira. El usuario pidió asignar a Yeison las tareas restantes que está asumiendo; no afirmamos que esa reasignación ya se haya guardado.
+**Comprobación posterior del 16 de octubre (corte histórico previo a PR #11):** probamos EC-22/23/24 en S21 con la sede real y HTTPS dev: carta, detalle/foto/precio y aviso de día cerrado. La falta de ID real indicada en los cortes siguientes ya está resuelta; [guardamos capturas y resultados](evidencias/carta-dev-s21-2026-10-16/README.md). La API nueva necesita sus migraciones: health pasó pero menú falló por `platos.activo` ausente en la base compartida. El único contenedor local quedó con la API compatible con el esquema vigente y menú HTTP 200. PR #10 sigue sin merge; faltan Storage real y actualización de Jira. El usuario pidió asignar a Yeison las tareas restantes que está asumiendo; no afirmamos que esa reasignación ya se haya guardado.
 
 **Versión:** 0.1 · **Generado:** 20 de agosto de 2026
 
 Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
-**Revisión del 16 de octubre:** mantenemos las estimaciones originales y registramos implementación local en [el plan](Plan_de_Sprints.md). EC-25 sigue cerrada en Jira/`dev`; en esta rama están implementadas carta EC-22/23/24, administración EC-26/27/30 y reservas EC-31–40. La PR #10 entrega el subconjunto de carta móvil: borrador hacia `dev`, mergeable, CI de build/pruebas verde, sin reviews; su descripción deja pendiente validar el `restauranteId` real y las fotos del entorno dev en el S21. Pasaron 187 pruebas API, 47 móviles, integración HTTP local y el recorrido principal de reserva/administración en S21 con fixtures desechables. No las marcamos `Listo`: falta esa aceptación real, integrar el resto de la rama, probar Storage real y actualizar Jira con evidencia. Las actividades conservan sus responsables actuales; no atribuimos commits a los compañeros.
+**Revisión del 16 de octubre (corte histórico previo a PR #11):** mantenemos las estimaciones originales y registramos implementación local en [el plan](Plan_de_Sprints.md). EC-25 sigue cerrada en Jira/`dev`; en esta rama están implementadas carta EC-22/23/24, administración EC-26/27/30 y reservas EC-31–40. La PR #10 entrega el subconjunto de carta móvil: borrador hacia `dev`, mergeable, CI de build/pruebas verde, sin reviews; su descripción deja pendiente validar el `restauranteId` real y las fotos del entorno dev en el S21. Pasaron 187 pruebas API, 47 móviles, integración HTTP local y el recorrido principal de reserva/administración en S21 con fixtures desechables. No las marcamos `Listo`: falta esa aceptación real, integrar el resto de la rama, probar Storage real y actualizar Jira con evidencia. Las actividades conservan sus responsables actuales; no atribuimos commits a los compañeros.
 
 **Corte de estado:** 16 de octubre de 2026. Usamos `[x]` solo para historias integradas y aceptadas, `[~]` para implementación en rama o aceptación incompleta y `[ ]` para pendiente. Los puntos del resumen siguen siendo estimaciones originales. `Backlog_Jira.csv` conserva el importable original y no es un reporte sincronizado; los cambios de estado deben hacerse directamente en Jira después de revisión.
 
-**Evidencia del 16 de octubre:** EC-28/29 conserva el panel integrado por PR #8 (`b1e0cf1`) y el recorrido Android previo con PostgreSQL aislado, en [el acta](evidencias/atencion-celular-2026-10-16/README.md). En esta rama pasan 187 pruebas API con PostgreSQL temporal y 47 móviles; EC-31–40 está implementada y documentada en [Reservas_EC31_EC40.md](Reservas_EC31_EC40.md). El S21 completó una solicitud con pedido y su revisión administrativa hasta cierre, contra una API y datos ficticios locales; el selector de fechas también se corrigió y verificó. La PR #10 cubre EC-22/23/24, pero permanece en borrador, sin review ni merge; falta la aceptación en S21 con el ID real de dev. También sigue pendiente integrar el resto de la rama, probar Storage real y actualizar Jira. No se cambiaron estados de Jira en este corte. La carga real de fotos depende de configurar un bucket de Supabase Storage.
+**Evidencia del 16 de octubre (corte histórico previo a PR #11):** EC-28/29 conserva el panel integrado por PR #8 (`b1e0cf1`) y el recorrido Android previo con PostgreSQL aislado, en [el acta](evidencias/atencion-celular-2026-10-16/README.md). En esta rama pasan 187 pruebas API con PostgreSQL temporal y 47 móviles; EC-31–40 está implementada y documentada en [Reservas_EC31_EC40.md](Reservas_EC31_EC40.md). El S21 completó una solicitud con pedido y su revisión administrativa hasta cierre, contra una API y datos ficticios locales; el selector de fechas también se corrigió y verificó. La PR #10 cubre EC-22/23/24, pero permanece en borrador, sin review ni merge; falta la aceptación en S21 con el ID real de dev. También sigue pendiente integrar el resto de la rama, probar Storage real y actualizar Jira. No se cambiaron estados de Jira en este corte. La carga real de fotos depende de configurar un bucket de Supabase Storage.
 
-**Verificación Docker adicional del 16 de octubre:** el paso de CI de runtime se ejecutó localmente y pasó migraciones, health HTTP del host y dentro del contenedor, coincidencia de ID de imagen, comando `node dist/main.js` y ausencia de montajes. El S21 cargó el plato de prueba desde esa API en Docker; el APK usado fue `debug`, porque el intento `release` falló en Ninja/CMake de Windows. No cambiamos estados de Jira: la rama sigue sin integrar, falta Storage real para EC-27 y la aceptación del equipo. Los contenedores/DB locales son sólo fixtures temporales, sin volúmenes persistentes, y se eliminan al cerrar la verificación.
+**Verificación Docker adicional del 16 de octubre (corte histórico previo a PR #11):** el paso de CI de runtime se ejecutó localmente y pasó migraciones, health HTTP del host y dentro del contenedor, coincidencia de ID de imagen, comando `node dist/main.js` y ausencia de montajes. El S21 cargó el plato de prueba desde esa API en Docker; el APK usado fue `debug`, porque el intento `release` falló en Ninja/CMake de Windows. No cambiamos estados de Jira: la rama sigue sin integrar, falta Storage real para EC-27 y la aceptación del equipo. Los contenedores/DB locales son sólo fixtures temporales, sin volúmenes persistentes, y se eliminan al cerrar la verificación.
 
 ---
 
@@ -216,7 +218,7 @@ Que el comensal recorra la carta con comodidad y llegue al detalle en un toque.
 - La lista esta virtualizada y se desplaza con fluidez con al menos 100 platos
 - Los platos no disponibles para la fecha consultada se presentan atenuados y con insignia
 
-### [~] Presentar en el inicio los platos del proximo dia de atencion
+### [x] Presentar en el inicio los platos del proximo dia de atencion
 
 `Sprint 2` · `5 pts` · `Highest` · `movil` · `RF-MEN02`
 
@@ -229,7 +231,7 @@ Que al abrir la aplicacion se sepa cuando abren y que habra de comer.
 - Se puede cambiar la fecha consultada y la carta se actualiza
 - Si la fecha esta cerrada, se explica y se ofrece la siguiente fecha abierta
 
-### [~] Construir el detalle de plato con galeria de hasta 10 fotos
+### [x] Construir el detalle de plato con galeria de hasta 10 fotos
 
 `Sprint 2` · `5 pts` · `High` · `movil` · `RF-MEN03`
 
@@ -239,7 +241,7 @@ Presentar el plato con la mayor fuerza visual posible.
 
 - La galeria admite hasta 10 fotos en relacion 4:3, con indicador de posicion
 - Se muestran descripcion extendida, etiquetas dietarias y alergenos
-- La pantalla se ve correcta cuando se abre en frio desde un enlace externo
+- El detalle se abre desde la carta; apertura en frío desde enlace externo y retroceso se aceptan en EC-47/48, Sprint 4, sin retirar RF-INF05 ni añadir puntos
 - El retroceso lleva a la carta y no cierra la aplicacion
 
 ### [x] Exponer la API de menu
@@ -290,7 +292,7 @@ Todo lo que el dueño mantiene para que la carta y el calendario reflejen la ope
 
 _4 historias · 32 puntos_
 
-### [~] Administrar categorias y platos
+### [x] Administrar categorias y platos
 
 `Sprint 2` · `8 pts` · `Highest` · `movil,backend` · `RF-ADM01, RF-ADM02, RF-ADM04`
 
@@ -317,7 +319,7 @@ Resolver el almacenamiento de imagenes y dejar lista la variante para compartir.
 - La URL de la imagen se versiona con un fragmento derivado de la fecha de actualizacion
 - Una imagen demasiado pesada produce un mensaje explicativo, no un fallo silencioso
 
-### [~] Gestionar la disponibilidad de platos por fecha
+### [x] Gestionar la disponibilidad de platos por fecha
 
 `Sprint 2` · `8 pts` · `Highest` · `movil,backend` · `RF-ADM03, ADR-010`
 
@@ -330,13 +332,13 @@ Reflejar que el restaurante habilita platos especiales segun el dia.
 - Existe la accion de copiar la seleccion de otra fecha
 - La carta del comensal refleja el cambio al consultar esa fecha
 
-### [~] Configurar el calendario de atencion
+### [x] Configurar el calendario de atencion
 
 `Sprint 2` · `8 pts` · `Highest` · `movil,backend` · `RF-ADM06, HU-05`
 
 Representar una operacion discontinua: fines de semana, festivos y aperturas por reserva.
 
-Incorporamos el backend de Fabián del [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4`), conservando sus commits. Integramos el panel móvil A05 por PR #8 y comprobamos el recorrido técnico en el celular; EC-29 sigue parcial hasta su aceptación explícita con el dueño. Registramos capturas Android, pruebas con PostgreSQL aislado y pendientes en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). El procedimiento vigente está en [Encargos_Equipo.md](Encargos_Equipo.md); no duplicamos el backend existente.
+Incorporamos el backend de Fabián del [PR #2](https://github.com/YeisonMunoz69/Restaurante-Native/pull/2), rama `fabian/calendario-atencion` (`76805a4`), conservando sus commits. Integramos el panel móvil A05 por PR #8 y comprobamos el recorrido técnico en el celular; En este corte histórico EC-29 seguía parcial; el cierre técnico posterior autorizado por Yeison y sus límites están en el acta, sin afirmar aceptación externa del dueño. Registramos capturas Android, pruebas con PostgreSQL aislado y pendientes en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). El procedimiento vigente está en [Encargos_Equipo.md](Encargos_Equipo.md); no duplicamos el backend existente.
 
 **Criterios de aceptación**
 

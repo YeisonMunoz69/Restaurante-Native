@@ -1,5 +1,9 @@
 # Primera entrega del calendario de atención
 
+**Corte de cierre del 16 de octubre:** integramos PR #11 en `dev`, merge `0245146`, conservando el subconjunto de PR #10 y todos los commits posteriores. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles. Registramos en Jira que Yeison asume EC-22/23/24/26/27/28/29/30; EC-25 conserva a Fabián. EC-22 mantiene pendiente la prueba física con 100 platos y EC-27 la validación real de Storage, ambas sin Listo. Los resultados de VPS, estados finales y registro del sprint están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md). Este corte prevalece sobre las notas históricas siguientes.
+
+## Evidencia y cortes históricos
+
 **Continuación del 16 de octubre:** conservamos este backend integrado y añadimos su panel y seis pruebas de transacciones con PostgreSQL aislado. Recorrido Android, capturas y pendientes de aceptación en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). EC-29 sigue En curso; las limitaciones y la confirmación de cierre descritas aquí se conservan.
 
 **Actualización del 16 de octubre:** las historias de Sprint 3 que consumen este calendario ya tienen implementación de franjas, creación/aprobación y validación de horario en `yeison/ajusta-encabezados-y-auth-plan`. Sus pruebas API usan PostgreSQL desechable. La rama aún no está en `dev`; esta nota no cierra EC-29 ni reemplaza su aceptación de calendario.

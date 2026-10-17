@@ -356,9 +356,13 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 
 ### Sprint 2: Carta Digital, Fotografías y Calendario (58 puntos)
 
+**Corte de recuperación del 16 de octubre:** integramos PR #11 en `dev`; Yeison asume EC-22/23/24/26/27/28/29/30 y Fabián conserva EC-25. La lista de requisitos siguiente representa el alcance previsto, no una certificación de cobertura completa: EC-22 mantiene pendiente la aceptación física con 100 platos y EC-27 la integración real de Storage por acceso incompleto. La apertura externa del detalle se acepta en EC-47/48 de Sprint 4. No retiramos RF-ADM02, RF-MEN01/RNF-01 ni RF-INF05; balance y estados finales en [el acta de cierre](Cierre_Sprint2_2026-10-16.md).
+
+Pendiente actualizar requisitos en Drive y Word local: sección 8 y estos RF/RNF, reflejar responsabilidades, aplazamiento y dependencia de aceptación externa; el Markdown no actualiza esos documentos automáticamente.
+
 - **Foco:** Catálogo de platos con lista virtualizada, compresión de imágenes con `sharp` en backend, gestión administrativa de platos y definición del calendario de atención.
 - **Entregables:** Home con platos del próximo día de servicio, detalle con galería de hasta 10 fotos WebP, CRUD de categorías/platos, disponibilidad por fecha específica.
-- **Requisitos cubiertos:** `RF-MEN01`, `RF-MEN02`, `RF-MEN03`, `RF-MEN06`, `RF-ADM01`, `RF-ADM02`, `RF-ADM03`, `RF-ADM04`, `RF-ADM06`, `RNF-01`.
+- **Requisitos previstos:** `RF-MEN01`, `RF-MEN02`, `RF-MEN03`, `RF-MEN06`, `RF-ADM01`, `RF-ADM02`, `RF-ADM03`, `RF-ADM04`, `RF-ADM06`, `RNF-01`.
 
 ### Sprint 3: Motor de Reservas, Aforo y Aprobación (62 puntos)
 

@@ -1,0 +1,74 @@
+{
+  "sprint": {
+    "id": 287,
+    "name": "EC Sprint 2",
+    "state": "closed",
+    "goal": "Regularizamos el cierre de recuperación de Sprint 2 con evidencia del 16 de octubre: PR #11 en dev 0245146, CI/CD y VPS verificados. Conservamos el plan original del 11–24 de septiembre como histórico; este registro administrativo no reconstruye fechas ni velocidad. Cierre técnico de EC-23/24/25/26/28/29/30 (42 puntos originales); EC-22 y EC-27 conservan 16 puntos y seguimiento en backlog.",
+    "startDate": "2026-10-17T04:42:45.379Z",
+    "endDate": "2026-10-18T04:42:45.379Z",
+    "completeDate": "2026-10-17T04:43:20.965Z",
+    "originBoardId": 167
+  },
+  "issues": [
+    {
+      "key": "EC-23",
+      "status": "Listo",
+      "assignee": "YEISON JAVIER MUÑOZ GOMEZ",
+      "points": 5
+    },
+    {
+      "key": "EC-24",
+      "status": "Listo",
+      "assignee": "YEISON JAVIER MUÑOZ GOMEZ",
+      "points": 5
+    },
+    {
+      "key": "EC-25",
+      "status": "Listo",
+      "assignee": "FABIAN ARMANDO HOYOS CERON",
+      "points": 5
+    },
+    {
+      "key": "EC-26",
+      "status": "Listo",
+      "assignee": "YEISON JAVIER MUÑOZ GOMEZ",
+      "points": 8
+    },
+    {
+      "key": "EC-28",
+      "status": "Listo",
+      "assignee": "YEISON JAVIER MUÑOZ GOMEZ",
+      "points": 8
+    },
+    {
+      "key": "EC-29",
+      "status": "Listo",
+      "assignee": "YEISON JAVIER MUÑOZ GOMEZ",
+      "points": 8
+    },
+    {
+      "key": "EC-30",
+      "status": "Listo",
+      "assignee": "YEISON JAVIER MUÑOZ GOMEZ",
+      "points": 3
+    }
+  ],
+  "backlog": [
+    {
+      "key": "EC-22",
+      "status": "En curso",
+      "assignee": "YEISON JAVIER MUÑOZ GOMEZ",
+      "points": 8
+    },
+    {
+      "key": "EC-27",
+      "status": "En curso",
+      "assignee": "YEISON JAVIER MUÑOZ GOMEZ",
+      "points": 8
+    }
+  ],
+  "closureComment": "https://yjmunoz.atlassian.net/browse/EC-26?focusedCommentId=10063",
+  "originalPoints": 58,
+  "acceptedPoints": 42,
+  "remainingPoints": 16
+}
