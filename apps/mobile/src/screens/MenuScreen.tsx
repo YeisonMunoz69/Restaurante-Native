@@ -85,6 +85,8 @@ export const MenuScreen: React.FC = () => {
   const [fecha, setFecha] = useState<string | null>(null);
   const [nextOpenDate, setNextOpenDate] = useState<string | null>(null);
   const [dayOpen, setDayOpen] = useState<boolean | null>(null);
+  const [dayHours, setDayHours] = useState<string[]>([]);
+  const [nextAvailableDay, setNextAvailableDay] = useState<string | null>(null);
   const [noNextOpenDay, setNoNextOpenDay] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -103,6 +105,8 @@ export const MenuScreen: React.FC = () => {
     setFecha(null);
     setNextOpenDate(null);
     setDayOpen(null);
+    setDayHours([]);
+    setNextAvailableDay(null);
     setNoNextOpenDay(false);
     setError(null);
     loadingMoreRef.current = false;
@@ -132,6 +136,7 @@ export const MenuScreen: React.FC = () => {
       ]);
       if (currentRequest !== requestNumber.current) return;
       setDayOpen(initialDay.abierto);
+      setDayHours(initialDay.horarios.map(hours => `${hours.horaApertura}–${hours.horaCierre}`));
       setDishes(firstPage.data);
       setNextPage(firstPage.paginacion.pagina + 1);
       setTotalPages(firstPage.paginacion.totalPaginas);
@@ -157,6 +162,8 @@ export const MenuScreen: React.FC = () => {
       const currentRequest = ++requestNumber.current;
       setFecha(nextDate);
       setDayOpen(null);
+      setDayHours([]);
+      setNextAvailableDay(null);
       setNoNextOpenDay(false);
       setDishes([]);
       setNextPage(2);
@@ -171,9 +178,18 @@ export const MenuScreen: React.FC = () => {
         ]);
         if (currentRequest !== requestNumber.current) return;
         setDayOpen(day.abierto);
+        setDayHours(day.horarios.map(hours => `${hours.horaApertura}–${hours.horaCierre}`));
         setDishes(page.data);
         setNextPage(page.paginacion.pagina + 1);
         setTotalPages(page.paginacion.totalPaginas);
+        if (!day.abierto) {
+          // Busco desde la fecha consultada para ofrecer la próxima apertura real, sin horarios fijos.
+          const next = await menuApi.nextOpenDay(restauranteId, nextDate);
+          if (currentRequest !== requestNumber.current) return;
+          setNextAvailableDay(next.dia?.fecha ?? null);
+          setNoNextOpenDay(next.dia === null);
+          if (next.dia) setNextOpenDate(next.dia.fecha);
+        }
       } catch (requestError) {
         if (currentRequest === requestNumber.current) setError(requestError);
       } finally {
@@ -316,6 +332,11 @@ export const MenuScreen: React.FC = () => {
                 >
                   {formatCivilDate(fecha)}
                 </Text>
+                {dayHours.length > 0 && (
+                  <Text testID="menu-day-hours" style={[typography.pie, { color: colors.texto.secundario, marginTop: spacing.xs }]}>
+                    {dayHours.join(' · ')}
+                  </Text>
+                )}
                 <View style={[styles.dateControls, { marginTop: spacing.s }]}>
                   <Pressable
                     testID="menu-date-previous"
@@ -382,6 +403,18 @@ export const MenuScreen: React.FC = () => {
                   >
                     {t('menu.dayClosed')}
                   </Text>
+                )}
+                {dayOpen === false && nextAvailableDay && (
+                  <Pressable
+                    testID="menu-next-open-date"
+                    accessibilityRole="button"
+                    onPress={() => loadDate(nextAvailableDay)}
+                    style={[styles.retryButton, { marginTop: spacing.s }]}
+                  >
+                    <Text style={[typography.pie, { color: colors.marca.primario }]}>
+                      {t('menu.goToNextOpenDay', { date: formatCivilDate(nextAvailableDay) })}
+                    </Text>
+                  </Pressable>
                 )}
               </View>
             )}

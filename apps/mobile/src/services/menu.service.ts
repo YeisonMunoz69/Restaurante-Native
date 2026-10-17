@@ -42,10 +42,10 @@ export const menuApi = {
       })
     ).data,
 
-  nextOpenDay: async (restauranteId: string) =>
+  nextOpenDay: async (restauranteId: string, desde?: string) =>
     (
       await apiClient.get<CalendarNextResult>('/calendario/proximo', {
-        params: { restauranteId },
+        params: { restauranteId, ...(desde ? { desde } : {}) },
       })
     ).data,
 

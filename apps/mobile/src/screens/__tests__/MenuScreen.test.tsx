@@ -136,6 +136,7 @@ describe('MenuScreen', () => {
 
     expect(api.dishes).toHaveBeenCalledWith(restaurantId, '2031-02-23', 1);
     expect(textValues(tree!)).toContain('menu.nextOpenDay');
+    expect(textValues(tree!)).toContain('10:00–17:00');
     expect(textValues(tree!)).toContain('Sopa de prueba');
     expect(textValues(tree!)).not.toContain('Sancocho de Gallina Criolla');
 
@@ -181,7 +182,7 @@ describe('MenuScreen', () => {
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
-  it('clears the no-open-day notice after choosing another date', async () => {
+  it('clears the no-open-day notice after choosing an open date', async () => {
     api.nextOpenDay.mockResolvedValue({
       desde: '2031-02-22',
       hasta: '2032-02-22',
@@ -203,6 +204,17 @@ describe('MenuScreen', () => {
 
     expect(textValues(tree!)).toContain('menu.noNextOpenDay');
 
+    api.day.mockResolvedValue({
+      restauranteId: restaurantId,
+      fecha: '2031-02-24',
+      zonaHoraria: 'America/Bogota',
+      abierto: true,
+      soloPorReserva: false,
+      origen: 'SEMANAL',
+      horarios: [{ horaApertura: '10:00', horaCierre: '17:00' }],
+      motivo: null,
+    });
+
     await ReactTestRenderer.act(async () => {
       tree!.root.findByProps({ testID: 'menu-date-next' }).props.onPress();
       await Promise.resolve();
@@ -210,6 +222,37 @@ describe('MenuScreen', () => {
     });
 
     expect(textValues(tree!)).not.toContain('menu.noNextOpenDay');
+    ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('ofrece la próxima apertura desde la fecha cerrada y carga su horario real', async () => {
+    const next = await api.nextOpenDay(restaurantId);
+    api.nextOpenDay.mockResolvedValueOnce(next).mockResolvedValue({
+      ...next,
+      desde: '2031-02-24',
+      dia: { ...next.dia!, fecha: '2031-02-25', horarios: [{ horaApertura: '11:00', horaCierre: '18:00' }] },
+    });
+    api.day.mockImplementation(async (_id, date) => ({
+      ...next.dia!,
+      fecha: date,
+      abierto: date === '2031-02-25',
+      horarios: date === '2031-02-25' ? [{ horaApertura: '11:00', horaCierre: '18:00' }] : [],
+    }));
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(<ThemeProvider><MenuScreen /></ThemeProvider>);
+    });
+    await ReactTestRenderer.act(async () => {
+      tree!.root.findByProps({ testID: 'menu-date-next' }).props.onPress();
+    });
+    expect(api.nextOpenDay).toHaveBeenLastCalledWith(restaurantId, '2031-02-24');
+    expect(textValues(tree!)).toContain('menu.dayClosed');
+    await ReactTestRenderer.act(async () => {
+      tree!.root.findByProps({ testID: 'menu-next-open-date' }).props.onPress();
+    });
+    expect(api.dishes).toHaveBeenLastCalledWith(restaurantId, '2031-02-25', 1);
+    expect(textValues(tree!)).toContain('11:00–18:00');
+    expect(textValues(tree!)).not.toContain('menu.dayClosed');
     ReactTestRenderer.act(() => tree!.unmount());
   });
 });
