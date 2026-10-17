@@ -1,16 +1,18 @@
 # Entregas pendientes de Alex: carta y reservas
 
-**Reparto vigente del 15 de octubre:** este catálogo ya no es una lista completa a cargo de Alex. Aplicamos [Encargos_Equipo.md](Encargos_Equipo.md): Alex EC-22/23/24 y luego EC-33/35/38; Fabián EC-25/28/29 y luego EC-31/32/34; Yeison EC-26/27/30 y luego EC-37/36/39, coordinando EC-40 al final. Conservamos las fichas como referencia compartida. A01/A04/A05 las lleva Fabián; A03/A06 y operación administrativa, Yeison. Las menciones posteriores al reparto anterior son históricas; el prompt vigente está en Encargos_Equipo.md, no encargamos toda la API y el móvil a Alex.
+**Estado al 16 de octubre de 2026:** EC-22/23/24 y EC-33/35/38 están implementadas en `yeison/ajusta-encabezados-y-auth-plan`, todavía sin integrar en `dev`. Pasan 187 pruebas API, 46 móviles, TypeScript, build Android y prueba Docker aislada. En el S21 renderizaron Carta, Mis reservas, Próximamente y Ajustes; los títulos ya no quedan pegados a la barra de estado. Aún falta probar los recorridos de reserva/admin contra API local con datos y roles de QA. Alex conserva las historias en Jira: debe comparar sus avances, ayudar a completar la aceptación y publicar únicamente diferencias propias, sin duplicar la implementación ni atribuirse estos commits. Ver [Encargos_Equipo.md](Encargos_Equipo.md) y [contrato EC-31–40](Reservas_EC31_EC40.md).
 
-**Corte del 16 de octubre:** EC-25 está integrada; EC-28/29 tienen backend y panel publicados, pero continúan En curso hasta completar aceptación y consumo de disponibilidad desde la carta. EC-22/23/24 siguen pendientes de comprobar en la rama de Alex y en Android. En Sprint 3 no existe todavía un flujo funcional de reservas. Google como único acceso y el bloqueo de todas las pestañas son una solicitud para Sprint 5, pendiente de Jira; las indicaciones anteriores de navegación pública describen el alcance transitorio y quedan reemplazadas al implementar ese cambio.
+**Reparto vigente:** Alex EC-22/23/24 y EC-33/35/38; Fabián EC-25/28/29 y EC-31/32/34; Yeison EC-26/27/30 y EC-36/37/39/40. Este reparto no cambia por implementar tareas ajenas con autorización del equipo. Las historias no están cerradas en Jira por pasar pruebas locales: falta revisión, aceptación e integración a `dev`.
 
-**Actualización del 16 de octubre:** el backend de calendario del PR #2 y el panel A05 del PR #8 ya están integrados en `dev`. No los rehacemos; faltan aceptación y pruebas pendientes descritas en el plan. Si Alex ya implementó carta/detalle, publica y demuestra ese avance; si no, empieza por EC-22 → EC-23 → EC-24. Usamos el reparto y los prompts vigentes de [Encargos_Equipo.md](Encargos_Equipo.md).
+**Decisión futura:** el acceso único con Google, la protección global de las cinco pestañas y las subpantallas de Ajustes siguen en el alcance solicitado para Sprint 5, no están implementados ni sincronizados todavía en Jira. Las instrucciones históricas de Sprint 2/3 que describen navegación pública no adelantan ni sustituyen ese cambio.
 
 **Corte inicial del 9 de octubre de 2026 (histórico):** revisamos `dev` en `0e27cb4`. Este documento reemplaza el reparto inicial de Sprint 2; su estado actual se describe en el corte del 16 de octubre y en el plan vigente.
 
 **Revisión del 16 de octubre:** Alex conserva EC-22/23/24 y EC-33/35/38; Fabián EC-25/28/29 y EC-31/32/34; Yeison EC-26/27/30 y EC-37/36/39, con EC-40 coordinada. Antes de duplicar, cada quien revisa y publica avances de su rama. El cambio futuro de autenticación se mantiene pendiente de Jira y de sincronizar requisitos manuales de Drive/Word.
 
-## 1. Desde dónde empezamos
+## 1. Foto previa a esta implementación (histórica)
+
+La siguiente tabla conserva la auditoría anterior al trabajo de esta rama. **No describe el estado actual del código**; el estado vigente está en el corte de arriba y en el plan de sprints.
 
 | Parte                | Lo que encontramos                                                                                                                  | Lo que todavía no podemos dar por entregado                                                    |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -129,7 +131,7 @@ El 16 de octubre cerramos las precisiones que antes figuraban como preguntas. En
 | Cancelación         | `SOLICITADA` se puede retirar; `CONFIRMADA` se puede cancelar cuando faltan 60 min o más          | Probamos confirmadas a 59, 60 y 61 minutos                                                         |
 | Expiración          | `SOLICITADA` vence tras 12 horas si sigue sin confirmarse                                         | El comprobante se revisa por WhatsApp; la aplicación solo conoce la confirmación que registra el dueño |
 | Rechazo             | `RECHAZADA` es terminal; no hay edición ni reapertura                                             | Para reintentar, el comensal registra otra solicitud                                               |
-| Estado compartido   | Prisma permite `EXPIRADA`                                                                          | EC-37 debe alinear el contrato compartido y cubrir todas las transiciones con pruebas             |
+| Estado compartido   | Prisma permite `EXPIRADA`                                                                          | La rama actual alinea el contrato compartido y prueba transiciones; falta integrar y aceptar      |
 | Sede                | El producto actual tiene una sede                                                               | No añadimos filtros de `Reservation.restaurantId` que el modelo aún no tiene                      |
 
 Ya tenemos decisiones que **sí aplicamos**: pedido opcional con menos de ocho personas y obligatorio desde ocho; pago externo y comprobante por WhatsApp; aprobación manual; Mirador, motos y pesca no se reservan en la app. No construimos pasarela ni carga de comprobantes por suposición.

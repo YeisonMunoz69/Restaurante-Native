@@ -1,5 +1,7 @@
 # Disponibilidad de platos por fecha · EC-28
 
+**Corte del 16 de octubre de 2026:** el backend/copia de disponibilidad de Fabián continúa integrado en `dev` (PR #7); el panel y su evidencia previa están en PR #8. Esta rama añade el cliente de carta, administración y disponibilidad, pero aún no se integra ni se cierra EC-28/29. La foto actual de pruebas/aceptación figura en [Plan_de_Sprints.md](Plan_de_Sprints.md).
+
 Implementamos excepciones de `DishSchedule` sobre el esquema existente. Una excepción `true` o `false` prevalece sobre `Dish.disponible`; quitarla restaura el valor general. No cambiamos esquema ni administramos aforo.
 
 ## Contrato administrativo
@@ -51,20 +53,14 @@ Publicamos tipos/validación en `packages/shared/src/schemas/dish-availability.s
 
 ## Repetir pruebas reales
 
-Usamos Node 22.23.3 y PostgreSQL local desechable. El helper heredado `menu-postgres.fixture.ts` conserva el nombre de base `encanto_ec25_test`, también para EC-28/29. Rechaza destinos fuera de `127.0.0.1`, puerto 5432, otro usuario/base o parámetros externos antes de crear Prisma. Cada suite crea un esquema aleatorio, aplica migraciones versionadas y borra únicamente ese esquema. No usa DATABASE_URL del proyecto, seed, reset ni db push.
+Usamos Node 22 y PostgreSQL local desechable. El helper `menu-postgres.fixture.ts` valida host, usuario y base `encanto_ec25_test`; cada suite crea un esquema aleatorio, aplica migraciones versionadas y borra únicamente ese esquema. La suite de reservas usa `RESERVATION_TEST_DATABASE_URL` con el mismo destino aislado. No usamos `DATABASE_URL` del proyecto, seed, reset ni `db push`.
 
-```powershell
-docker run --rm --name encanto-sprint2-pg-test -e POSTGRES_USER=encanto_test -e POSTGRES_PASSWORD=encanto_local_test -e POSTGRES_DB=encanto_ec25_test -p 127.0.0.1::5432 -d postgres:17-alpine
-docker port encanto-sprint2-pg-test 5432/tcp
-# Sustituimos PUERTO por el asignado; usuario/contraseña solo son de la base desechable.
-$env:ENCANTO_MENU_TEST_DATABASE_URL='postgresql://encanto_test:encanto_local_test@127.0.0.1:PUERTO/encanto_ec25_test'
-npm run test --workspace=api
-```
+Para repetir la suite completa (menú, calendario, disponibilidad y reservas), sigue el procedimiento seguro y reproducible de [EC-25: PostgreSQL aislado](API_Menu_EC25.md#postgresql-aislado-y-reproducción). Esa guía define ambas variables (`ENCANTO_MENU_TEST_DATABASE_URL` y `RESERVATION_TEST_DATABASE_URL`), espera a que el contenedor esté listo y limpia solo su contenedor/esquemas.
 
-Sin esa variable omitimos explícitamente las integraciones. Los dobles HTTP no acreditan persistencia. La suite real EC-28 cubre reconexión, precedencia en menú público, ID/cupo, copia sin escritura previa, confirmación vencida, categorías inactivas, rollback después de actualizar y escritor concurrente real. La suite de calendario es independiente y reutiliza su backend integrado.
+La ejecución actual pasó **20 suites y 187 pruebas API**; la misma corrida incluyó las integraciones con PostgreSQL. Los dobles HTTP por sí solos no acreditan persistencia. No confundimos los datos del entorno temporal con Supabase.
 
 ## Coordinación
 
-Responsable EC-28: Fabián. EC-26/27/30 siguen con Yeison; EC-22/23/24 con Alex. Acordamos acceso ADMIN en Ajustes y selector compartido antes del login, manteniendo cinco pestañas y autenticación existente. Panel y evidencia Android se entregan por separado de la API; estos endpoints solos no cierran EC-28.
+Responsables Jira EC-28/29: Fabián; EC-26/27/30: Yeison; EC-22/23/24: Alex. La rama actual incluye la implementación adicional, sin cambiar esa autoría. Acordamos acceso ADMIN en Ajustes y selector compartido antes del login, manteniendo las cinco pestañas y autenticación existente hasta el cambio futuro de Google. La suite local no sustituye aceptación Android ni prueba real de Storage.
 
 Registramos copia/configuración en Jira EC-28, comentario `10040`. **Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/ADR-010, copia de disponibilidad efectiva con previsualización/confirmación; configuración compartida de entorno/sede; sección 8 reparto y sección 10 control de cambios.** Editar Markdown no demuestra actualización de esos documentos.

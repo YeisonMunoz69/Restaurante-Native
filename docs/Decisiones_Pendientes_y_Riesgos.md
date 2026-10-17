@@ -8,6 +8,8 @@ Registramos lo acordado y lo distinguimos de lo implementado. Las filas con `⬜
 
 El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejando la corrección en Jira y en los documentos afectados. Aplicamos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos dónde cambió y recordamos actualizar manualmente los requisitos de Drive y `docs/Requisitos_del_Sistema.docx`. El 16 de octubre cerramos las reglas operativas de reservas y tres decisiones de Android que estaban pendientes. También se pidió Google como proveedor único y un acceso global para el Sprint 5, además de ordenar Ajustes en subpantallas. Jira queda por sincronizar: estas decisiones describen el alcance solicitado, no su implementación ni cambios ya guardados en Jira o en los documentos manuales.
 
+**Estado de implementación al 16 de octubre:** las reglas H-10–H-12 están codificadas y probadas en la rama `yeison/ajusta-encabezados-y-auth-plan`, aún no integrada en `dev`. El cambio futuro de Google y la reorganización de Ajustes sigue pendiente de planificación en Jira y de actualizar los requisitos manuales; no se incluyó en este trabajo.
+
 ---
 
 ## Ficha
@@ -180,12 +182,12 @@ Las reglas de reserva ya están decididas. Antes de cerrar las historias de rese
 | H-4 ✅  | ¿Cuánto tiempo espera una reserva sin comprobante antes de expirar?                                    | Vence a las 12 horas si un dueño no la confirma tras revisar el pago externo; WhatsApp no informa por sí solo a la aplicación          |
 | H-5 ✅  | ¿La adición de platos tras la confirmación se hace en la app o por WhatsApp?                           | La adición se solicita desde la app; WhatsApp sigue siendo canal de coordinación, según `RF-RES15`                                     |
 | H-6 ✅  | ¿Las noticias generan notificación push?                                                               | Sí, a usuarios que hayan dado consentimiento, según `RF-NOT05`                                                                         |
-| H-7 ✅  | Reglas semanales y excepciones por fecha, según modelos y Sprint 2                                     | Fabián lo publicó en PR #2; faltan integración y panel móvil. Esto no afirma que genere automáticamente todos los festivos             |
+| H-7 ✅  | Reglas semanales y excepciones por fecha, según modelos y Sprint 2                                     | Backend y panel integrados en PR #2/#8 con evidencia Android previa; no se afirma que genere automáticamente todos los festivos      |
 | H-8 ✅  | Bloque F completo                                                                                      | ✅ Resuelto y cerrado en la carpeta `design/`                                                                                          |
 | H-9 ✅  | G-9, G-10, G-14                                                                                        | Ícono temporal por ahora, paquete `co.encantocampestre.app` y formulario desplazable junto al teclado                                  |
-| H-10 ✅ | Tres meses calendario y mínimo de una hora, sin corte de las 13:00                                      | El calendario debe limitar la fecha a tres meses desde hoy y aceptar una franja si faltan al menos 60 minutos                          |
-| H-11 ✅ | B-1 distingue duraciones de 90/120 minutos, pero Restaurant guardaba una sola                           | El esquema conserva dos valores configurables: hasta 4 personas y desde 5 personas                                                    |
-| H-12 ✅ | ¿La cancelación exactamente a 60 minutos está permitida?                                               | Sí: 60 minutos exactos permite cancelar; 59 no y 61 sí                                                                                 |
+| H-10 ✅ | Tres meses calendario y mínimo de una hora, sin corte de las 13:00                                      | Implementado y probado en la rama actual; todavía no integrado en `dev`                                                               |
+| H-11 ✅ | B-1 distingue duraciones de 90/120 minutos, pero Restaurant guardaba una sola                           | El esquema conserva dos valores configurables: hasta 4 personas y desde 5; motor verificado en la rama actual                         |
+| H-12 ✅ | ¿La cancelación exactamente a 60 minutos está permitida?                                               | Sí: 60 minutos exactos permite cancelar; 59 no y 61 sí; probado en el servicio y aún pendiente de aceptación física                   |
 
 ---
 

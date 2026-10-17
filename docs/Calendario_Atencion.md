@@ -2,6 +2,8 @@
 
 **Continuación del 16 de octubre:** conservamos este backend integrado y añadimos su panel y seis pruebas de transacciones con PostgreSQL aislado. Recorrido Android, capturas y pendientes de aceptación en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). EC-29 sigue En curso; las limitaciones y la confirmación de cierre descritas aquí se conservan.
 
+**Actualización del 16 de octubre:** las historias de Sprint 3 que consumen este calendario ya tienen implementación de franjas, creación/aprobación y validación de horario en `yeison/ajusta-encabezados-y-auth-plan`. Sus pruebas API usan PostgreSQL desechable. La rama aún no está en `dev`; esta nota no cierra EC-29 ni reemplaza su aceptación de calendario.
+
 **Prueba con celular, 16 de octubre:** repetimos el recorrido en Samsung SM-G780G con Android 13. Conservamos el ID/aforo de la regla al guardar, cerramos una fecha después de cancelar y confirmar la advertencia de dos reservas y abrimos otra solo por reserva. Las dos reservas siguieron CONFIRMADA en PostgreSQL aislado. El panel está integrado por PR #8; queda la aceptación explícita del dueño. [Evidencia y límites](evidencias/atencion-celular-2026-10-16/README.md).
 
 Implementamos el backend de RF-ADM06 / HU-05 del Sprint 2. Consultamos un día y el próximo día abierto, mantenemos reglas semanales y excepciones por fecha, y advertimos antes de cerrar fechas con reservas confirmadas. No cerramos la historia móvil ni todo el sprint con esta entrega.
@@ -113,7 +115,7 @@ Volvemos a contar: si ahora hay tres reservas, devolvemos otro 409 con tres. Si 
 
 También advertimos al eliminar una excepción abierta si el horario semanal deja cerrado el día. Al reemplazar reglas semanales revisamos todas las fechas con reservas confirmadas desde hoy en Bogotá y advertimos únicamente las que pasan de abiertas a cerradas, respetando sus excepciones. No limitamos ese análisis de reservas al horizonte de la consulta pública. Reducir horarios de un día que sigue abierto no constituye un cierre completo en este contrato; no validamos compatibilidad horaria ni transiciones de reservas.
 
-Ejecutamos comprobación y escritura del calendario en una transacción serializable. Un conflicto Prisma `P2034` devuelve 409 `CALENDARIO_CONCURRENTE`; consultamos y repetimos la operación. No sustituimos con esto las validaciones de futuras creaciones/aprobaciones de reservas: el Sprint 3 debe verificar el calendario en sus propias transacciones. No afirmamos haber probado concurrencia real de PostgreSQL con dobles.
+Ejecutamos comprobación y escritura del calendario en una transacción serializable. Un conflicto Prisma `P2034` devuelve 409 `CALENDARIO_CONCURRENTE`; consultamos y repetimos la operación. El módulo de reservas de la rama de trabajo vuelve a validar calendario, disponibilidad y aforo en sus propias transacciones serializables; las integraciones contra PostgreSQL aislado pasaron. No usamos dobles como evidencia de concurrencia real.
 
 ## Sede única y errores
 
@@ -134,4 +136,4 @@ Conservamos el formato del filtro global: `statusCode`, `message`, `timestamp`, 
 
 Probamos el servicio con Prisma simulado y HTTP con `CalendarModule`, `AuthModule`, JWT y guardias reales. Sustituimos solamente Prisma y la configuración de prueba, sin leer archivos `.env`. En Vitest restauramos `design:paramtypes` de las guardias existentes porque esbuild no emite esos metadatos; en la compilación de producción los emite TypeScript. No conectamos Supabase, ejecutamos seed, reset ni migraciones. Probamos Swagger con el mismo filtro global usado en producción.
 
-Registramos los comandos y resultados reales en [el resumen del PR](PR_Calendario_Atencion.md). Dejamos pendientes las pantallas móviles, validación de recorrido con el dueño, menú/carta, aforo, transiciones de reservas, TOTP y bitácora del alcance posterior. No marcamos RF-ADM06/HU-05 completos ni modificamos el estado de todo el Sprint 2. Tras revisar e integrar el PR a `dev`, comprobamos CI/CD y salud; esta rama no necesita acceso a la VPS.
+Registramos los comandos y resultados del panel en [el resumen del PR](PR_Calendario_Atencion.md). El calendario/panel y el Sprint 3 nuevo aún requieren merge/revisión en `dev`; el S21 renderizó las pantallas nuevas, pero no se ejecutó el flujo conectado de reservas por falta de API local con datos/roles de QA. No se modificó Jira en este corte. TOTP y bitácora siguen fuera de Sprint 2/3. Al integrar a `dev`, CI/CD desplegará por el flujo habitual; no hace falta acceso SSH para contribuir.

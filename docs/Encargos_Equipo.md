@@ -1,6 +1,6 @@
 # Encargos e integración del equipo
 
-Actualizamos este reparto el 15 de octubre de 2026. Trabajamos desde `dev`; `main` queda fuera de esta VPS. Integramos documentación del PR #3 e incorporamos el backend de calendario del PR #2 conservando los cuatro commits de Fabián. Antes de consumirlo comprobamos el merge y la ejecución de Actions; no confundimos pruebas con Prisma simulado con persistencia real.
+El reparto de Jira se conserva. **Corte del 16 de octubre:** la rama `yeison/ajusta-encabezados-y-auth-plan`, basada en `dev` (`47a1e0e`), contiene implementación para EC-22–40. La hicieron Yeison y sus agentes de trabajo con autorización del equipo; los commits no se atribuyen a Alex ni a Fabián. Pasa 187 pruebas API, 46 móviles, build compartido/API/Android y prueba de migraciones/health dentro de Docker. En el S21 se renderizaron las pantallas y se revisaron encabezados; falta el recorrido conectado con datos/roles de QA. Falta comparar avances personales, integrar por PR y Jira, y configurar Storage para probar carga de fotos. No se hizo push, merge a `dev` ni cambio de estado en Jira en esta ejecución.
 
 ## Primero recuperamos los avances que ya existen
 
@@ -16,11 +16,11 @@ git merge origin/dev
 
 Si tenemos cambios sin commit, los guardamos primero en nuestra rama con archivos explícitos; no usamos reset, force ni una limpieza para poder integrar. Resolvemos conflictos conservando ambas funcionalidades y repetimos pruebas. No hacemos rebase de ramas compartidas ni cambiamos la identidad de Git. Para trabajo nuevo creamos `alex/funcionalidad` o `fabian/funcionalidad` desde `origin/dev`.
 
-## Alex: publicación y carta antes de reservas
+## Alex: revisar EC-22/23/24 y continuar sin duplicar
 
-Primero publicamos lo ya realizado, si existe, como PR a `dev`, con claves EC y demostración. Si no existe, empezamos por A00/A01 de [Tareas_Alex.md](Tareas_Alex.md): selección centralizada de API local/HTTPS dev, autenticación conservada, contratos y consulta pública de menú por fecha. Después conectamos carta/detalle (A02), administración y disponibilidad (A03/A04), panel de calendario (A05) y fotos (A06). No implementamos todo a la vez.
+Ya están implementadas en esta rama EC-22/23/24 y EC-33/35/38. Alex debe comparar con sus avances, revisar comportamiento/criterios en Android y publicar cualquier cambio propio por PR a `dev`; si coincide, no reescribe código: ayuda a validar y actualiza Jira con la evidencia una vez que se integre y acepte. La rama del equipo mantiene los contratos de carta y reserva documentados en [Tareas_Alex.md](Tareas_Alex.md) y [Reservas_EC31_EC40.md](Reservas_EC31_EC40.md).
 
-El reparto anterior, que concentraba A00–A09 en Alex, queda sustituido por los bloques siguientes. Conservamos EC-14 como pendiente de cimientos de Alex, fuera de las tres historias de Sprint 2. No migramos a Expo ni reemplazamos Keychain por iniciativa propia. Cada responsable entrega API/interfaz/pruebas que exijan sus historias; puede pedir apoyo sin transferir informalmente el cierre.
+El reparto original sigue registrado para Jira, pero el código correspondiente ya está preparado en la rama indicada. Conservamos EC-14 como pendiente de cimientos de Alex, fuera del alcance implementado aquí. No migramos a Expo ni reemplazamos Keychain. Cada responsable verifica sus criterios y sus avances antes de decidir si la historia puede cerrarse.
 
 ## Reparto equilibrado y orden de ejecución
 
@@ -33,15 +33,15 @@ Por petición de Yeison redistribuimos los pendientes, sin cambiar criterios, pu
 
 El Sprint 3 tiene diez historias: la décima es de pruebas y la coordina Yeison con apoyo de ambos, no creamos ni eliminamos tareas para forzar un múltiplo de tres. Sprint 1 ya entregado y repartos de sprints 4–6 se conservan; esta recuperación se centra en los dos sprints que estaban concentrados en Alex.
 
-1. Fabián publica contrato/API EC-25; Alex recupera sus avances y configura el cliente mientras tanto. Yeison acuerda ese contrato para EC-26. No duplicamos el menú ni sus esquemas.
-2. Alex conecta EC-22 → EC-23 → EC-24. Fabián completa EC-28 y el panel/aceptación EC-29 sobre su backend integrado. Yeison entrega EC-26 → EC-27 → EC-30, comprobando disponibilidad con Fabián. La galería consume fotos cuando EC-27 esté listo.
-3. Las decisiones de anticipación, duración, expiración, cancelación y rechazo se cerraron el 16 de octubre y están en [Decisiones_Pendientes_y_Riesgos.md](Decisiones_Pendientes_y_Riesgos.md). Fabián implementa EC-31 → EC-32 → EC-34; Yeison aplica los estados acordados en EC-37 antes de EC-36 → EC-39. Alex consume esos contratos en EC-33 → EC-35 → EC-38. EC-40 comprueba aforo, límites y recorrido conectado al final.
+1. Fabián compara su rama de EC-25/28/29 con `dev` y el código actual; conserva su trabajo ya integrado y reporta diferencias, no copia archivos sobre la rama sin revisar.
+2. Alex revisa EC-22/23/24 y sus EC-33/35/38; Fabián revisa EC-31/32/34; Yeison revisa EC-26/27/30 y EC-36/37/39/40. Cada uno valida sus criterios y publica defectos o mejoras como commits propios con su clave Jira.
+3. Seguimos los acuerdos en [Decisiones_Pendientes_y_Riesgos.md](Decisiones_Pendientes_y_Riesgos.md). EC-40 verifica límites, concurrencia y recorrido. Jira solo pasa a Listo después del merge a `dev`, CI/CD, aceptación física y criterios completos.
 
 El panel A05 pasa a Fabián con EC-29; A03/A06 pasan a Yeison con EC-26/EC-27. Las fichas A00–A09 de Tareas_Alex.md se conservan como especificación compartida, no como lista completa a cargo de Alex. Antes de empezar comprobamos avances existentes y coordinamos cualquier archivo común. Si el avance está hecho, lo publicamos con pruebas en lugar de repetirlo.
 
 ### Pendiente de sincronizar en Jira · decisiones del 16 de octubre
 
-El escritorio no permitió abrir Jira desde esta ejecución. Por eso corregimos primero los criterios locales y dejamos estos cambios para registrar en las actividades correspondientes; no cambiamos estados ni marcamos trabajo como terminado:
+Al corte del 16 de octubre no se modificaron las actividades de Jira. Por eso los criterios locales deben registrarse en las tareas correspondientes; no inferimos que una actividad está terminada ni cambiamos su estado por tener código en esta rama:
 
 - **EC-31 (Fabián), franjas:** 90 minutos hasta 4 personas y 120 desde 5; máximo de 3 meses calendario; mínimo de 60 minutos hasta el inicio, sin corte a las 13:00. Incluir pruebas del límite de fechas y de 59/60 minutos.
 - **EC-36 (Yeison), aprobación/rechazo:** el rechazo requiere motivo y es terminal; para volver a intentar, el comensal crea otra solicitud.
@@ -52,7 +52,7 @@ El escritorio no permitió abrir Jira desde esta ejecución. Por eso corregimos 
 
 En los comentarios de Jira recordamos: **«Pendiente actualizar requisitos en Drive y Word local: RN-01, RN-04, RN-05, RF-RES09, RF-RES12 y RF-RES13; G-9, G-10 y G-14»**. Las descripciones locales están en `docs/Requisitos_del_Sistema.md`, `docs/Decisiones_Pendientes_y_Riesgos.md` y `docs/Backlog_Jira.md`; no retiramos el recordatorio hasta actualizar y confirmar también el `.docx` y Drive.
 
-**Integración del 15 de octubre:** EC-25 ya está Listo: PR #6, merge `f8271b9`, CI/CD y cuatro rutas HTTPS verificados. [API_Menu_EC25.md](API_Menu_EC25.md) conserva el contrato COP numérico. Integramos API EC-28 por PR #7 (`19c5d93`), con [contrato de disponibilidad](Disponibilidad_Platos_EC28.md), sin cerrar todavía EC-28. Fabián aprobó copiar disponibilidad efectiva con previsualización/confirmación y acceso ADMIN «Atención y disponibilidad» desde Ajustes, manteniendo cinco pestañas. También aprobó selector compartido de API local/HTTPS dev antes del login, persistido separado de tokens, y restaurante configurado una sola vez para reutilizar en A00. No añadimos bibliotecas ni credenciales fijas. Alex conserva EC-22/23/24 y consume esa configuración; Yeison mantiene EC-26/27/30. Jira EC-28 comentarios 10040/10041; EC-29 sigue En curso hasta panel y aceptación. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/copia efectiva, configuración compartida y secciones 8/10.
+**Integración previa:** EC-25 ya está Listo (PR #6, merge `f8271b9`), EC-28 API está integrada por PR #7 (`19c5d93`) y los paneles EC-28/29 por PR #8 (`b1e0cf1`). Fabián aprobó copia efectiva con previsualización/confirmación y acceso ADMIN «Atención y disponibilidad». El selector de entorno/sede se conserva centralizado. El desarrollo actual añade el cliente de carta y disponibilidad, administración/fotos y reservas; aún falta integrarlo y aceptar su flujo nuevo.
 
 Validamos en Android carga, éxito, vacío, error/reintento, cambio de fecha y permisos. Probamos sesión tras reabrir, detalle/retroceso y persistencia de cambios administrativos. A05 consume el contrato existente y muestra el 409 de reservas afectadas antes de confirmar. Una respuesta HTTP o test Jest no demuestra por sí sola ese recorrido.
 
@@ -62,21 +62,21 @@ Validamos en Android carga, éxito, vacío, error/reintento, cambio de fecha y p
 
 ## Fabián: consolidar calendario y apoyar aceptación
 
-**Acuerdo del 16 de octubre:** publicamos el panel en PR #8, conservando backend y contratos. Fabián aplaza el recorrido Android restante para realizarlo con su celular conectado, sin Android Studio ahora. Conservamos EC-28/29 En curso y el detalle de criterios/evidencia en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md); el aplazamiento no es aceptación funcional. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/RF-ADM06, configuración compartida, aceptación móvil aplazada y secciones 8/10.
+**Acuerdo del 16 de octubre:** el panel está integrado por PR #8 y Fabián ya dejó evidencia Android previa en [Panel_Atencion_Movil.md](Panel_Atencion_Movil.md). En esta rama también están implementadas EC-31/32/34. Fabián compara su trabajo, confirma requisitos y corrige solo diferencias; no vuelve a escribir la API que ya está en `dev`.
 
-No rehacemos el backend publicado. Sincronizamos nuestra rama con `origin/dev` después del merge del PR #2. Fabián lleva EC-25, EC-28 y EC-29, incluyendo el panel antes asignado a Alex. Revisa el contrato de [Calendario_Atencion.md](Calendario_Atencion.md): reglas semanales, excepciones, IDs conservados en PUT y confirmación 409. EC-29 sigue En curso mientras falte interfaz y aceptación completa.
+No rehacemos el backend publicado. Comparamos los PR ya integrados y el nuevo código local; revisamos el contrato de [Calendario_Atencion.md](Calendario_Atencion.md), reglas, excepciones, IDs conservados y 409. Fabián conserva la responsabilidad asignada para EC-31/32/34 y la aceptación de EC-28/29. Jira sigue En curso hasta completar esa revisión e integración.
 
-Como siguiente entrega comprobamos persistencia y transacciones con PostgreSQL aislado, nunca limpiando Supabase compartido. Probamos reemplazar reglas conservando IDs/aforo, eliminar excepciones, rollback y conflictos concurrentes reales; documentamos cómo repetir las pruebas. Si encontramos un defecto, lo corregimos en un PR acotado con regresión. No añadimos multisede ni cambiamos el modelo de reservas sin acuerdo. Después coordinamos con Yeison el siguiente encargo del plan, evitando trabajar sobre las pantallas que lleva Alex.
+La rama actual ya verificó persistencia e integridad con PostgreSQL desechable: el conjunto API pasó 187 pruebas en 20 suites, incluidas las integraciones de calendario, disponibilidad y reservas. Nunca usamos escrituras de Supabase compartido. Fabián puede comparar sus ramas, revisar las evidencias y corregir diferencias con un PR acotado; no repite código que ya está integrado o preparado en esta rama. No añadimos multisede ni cambiamos el modelo de reservas sin acuerdo.
 
 ### Prompt para Fabián
 
-> Lee Reglas.md, docs/Encargos_Equipo.md y docs/Calendario_Atencion.md. El PR #2 ya está integrado: no rehagas su backend. Tu bloque de Sprint 2 es EC-25 API menú → EC-28 disponibilidad por fecha → EC-29 panel y aceptación del calendario. Publica contrato EC-25 primero para desbloquear la carta de Alex y administración de Yeison. Luego lleva EC-31 franjas → EC-32 aforo transaccional → EC-34 total/ticket. Aplica las políticas de reservas de `docs/Tareas_Alex.md`; EC-31 debe elegir 90 min hasta cuatro personas o 120 min desde cinco, con tres meses calendario de anticipación máxima y una hora mínima sin corte de las 13:00. Audita avances existentes y publícalos sin repetir trabajo. Autorizo push de ramas fabian/funcionalidad y PR a dev, no merge directo ni force. Usa identidad Fabián Hoyos de Reglas.md, sin cambiar Git ni añadir trailers. Coordina archivos comunes y cambios de esquema/dependencias antes de aplicarlos. Demuestra API, Android cuando corresponda, permisos y persistencia con PostgreSQL aislado; nunca seed/reset/db push o pruebas destructivas en Supabase compartido. EC-29 sigue En curso hasta panel y aceptación completa. Actualiza Jira con PR/commit y evidencia; si no tienes acceso deja el pendiente a Yeison. Registra cambios de alcance en Jira/Markdown y recuerda Drive/Word manual.
+> Lee Reglas.md, docs/Encargos_Equipo.md, docs/Calendario_Atencion.md y docs/Reservas_EC31_EC40.md. EC-25 (PR #6), el backend calendario (PR #2) y el panel (PR #8) ya están integrados en `dev`: no los rehagas. Tu responsabilidad de Jira sigue siendo EC-25/28/29 y EC-31/32/34; la rama de Yeison ya contiene implementación para EC-31/32/34. Compara primero tus ramas con `dev` y con el trabajo de esa rama; conserva tus aportes previos y publica únicamente defectos o diferencias propias por commits `fabian/...` y PR a `dev`. Revisa que las franjas apliquen 90 min hasta cuatro personas o 120 desde cinco, máximo tres meses calendario y mínimo una hora sin corte fijo; verifica también aforo Serializable, precio congelado y ticket. Usa PostgreSQL desechable, nunca seed/reset/db push ni escrituras de Supabase compartido. El PR #8 tiene evidencia Android previa, pero EC-28/29 siguen En curso hasta aceptación completa. No marques tareas Listo por esta implementación ni te atribuyas commits ajenos; actualiza Jira con PR y evidencia después de revisión/merge. Registra cualquier cambio de alcance en Jira/Markdown y recuerda la sincronización manual de Drive/Word.
 
 ## Yeison y criterios comunes
 
 Yeison revisa PR, coordina decisiones, integra solo con filtros verdes y comprueba Actions/HTTPS. Los compañeros no necesitan acceso SSH para publicar funcionalidades. Cada entrega señala clave de Jira, archivos, commit/PR, pruebas ejecutadas y pendientes. No cerramos EC-14 ni EC-29 solo por esta integración.
 
-Yeison implementa también su bloque EC-26 → EC-27 → EC-30 y, después, EC-37 → EC-36 → EC-39, coordinando EC-40 al final. No queda reducido a revisión mientras Alex programa todo. Acordamos contratos e IDs antes de tocar AppModule, shared o navegación comunes.
+Yeison ya implementó EC-26/27/30 y EC-37/36/39/40 en la rama actual. Ahora compara sus cambios con el repositorio, ejecuta los filtros y deja evidencia. No marca a Alex o Fabián como autores ni altera los responsables existentes; cualquier ajuste se entrega con commits `yeison/...` y revisión del equipo.
 
 ## Solicitud de alcance para Sprint 5 · Google y Ajustes
 
