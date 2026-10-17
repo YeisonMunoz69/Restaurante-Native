@@ -115,13 +115,13 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 
 |  Estado   | Tarea                                                                                 | Requisitos         |  Pts   | Responsable |
 | :-------: | ------------------------------------------------------------------------------------- | ------------------ | :----: | ----------- |
-|    [ ]    | Carta por categorías con lista virtualizada en React Native                           | RF-MEN01, RF-MEN06 |   8    | Alex        |
-|    [ ]    | Pantalla de inicio con los platos del próximo día de atención                         | RF-MEN02           |   5    | Alex        |
-|    [ ]    | Detalle de plato con galería de hasta 10 fotos                                        | RF-MEN03           |   5    | Alex        |
-|    [x]    | API de menú EC-25: PR #6 integrado, CI/CD y cuatro rutas HTTPS verificados              | RF-MEN01–06        |   5    | Fabián      |
+|    [~]    | Carta por categorías con lista virtualizada en React Native                           | RF-MEN01, RF-MEN06 |   8    | Alex        |
+|    [~]    | Pantalla de inicio con los platos del próximo día de atención                         | RF-MEN02           |   5    | Alex        |
+|    [~]    | Detalle de plato con galería de hasta 10 fotos                                        | RF-MEN03           |   5    | Alex        |
+|    [x]    | API de menú EC-25: PR #6 integrado, CI/CD y cuatro rutas HTTPS verificados            | RF-MEN01–06        |   5    | Fabián      |
 |    [ ]    | Administración de categorías y platos en backend y móvil                              | RF-ADM01, 02, 04   |   8    | Yeison      |
 |    [ ]    | Carga de fotos: compresión con `sharp`, Supabase Storage y variante para vista previa | RF-ADM02, C-7      |   8    | Yeison      |
-|    [~]    | Disponibilidad por fecha: API integrada por PR #7; panel/aceptación en curso            | RF-ADM03, ADR-010  |   8    | Fabián      |
+|    [~]    | Disponibilidad por fecha: API integrada por PR #7; panel/aceptación en curso          | RF-ADM03, ADR-010  |   8    | Fabián      |
 |    [~]    | Calendario: incorporamos backend del PR #2; falta aceptación del panel móvil          | RF-ADM06, HU-05    |   8    | Fabián      |
 |    [ ]    | Pruebas de disponibilidad de plato por fecha                                          | RNF-12             |   3    | Yeison      |
 | **Total** |                                                                                       |                    | **58** |             |
@@ -131,6 +131,8 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 El reparto vigente distribuye EC-22/23/24 a Alex, EC-25/28/29 a Fabián y EC-26/27/30 a Yeison. Fabián conserva EC-29 y entrega también su panel antes asignado a Alex. No encontramos avances nuevos de Alex publicados al consultar el 15 de octubre; revisamos su rama antes de duplicar trabajo.
 
 **Entrega EC-25 del 15 de octubre:** integramos PR #6 con merge `f8271b9`; CI/CD dev 38840180341 y consultas funcionales HTTPS correctos. Jira EC-25 está Listo (comentario 10039). Precio COP numérico y contratos en [API_Menu_EC25.md](API_Menu_EC25.md), evidencia en [Entrega_EC25.md](Entrega_EC25.md). EC-28 sigue En curso: API/copia confirmada integrada en PR #7 (`19c5d93`), panel Android y aceptación en curso. EC-29 conserva su backend integrado y sigue En curso hasta panel y aceptación. No cerramos las pantallas de Alex ni la administración de Yeison. Pendiente actualizar requisitos en Drive y Word local: RF-ADM03/copia efectiva confirmada, configuración compartida y secciones 8/10.
+
+**Carta móvil en curso, 16 de octubre:** no encontramos una rama `alex/*` ni un PR suyo con EC-22/23/24. En la rama local `yeison/conecta-carta-real-ec22-24` conectamos la pantalla a la API integrada: categorías, lista virtualizada y paginada, próximo día abierto, aviso al consultar un día cerrado, precio/estado real y detalle con fotos públicas, alérgenos y etiquetas. Pasan 34 pruebas móviles en 10 suites, TypeScript, lint dirigido y el build Android de depuración. Las tres actividades siguen parciales: falta probar la interfaz Android con una sede real y revisar el despliegue en `dev`; no se presentan como completas ni como trabajo de Alex.
 
 **Si hay que recortar:** búsqueda, filtros, favoritos y caché sin conexión siguen en Sprint 5. No posponemos la integración del calendario que ya está publicado: la necesitamos para validar reservas. Seguimos A00–A06 de la guía de Alex.
 

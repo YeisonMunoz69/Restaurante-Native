@@ -17,6 +17,8 @@ Este documento reúne las pautas obligatorias que acordamos en el equipo para tr
 Para que el historial de Git sea transparente y sepamos exactamente quién hizo cada cosa y por qué, definimos:
 
 - **Responsabilidad única:** Cada commit debe resolver una sola cosa específica. No mezclar ajustes de diseño con cambios de base de datos o lógica de autenticación en un mismo commit.
+- **Commit propio por cada función nueva:** Cada función o funcionalidad nueva, por pequeña que sea, se registra en su propio commit. Si una entrega incorpora varias funciones independientes, las separamos en commits coherentes y verificables; no las acumulamos en un único commit genérico. Las pruebas y la documentación directamente necesarias para esa función pueden ir junto con ella.
+- **Mensaje diciente:** El texto después del prefijo personal debe nombrar el comportamiento o resultado concreto que agregamos, no usar mensajes vagos como `actualiza`, `arreglos` o `cambios varios`.
 - **Formato del mensaje de commit:** El mensaje debe iniciar obligatoriamente con el nombre de quien está trabajando, seguido de lo que hizo en minúsculas y separado por barra:
   - `yeison/{lo que está haciendo}`
   - `alex/{lo que está haciendo}`
@@ -103,10 +105,11 @@ async function guardarSesionSegura(refreshToken) {
 
 ## 6. Resumen Rápido para el Día a Día
 
-1. **¿Funciona completo en local?** Sí $\rightarrow$ Listo para commit.
-2. **¿Formato de commit correcto?** Nombre + lo que hice (`yeison/...`, `alex/...`, `fabian/...`).
-3. **¿Código comentado con lenguaje humano?** Sí, explicando qué hace cada parte.
-4. **¿Pasa limpio a `main`?** Solo cuando backend, frontend y base de datos estén coordinados y sin errores.
+1. **¿Funciona completo en local?** Sí $\rightarrow$ Listo para su commit.
+2. **¿Hay un commit propio por cada función nueva?** Sí; cada commit contiene una sola función o corrección coherente y verificable.
+3. **¿Formato de commit correcto y diciente?** Nombre + resultado concreto en minúsculas (`yeison/...`, `alex/...`, `fabian/...`).
+4. **¿Código comentado con lenguaje humano?** Sí, explicando qué hace cada parte.
+5. **¿Pasa limpio a `main`?** Solo cuando backend, frontend y base de datos estén coordinados y sin errores.
 
 ---
 
@@ -115,6 +118,8 @@ async function guardarSesionSegura(refreshToken) {
 Podemos corregir, dividir, sustituir o aplazar tareas durante el desarrollo cuando el equipo acuerde el motivo. El backlog y los sprints admiten esos ajustes; las tareas originales no nos obligan a implementar una solución que ya decidimos cambiar. Cada actividad debe tener una persona responsable, aunque reciba apoyo de los demás.
 
 Antes de dar por cerrado un cambio de alcance, registramos la corrección directamente en la actividad de Jira: qué cambia, por qué, criterios nuevos, responsable y efecto sobre el sprint. Actualizamos también los requisitos Markdown afectados, el plan y los encargos que correspondan, e indicamos en la entrega las claves de Jira, los archivos/secciones modificados y el commit. Si una decisión modifica el comportamiento acordado con el cliente o docente, dejamos su aprobación o su estado pendiente; no la presentamos como un acuerdo confirmado por el solo hecho de implementarla.
+
+Antes de afirmar que una regla o decisión de negocio no existe, revisamos explícitamente `docs/Decisiones_Pendientes_y_Riesgos.md`, el requisito relacionado en `docs/Requisitos_del_Sistema.md` y sus fuentes de diseño o implementación pertinentes (por ejemplo Sprint 0, ADR, esquemas compartidos, Prisma, seed y pruebas). Distinguimos lo ya acordado de lo que aún requiere precisar o implementar. Si los documentos se contradicen, citamos la discrepancia y la dejamos pendiente de resolución; no tratamos una fila abierta como si borrara una decisión ya escrita ni inferimos una decisión a partir del código solamente.
 
 El documento de requisitos de Drive y su copia `docs/Requisitos_del_Sistema.docx` se actualizan manualmente. Cuando una corrección afecte esos requisitos, incluimos siempre este recordatorio en Jira y en la entrega: **«Pendiente actualizar requisitos en Drive y Word local: [RF/RNF o sección], [cambio concreto]»**. Mantenemos el pendiente hasta que el responsable confirme ambos documentos. Editar el Markdown no significa que Drive o Word hayan cambiado.
 
