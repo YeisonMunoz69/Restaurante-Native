@@ -16,6 +16,8 @@ Archivo importable: `Backlog_Jira.csv`. Instrucciones de importación al final.
 
 **Evidencia del 16 de octubre:** EC-28/29 conserva el panel integrado por PR #8 (`b1e0cf1`) y el recorrido Android previo con PostgreSQL aislado, en [el acta](evidencias/atencion-celular-2026-10-16/README.md). En esta rama pasan 187 pruebas API con PostgreSQL temporal y 47 móviles; EC-31–40 está implementada y documentada en [Reservas_EC31_EC40.md](Reservas_EC31_EC40.md). El S21 completó una solicitud con pedido y su revisión administrativa hasta cierre, contra una API y datos ficticios locales; el selector de fechas también se corrigió y verificó. Sigue pendiente revisar e integrar la rama, completar aceptación y actualizar Jira. No se cambiaron estados de Jira en este corte. La carga real de fotos depende de configurar un bucket de Supabase Storage.
 
+**Verificación Docker adicional del 16 de octubre:** el paso de CI de runtime se ejecutó localmente y pasó migraciones, health HTTP del host y dentro del contenedor, coincidencia de ID de imagen, comando `node dist/main.js` y ausencia de montajes. El S21 cargó el plato de prueba desde esa API en Docker; el APK usado fue `debug`, porque el intento `release` falló en Ninja/CMake de Windows. No cambiamos estados de Jira: la rama sigue sin integrar, falta Storage real para EC-27 y la aceptación del equipo. Los contenedores/DB locales son sólo fixtures temporales, sin volúmenes persistentes, y se eliminan al cerrar la verificación.
+
 ---
 
 ## Resumen

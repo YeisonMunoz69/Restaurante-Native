@@ -56,8 +56,69 @@ jobs:
       - name: Check deployment script
         run: bash -n scripts/deploy-vps.sh
 
-      - name: Build VPS image
-        run: docker build -f apps/api/Dockerfile.vps -t encanto-api:ci .
+      - name: Build and smoke-test VPS containers
+        env:
+          CI_DATABASE_URL: postgresql://ci:ci@db:5432/ci?schema=public
+          CI_JWT_ACCESS_SECRET: ci-access-secret-not-for-production-0123456789
+          CI_JWT_REFRESH_SECRET: ci-refresh-secret-not-for-production-9876543210
+        run: |
+          set -euo pipefail
+          network=encanto-ci
+          db=encanto-ci-db
+          api=encanto-ci-api
+          runtime_image=encanto-api:ci
+          migration_image=encanto-api-migrate:ci
+          cleanup() {
+            docker rm -f "$api" "$db" >/dev/null 2>&1 || true
+            docker network rm "$network" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          docker network create "$network" >/dev/null
+          docker run -d --name "$db" --network "$network" --network-alias db \
+            -e POSTGRES_USER=ci -e POSTGRES_PASSWORD=ci -e POSTGRES_DB=ci \
+            --health-cmd 'pg_isready -U ci -d ci' --health-interval 2s \
+            --health-timeout 2s --health-retries 30 postgres:16-alpine >/dev/null
+
+          for attempt in $(seq 1 60); do
+            db_health=$(docker inspect --format '{{.State.Health.Status}}' "$db")
+            [[ "$db_health" == healthy ]] && break
+            [[ "$db_health" != unhealthy ]] || { docker logs "$db"; exit 1; }
+            sleep 2
+          done
+          [[ "$(docker inspect --format '{{.State.Health.Status}}' "$db")" == healthy ]]
+
+          docker build --target build -f apps/api/Dockerfile.vps -t "$migration_image" .
+          docker run --rm --network "$network" --entrypoint npx \
+            -e DATABASE_URL="$CI_DATABASE_URL" -e DIRECT_URL="$CI_DATABASE_URL" \
+            "$migration_image" prisma migrate deploy --schema=apps/api/prisma/schema.prisma
+
+          docker build -f apps/api/Dockerfile.vps -t "$runtime_image" .
+          docker run -d --name "$api" --network "$network" \
+            --publish 127.0.0.1:18080:3000 \
+            --health-cmd "node -e \"fetch('http://127.0.0.1:3000/api/v1/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"" \
+            --health-interval 2s --health-timeout 5s --health-start-period 30s --health-retries 30 \
+            -e APP_ENV=staging -e NODE_ENV=production -e PORT=3000 -e API_PREFIX=api/v1 \
+            -e SWAGGER_ENABLED=false -e DATABASE_URL="$CI_DATABASE_URL" -e DIRECT_URL="$CI_DATABASE_URL" \
+            -e JWT_ACCESS_SECRET="$CI_JWT_ACCESS_SECRET" -e JWT_ACCESS_EXPIRATION=15m \
+            -e JWT_REFRESH_SECRET="$CI_JWT_REFRESH_SECRET" -e JWT_REFRESH_EXPIRATION=7d \
+            "$runtime_image" >/dev/null
+
+          for attempt in $(seq 1 90); do
+            api_health=$(docker inspect --format '{{.State.Health.Status}}' "$api")
+            [[ "$api_health" == healthy ]] && break
+            [[ "$api_health" != unhealthy ]] || { docker logs "$api"; exit 1; }
+            sleep 2
+          done
+          [[ "$(docker inspect --format '{{.State.Health.Status}}' "$api")" == healthy ]]
+          curl --fail --show-error http://127.0.0.1:18080/api/v1/health
+          docker exec "$api" node -e "fetch('http://127.0.0.1:3000/api/v1/health').then(async r => { if (!r.ok) process.exit(1); console.log(await r.text()) }).catch(() => process.exit(1))"
+
+          image_id=$(docker image inspect --format '{{.Id}}' "$runtime_image")
+          container_image_id=$(docker inspect --format '{{.Image}}' "$api")
+          [[ "$image_id" == "$container_image_id" ]]
+          [[ "$(docker inspect --format '{{len .Mounts}}' "$api")" == 0 ]]
+          [[ "$(docker inspect --format '{{join .Config.Cmd " "}}' "$api")" == 'node dist/main.js' ]]
 
   deploy:
     name: Deploy dev to VPS
