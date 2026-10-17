@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MenuDish } from '@encanto/shared';
 import { useTheme } from '../../theme/ThemeContext';
 import { menuApi } from '../../services/menu.service';
@@ -39,6 +40,7 @@ export function MenuDishDetailModal({
 }) {
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
+  const insets = useSafeAreaInsets();
   const [dish, setDish] = useState<MenuDish | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -79,7 +81,16 @@ export function MenuDishDetailModal({
         testID="menu-detail-modal"
         style={[styles.container, { backgroundColor: colors.superficie.fondo }]}
       >
-        <View style={[styles.topBar, { padding: spacing.margenLateral }]}>
+        <View
+          style={[
+            styles.topBar,
+            {
+              paddingHorizontal: spacing.margenLateral,
+              paddingTop: insets.top + spacing.l,
+              paddingBottom: spacing.m,
+            },
+          ]}
+        >
           <TouchableOpacity
             testID="menu-detail-close"
             accessibilityRole="button"
@@ -103,7 +114,9 @@ export function MenuDishDetailModal({
         </View>
 
         {loading ? (
-          <View style={styles.centered}>
+          <View
+            style={[styles.centered, { paddingBottom: insets.bottom + 24 }]}
+          >
             <ActivityIndicator
               testID="menu-detail-loading"
               color={colors.marca.primario}
@@ -118,7 +131,9 @@ export function MenuDishDetailModal({
             </Text>
           </View>
         ) : error ? (
-          <View style={styles.centered}>
+          <View
+            style={[styles.centered, { paddingBottom: insets.bottom + 24 }]}
+          >
             <Text
               testID="menu-detail-error"
               style={[typography.cuerpoM, { color: colors.estado.error }]}
@@ -142,7 +157,7 @@ export function MenuDishDetailModal({
           <ScrollView
             contentContainerStyle={{
               paddingHorizontal: spacing.margenLateral,
-              paddingBottom: spacing.xxl,
+              paddingBottom: insets.bottom + spacing.xxl,
             }}
           >
             <Text

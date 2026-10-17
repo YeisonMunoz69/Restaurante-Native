@@ -111,7 +111,7 @@ export const ReservationsScreen: React.FC = () => {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView
-        contentContainerStyle={[styles.content, { padding: spacing.margenLateral }]}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.margenLateral, paddingTop: spacing.l }]}
         keyboardShouldPersistTaps="handled"
       >
         <Text style={[typography.display, width < 360 ? styles.compactTitle : null, width >= 600 ? styles.wideTitle : null, { color: colors.texto.primario }]}>

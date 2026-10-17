@@ -30,6 +30,7 @@ import {
   User,
   LogOut,
 } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // pantalla de ajustes con gestion de tema, idioma y estado de autenticacion segura
 export const SettingsScreen: React.FC = () => {
@@ -40,6 +41,7 @@ export const SettingsScreen: React.FC = () => {
     useAuth();
   const { isSaving } = useConnection();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<'login' | 'register'>('login');
   const [nombre, setNombre] = useState('');
@@ -89,7 +91,7 @@ export const SettingsScreen: React.FC = () => {
         styles.scrollContent,
         {
           padding: spacing.margenLateral,
-          paddingTop: spacing.xxxl,
+          paddingTop: insets.top + spacing.l,
         },
       ]}
     >

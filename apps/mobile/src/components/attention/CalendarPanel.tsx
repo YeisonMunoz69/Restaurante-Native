@@ -174,7 +174,10 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
             style={{ backgroundColor: colors.superficie.fondo }}
             contentContainerStyle={[
               styles.confirmation,
-              { paddingTop: insets.top + 16 },
+              {
+                paddingTop: insets.top + 16,
+                paddingBottom: insets.bottom + 16,
+              },
             ]}
           >
             <Panel>

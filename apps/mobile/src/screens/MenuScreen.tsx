@@ -15,6 +15,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft,
@@ -76,6 +77,7 @@ type MenuSection = { id: string; title: string; data: MenuDish[] };
 export const MenuScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
+  const insets = useSafeAreaInsets();
   const { settings } = useConnection();
   const restauranteId = settings.restauranteId;
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -259,7 +261,7 @@ export const MenuScreen: React.FC = () => {
               styles.header,
               {
                 paddingHorizontal: spacing.margenLateral,
-                paddingTop: spacing.l,
+                paddingTop: insets.top + spacing.l,
               },
             ]}
           >

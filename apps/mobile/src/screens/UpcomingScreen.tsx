@@ -6,6 +6,7 @@ import {
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme/ThemeContext';
 import { Sparkles, Bike, Fish, MessageCircle } from 'lucide-react-native';
@@ -15,6 +16,7 @@ export const UpcomingScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   return (
     <ScrollView
@@ -23,7 +25,7 @@ export const UpcomingScreen: React.FC = () => {
         styles.scrollContent,
         {
           padding: spacing.margenLateral,
-          paddingTop: spacing.xxxl,
+          paddingTop: insets.top + spacing.l,
         },
       ]}
     >
