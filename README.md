@@ -31,6 +31,7 @@ La última aceptación de despliegue registrada pasó [CI/CD dev, ejecución 378
 - [Resumen de CI/CD](docs/Resumen_CI_CD_Dev.md): explicación breve del recorrido desde el PR hasta la VPS.
 - [Requisitos](docs/Requisitos_del_Sistema.md), [análisis y ADR](docs/Sprint0_Analisis_y_Diseno.md) y [decisiones](docs/Decisiones_Pendientes_y_Riesgos.md): comportamiento acordado y diferencias por resolver.
 - [Backlog](docs/Backlog_Jira.md): criterios de aceptación; el CSV conserva el importable original, no un avance sincronizado.
+- [Tablero Jira del proyecto](https://yjmunoz.atlassian.net/jira/software/projects/EC/boards/167/backlog): backlog vivo del proyecto EC, fuente para consultar tareas y estados actuales.
 - [Diseño](design/README.md): tokens, componentes y pantallas de referencia.
 
 Concentramos aquí el arranque local, en lugar de mantener instrucciones de inicialización que ya no corresponden a proyectos existentes.

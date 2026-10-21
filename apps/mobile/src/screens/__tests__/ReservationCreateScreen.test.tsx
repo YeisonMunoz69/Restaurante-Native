@@ -109,7 +109,7 @@ describe('ReservationCreateScreen', () => {
       await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress();
     });
     await ReactTestRenderer.act(async () => {
-      tree!.root.findAllByType(Action).find(action => action.props.label === 'reservations.reviewRequest')!.props.onPress();
+      await tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress();
     });
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress();
@@ -181,6 +181,45 @@ describe('ReservationCreateScreen', () => {
     });
 
     expect(api.slots).toHaveBeenCalledWith({ fecha: nextWeek, numComensales: 2 });
+    ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('pide iniciar sesión antes de consultar y conserva el grupo seleccionado', async () => {
+    const onRequireLogin = jest.fn();
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(
+        <ThemeProvider>
+          <ReservationCreateScreen
+            onBack={onBack}
+            onCreated={onCreated}
+            isAuthenticated={false}
+            onRequireLogin={onRequireLogin}
+          />
+        </ThemeProvider>,
+      );
+    });
+    ReactTestRenderer.act(() => {
+      tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.people')!.props.onChangeText('7');
+    });
+    await ReactTestRenderer.act(async () => {
+      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
+    });
+
+    expect(onRequireLogin).toHaveBeenCalledTimes(1);
+    expect(api.slots).not.toHaveBeenCalled();
+
+    await ReactTestRenderer.act(async () => {
+      tree!.update(
+        <ThemeProvider>
+          <ReservationCreateScreen onBack={onBack} onCreated={onCreated} isAuthenticated />
+        </ThemeProvider>,
+      );
+    });
+    await ReactTestRenderer.act(async () => {
+      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
+    });
+    expect(api.slots).toHaveBeenCalledWith(expect.objectContaining({ numComensales: 7 }));
     ReactTestRenderer.act(() => tree!.unmount());
   });
 });
