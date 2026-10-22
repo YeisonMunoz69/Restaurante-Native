@@ -269,4 +269,36 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
       ReservationStatus.EXPIRADA,
     );
   });
+
+  it('permite grupos pequeños entre semana habilitada y rechaza días de solo pesca/motos', async () => {
+    await prisma.calendarDay.upsert({
+      where: { restaurantId_fecha: { restaurantId, fecha: calendarDate(fecha) } },
+      create: { restaurantId, fecha: calendarDate(fecha), abierto: true, horaApertura: '10:00', horaCierre: '16:00', soloPorReserva: true, servicios: ['RESTAURANTE', 'PESCA'] },
+      update: { abierto: true, horaApertura: '10:00', horaCierre: '16:00', soloPorReserva: true, servicios: ['RESTAURANTE', 'PESCA'] },
+    });
+    try {
+      expect((await service.availableSlots({ fecha, numComensales: 2 })).franjas.length).toBeGreaterThan(0);
+      await prisma.calendarDay.update({ where: { restaurantId_fecha: { restaurantId, fecha: calendarDate(fecha) } }, data: { servicios: ['PESCA', 'MOTOS'] } });
+      expect((await service.availableSlots({ fecha, numComensales: 2 })).franjas).toEqual([]);
+      await expect(service.create(dinerId, { fecha, horaInicio: '10:00', numComensales: 2, lineas: [], nota: null })).rejects.toThrow();
+      expect(await prisma.reservation.count()).toBe(0);
+    } finally {
+      await prisma.calendarDay.delete({ where: { restaurantId_fecha: { restaurantId, fecha: calendarDate(fecha) } } });
+    }
+  });
+
+  it('ofrece y persiste mesas en un domingo base sin reglas semanales', async () => {
+    const date = calendarDate(fecha);
+    date.setUTCDate(date.getUTCDate() + (7 - date.getUTCDay()) % 7);
+    const sunday = dateKey(date);
+    const rules = await prisma.timeSlot.findMany({ where: { restaurantId, diaSemana: 0 } });
+    await prisma.timeSlot.deleteMany({ where: { restaurantId, diaSemana: 0 } });
+    try {
+      expect((await service.availableSlots({ fecha: sunday, numComensales: 2 })).franjas.length).toBeGreaterThan(0);
+      const created = await service.create(dinerId, { fecha: sunday, horaInicio: '10:00', numComensales: 2, lineas: [], nota: null });
+      expect(created.reserva.estado).toBe('SOLICITADA');
+    } finally {
+      await prisma.timeSlot.createMany({ data: rules });
+    }
+  });
 });

@@ -133,7 +133,7 @@ describe.skipIf(!process.env.ENCANTO_MENU_TEST_DATABASE_URL)(
       });
       expect(await service.day(restaurantId, '2031-02-25')).toMatchObject({
         abierto: true,
-        soloPorReserva: true,
+        soloPorReserva: false,
         origen: 'EXCEPCION',
       });
       await service.deleteException(restaurantId, '2031-02-25');

@@ -8,6 +8,7 @@ import {
 import {
   CalendarDayQuerySchema,
   CalendarNextQuerySchema,
+  CalendarRangeQuerySchema,
 } from '@encanto/shared';
 import { CalendarService } from './calendar.service.js';
 import { parseCalendar } from './calendar.validation.js';
@@ -25,12 +26,19 @@ export class CalendarController {
     @Inject(CalendarService) private readonly calendar: CalendarService,
   ) {}
 
+  @Get('rango')
+  @ApiOperation({ summary: 'Consultar hasta 42 días con servicios, horarios y notas' })
+  range(@Query() query: unknown) {
+    const { restauranteId, desde, hasta } = parseCalendar(CalendarRangeQuerySchema, query);
+    return this.calendar.range(restauranteId, desde, hasta);
+  }
+
   // Entrego el día efectivo con todas sus franjas y la procedencia del horario.
   @Get('dia')
   @ApiOperation({
     summary: 'Consultar un día de atención',
     description:
-      'La excepción reemplaza todas las reglas; sin excepción usamos todas las reglas abiertas activas. Sin reglas, cerrado.',
+      'La excepción prevalece sobre reglas semanales. Sin configuración explícita abrimos domingos y festivos colombianos con horario base 10:00–18:00. Solo RESTAURANTE permite reservar mesas; las otras etiquetas son informativas.',
   })
   @ApiQuery({ name: 'fecha', required: true, schema: calendarDateProperty })
   @ApiOkResponse({ schema: calendarDayResponse })

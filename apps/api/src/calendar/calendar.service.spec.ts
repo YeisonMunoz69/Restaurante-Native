@@ -89,26 +89,26 @@ describe('CalendarService con Prisma simulado', () => {
     });
   });
 
-  it('una excepción abre un día sin reglas y conserva soloPorReserva', async () => {
+  it('una excepción abre un día sin restaurar la regla retirada de soloPorReserva', async () => {
     db.calendarDay.findUnique.mockResolvedValue(exception());
     expect(await service.day(restaurantId, '2026-10-11')).toMatchObject({
       abierto: true,
       origen: 'EXCEPCION',
-      soloPorReserva: true,
+      soloPorReserva: false,
       horarios: [{ horaApertura: '09:00', horaCierre: '11:00' }],
     });
     db.timeSlot.findMany.mockResolvedValue([rule({ abierto: false })]);
     expect(await service.day(restaurantId, '2026-10-11')).toMatchObject({
       abierto: true,
       origen: 'EXCEPCION',
-      soloPorReserva: true,
+      soloPorReserva: false,
     });
   });
 
-  it('sin reglas queda cerrado y no confunde la sede con un día inexistente', async () => {
+  it('sin reglas abre domingo por defecto y no confunde la sede inexistente', async () => {
     expect(await service.day(restaurantId, '2026-10-11')).toMatchObject({
-      abierto: false,
-      origen: 'SIN_REGLA',
+      abierto: true,
+      origen: 'BASE_DOMINGO',
     });
     db.restaurant.findUnique.mockResolvedValue(null);
     await expect(service.day(restaurantId, '2026-10-11')).rejects.toThrow(
@@ -131,17 +131,18 @@ describe('CalendarService con Prisma simulado', () => {
       exception({ abierto: false, soloPorReserva: false }),
     ]);
     expect(await service.next(restaurantId, '2026-10-11')).toMatchObject({
-      diasBuscados: 8,
-      dia: { fecha: '2026-10-18' },
+      diasBuscados: 2,
+      dia: { fecha: '2026-10-12', origen: 'BASE_FESTIVO' },
     });
     db.calendarDay.findMany.mockResolvedValue([exception()]);
     expect(await service.next(restaurantId, '2026-10-11')).toMatchObject({
       diasBuscados: 1,
-      dia: { fecha: '2026-10-11', soloPorReserva: true },
+      dia: { fecha: '2026-10-11', soloPorReserva: false },
     });
   });
 
   it('termina tras 366 fechas sin aperturas y usa dos consultas de horarios', async () => {
+    db.timeSlot.findMany.mockResolvedValue(Array.from({ length: 7 }, (_, diaSemana) => rule({ diaSemana, abierto: false })));
     expect(await service.next(restaurantId, '2026-10-08')).toEqual({
       desde: '2026-10-08',
       hasta: '2027-10-08',
@@ -153,6 +154,7 @@ describe('CalendarService con Prisma simulado', () => {
   });
 
   it('encuentra la apertura en el último día permitido', async () => {
+    db.timeSlot.findMany.mockResolvedValue(Array.from({ length: 7 }, (_, diaSemana) => rule({ diaSemana, abierto: false })));
     db.calendarDay.findMany.mockResolvedValue([
       exception({ fecha: new Date('2027-10-08T00:00:00Z') }),
     ]);
@@ -209,6 +211,7 @@ describe('CalendarService con Prisma simulado', () => {
       motivo: 'Mantenimiento',
       horaApertura: null,
       horaCierre: null,
+      servicios: ['RESTAURANTE'],
     });
     expect(db.$transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: 'Serializable',
@@ -225,7 +228,7 @@ describe('CalendarService con Prisma simulado', () => {
     expect(
       await service.putException(restaurantId, '2026-10-11', input),
     ).toMatchObject({
-      excepcion: { soloPorReserva: true },
+      excepcion: { soloPorReserva: false },
       reservasAfectadas: 0,
     });
     expect(db.reservation.count).not.toHaveBeenCalled();
@@ -296,6 +299,7 @@ describe('CalendarService con Prisma simulado', () => {
         horaCierre: '12:00',
         abierto: true,
         activo: true,
+        servicios: ['RESTAURANTE'],
       },
     });
     expect(db.timeSlot.deleteMany).toHaveBeenCalledWith({
@@ -310,6 +314,7 @@ describe('CalendarService con Prisma simulado', () => {
           horaCierre: '18:00',
           abierto: true,
           activo: true,
+          servicios: ['RESTAURANTE'],
         },
       ],
     });
@@ -331,6 +336,7 @@ describe('CalendarService con Prisma simulado', () => {
   });
 
   it('advierte al borrar una excepción que abría un día semanal cerrado', async () => {
+    db.timeSlot.findMany.mockResolvedValue([rule({ abierto: false })]);
     db.calendarDay.findUnique.mockResolvedValue(exception());
     db.reservation.count.mockResolvedValue(3);
     await expect(

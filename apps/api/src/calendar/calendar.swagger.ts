@@ -80,7 +80,8 @@ export const calendarDayResponse: SchemaObject = {
     zonaHoraria: { type: 'string', enum: ['America/Bogota'] },
     abierto: { type: 'boolean' },
     soloPorReserva: { type: 'boolean' },
-    origen: { type: 'string', enum: ['EXCEPCION', 'SEMANAL', 'SIN_REGLA'] },
+    origen: { type: 'string', enum: ['EXCEPCION', 'SEMANAL', 'SIN_REGLA', 'BASE_DOMINGO', 'BASE_FESTIVO'] },
+    servicios: { type: 'array', items: { type: 'string', enum: ['RESTAURANTE', 'PESCA', 'MOTOS'] } },
     horarios: {
       type: 'array',
       items: {

@@ -114,12 +114,13 @@ describe('Calendario HTTP con módulo real y Prisma simulado', () => {
       .expect(200);
     expect(open.body).toMatchObject({
       abierto: true,
-      soloPorReserva: true,
+      soloPorReserva: false,
       origen: 'EXCEPCION',
     });
   });
 
   it('devuelve null cuando no hay apertura en el intervalo', async () => {
+    db.timeSlot.findMany.mockResolvedValue(Array.from({ length: 7 }, (_, diaSemana) => rule({ diaSemana, abierto: false })));
     const response = await request(app.getHttpServer())
       .get(`/api/v1/calendario/proximo${query}&desde=2026-10-08`)
       .expect(200);
@@ -271,6 +272,7 @@ describe('Calendario HTTP con módulo real y Prisma simulado', () => {
   });
 
   it('confirma por HTTP un cierre al eliminar una excepción abierta', async () => {
+    db.timeSlot.findMany.mockResolvedValue([rule({ abierto: false })]);
     db.calendarDay.findUnique.mockResolvedValue(exception());
     db.reservation.count.mockResolvedValue(2);
     const path = `/api/v1/admin/calendario/excepciones/2026-10-11${query}`;
@@ -324,7 +326,7 @@ describe('Calendario HTTP con módulo real y Prisma simulado', () => {
         soloPorReserva: true,
       })
       .expect(200);
-    expect(response.body.excepcion.soloPorReserva).toBe(true);
+    expect(response.body.excepcion.soloPorReserva).toBe(false);
     db.calendarDay.findUnique.mockResolvedValue(exception());
     const saved = await request(app.getHttpServer())
       .get(`/api/v1/admin/calendario/excepciones${query}&fecha=2026-10-11`)

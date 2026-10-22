@@ -2,6 +2,8 @@
 
 ### App móvil de carta digital, reservas y noticias — El Encanto Campestre
 
+**Cambio de alcance confirmado el 22/10/2026:** el acuerdo vigente de [Mi Pedido y calendario](Pedido_y_Calendario_2026-10-22.md) sustituye en este diseño histórico la apertura automática de sábados y la restricción de quince personas entre semana. Domingos/festivos colombianos son base editable; actividades combinables y notas son informativas salvo Restaurante, único servicio con mesas reservables. Mi Pedido se puede comenzar desde carta, sin checkout, conservando pedido obligatorio desde ocho. Las secciones originales de abajo sirven como historial, no prevalecen sobre RN-12/RF actualizados.
+
 **Asignatura:** Electiva V — Desarrollo Móvil · **Periodo:** agosto – noviembre 2026
 **Versión:** 0.3 · **Actualizado:** 16 de octubre de 2026
 

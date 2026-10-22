@@ -625,10 +625,9 @@ async function main() {
   // ----------------------------------------------------------------------------
   console.log('📅 Programando calendario de atención para los próximos fines de semana y festivos...');
 
-  // horario habitual: sábados (10:00 a 18:00) y domingos (09:00 a 18:00)
+  // Creo únicamente domingo base; no sobrescribo horarios explícitos del dueño.
   const reglasSemanales = [
     { diaSemana: 0, horaApertura: '09:00', horaCierre: '18:00', abierto: true }, // Domingo
-    { diaSemana: 6, horaApertura: '10:00', horaCierre: '18:00', abierto: true }, // Sábado
   ];
 
   for (const regla of reglasSemanales) {

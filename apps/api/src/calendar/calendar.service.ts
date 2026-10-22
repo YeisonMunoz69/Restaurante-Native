@@ -9,6 +9,7 @@ import { Prisma, ReservationStatus } from '@prisma/client';
 import type { CalendarDay, TimeSlot } from '@prisma/client';
 import { CALENDAR_SEARCH_DAYS, CALENDAR_TIME_ZONE } from '@encanto/shared';
 import type {
+  CalendarServiceKind,
   CalendarClosureWarning,
   CalendarDayResult,
   CalendarExceptionInput,
@@ -16,11 +17,12 @@ import type {
   CalendarRulesInput,
 } from '@encanto/shared';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { isColombianHoliday } from './colombia-holidays.js';
 
 type AttentionRule = Pick<
   TimeSlot,
   'diaSemana' | 'activo' | 'abierto' | 'horaApertura' | 'horaCierre'
->;
+> & { servicios?: string[] };
 
 // Represento DATE en UTC solamente para persistir y hacer aritmética de fechas civiles.
 export const calendarDate = (fecha: string) =>
@@ -45,11 +47,12 @@ export function resolveCalendarDay(
   restauranteId: string,
   fecha: string,
   rules: AttentionRule[],
-  exception?: CalendarDay | null,
+  exception?: (Omit<CalendarDay, 'servicios'> & { servicios?: string[] }) | null,
 ): CalendarDayResult {
-  const weekly = rules.filter(
-    (rule) => rule.diaSemana === calendarDate(fecha).getUTCDay() && rule.activo,
-  );
+  const weekday = calendarDate(fecha).getUTCDay();
+  const configured = rules.filter(rule => rule.diaSemana === weekday);
+  const weekly = configured.filter(rule => rule.activo);
+  const base = !exception && !configured.length && (weekday === 0 || isColombianHoliday(fecha));
   const horarios = exception
     ? exception.abierto
       ? [
@@ -59,7 +62,7 @@ export function resolveCalendarDay(
           },
         ]
       : []
-    : weekly
+    : base ? [{ horaApertura: '10:00', horaCierre: '18:00' }] : weekly
         .filter((rule) => rule.abierto)
         .map(({ horaApertura, horaCierre }) => ({ horaApertura, horaCierre }));
   horarios.sort(
@@ -67,13 +70,18 @@ export function resolveCalendarDay(
       a.horaApertura.localeCompare(b.horaApertura) ||
       a.horaCierre.localeCompare(b.horaCierre),
   );
+  const services = exception
+    ? exception.servicios ?? ['RESTAURANTE']
+    : base ? ['RESTAURANTE'] : weekly.filter(rule => rule.abierto).flatMap(rule => rule.servicios ?? ['RESTAURANTE']);
   return {
     restauranteId,
     fecha,
     zonaHoraria: CALENDAR_TIME_ZONE,
     abierto: horarios.length > 0,
-    soloPorReserva: exception?.soloPorReserva ?? false,
-    origen: exception ? 'EXCEPCION' : weekly.length ? 'SEMANAL' : 'SIN_REGLA',
+    soloPorReserva: false,
+    origen: exception ? 'EXCEPCION' : configured.length ? 'SEMANAL'
+      : base ? (weekday === 0 ? 'BASE_DOMINGO' : 'BASE_FESTIVO') : 'SIN_REGLA',
+    servicios: horarios.length ? [...new Set(services)] as CalendarServiceKind[] : [],
     horarios,
     motivo: exception?.motivo ?? null,
   };
@@ -88,14 +96,14 @@ export class CalendarService {
     db: Prisma.TransactionClient,
     restauranteId: string,
   ) {
-    if (
-      !(await db.restaurant.findUnique({
+    const restaurant = await db.restaurant.findUnique({
         where: { id: restauranteId },
-        select: { id: true },
-      }))
-    ) {
+        select: { id: true, whatsapp: true },
+      });
+    if (!restaurant) {
       throw new NotFoundException('Restaurante inexistente');
     }
+    return restaurant;
   }
 
   // Mientras Reservation no tenga sede, impido atribuir sus reservas a varias sedes.
@@ -123,7 +131,6 @@ export class CalendarService {
         where: {
           restaurantId: restauranteId,
           diaSemana: calendarDate(fecha).getUTCDay(),
-          activo: true,
         },
       }),
       this.prisma.calendarDay.findUnique({
@@ -153,7 +160,7 @@ export class CalendarService {
     );
     const [rules, exceptions] = await Promise.all([
       this.prisma.timeSlot.findMany({
-        where: { restaurantId: restauranteId, activo: true },
+        where: { restaurantId: restauranteId },
       }),
       this.prisma.calendarDay.findMany({
         where: { restaurantId: restauranteId, fecha: { gte: start, lte: end } },
@@ -172,9 +179,25 @@ export class CalendarService {
         rules,
         byDate.get(fecha),
       );
-      if (dia.abierto) return { desde, hasta: dateKey(end), diasBuscados, dia };
+      if (dia.abierto && dia.servicios?.includes('RESTAURANTE')) return { desde, hasta: dateKey(end), diasBuscados, dia };
     }
     return { desde, hasta: dateKey(end), diasBuscados, dia: null };
+  }
+
+  // Cargo un mes visible con solo dos consultas y el mismo resolvedor de reservas.
+  async range(restauranteId: string, desde: string, hasta: string) {
+    const restaurant = await this.requireRestaurant(this.prisma, restauranteId);
+    const [rules, exceptions] = await Promise.all([
+      this.prisma.timeSlot.findMany({ where: { restaurantId: restauranteId } }),
+      this.prisma.calendarDay.findMany({ where: { restaurantId: restauranteId, fecha: { gte: calendarDate(desde), lte: calendarDate(hasta) } } }),
+    ]);
+    const byDate = new Map(exceptions.map(day => [dateKey(day.fecha), day]));
+    const dias: CalendarDayResult[] = [];
+    for (let time = calendarDate(desde).getTime(); time <= calendarDate(hasta).getTime(); time += 86400000) {
+      const fecha = dateKey(new Date(time));
+      dias.push(resolveCalendarDay(restauranteId, fecha, rules, byDate.get(fecha)));
+    }
+    return { restauranteId, desde, hasta, dias, whatsapp: restaurant.whatsapp ?? '' };
   }
 
   // Incluyo las reglas inactivas para que podamos editarlas desde administración.
@@ -185,13 +208,14 @@ export class CalendarService {
       orderBy: [{ diaSemana: 'asc' }, { horaApertura: 'asc' }, { id: 'asc' }],
     });
     return rules.map(
-      ({ id, diaSemana, horaApertura, horaCierre, abierto, activo }) => ({
+      ({ id, diaSemana, horaApertura, horaCierre, abierto, activo, servicios }) => ({
         id,
         diaSemana,
         horaApertura,
         horaCierre,
         abierto,
         activo,
+        servicios,
       }),
     );
   }
@@ -294,8 +318,9 @@ export class CalendarService {
           where: { restaurantId: restauranteId, fecha: { gte: future } },
         }),
       ]);
-      const nextRules = input.reglas.map((rule) => ({
+      const nextRules = (input.reglas.length ? input.reglas : [{ horaApertura: '10:00', horaCierre: '18:00', abierto: false, activo: true, servicios: ['RESTAURANTE'] }]).map((rule) => ({
         ...rule,
+        servicios: rule.servicios ?? ['RESTAURANTE'],
         diaSemana,
       }));
       const byDate = new Map(
@@ -306,10 +331,8 @@ export class CalendarService {
           if (fecha.getUTCDay() !== diaSemana) return false;
           const key = dateKey(fecha);
           return (
-            resolveCalendarDay(restauranteId, key, rules, byDate.get(key))
-              .abierto &&
-            !resolveCalendarDay(restauranteId, key, nextRules, byDate.get(key))
-              .abierto
+            canReserveRestaurant(resolveCalendarDay(restauranteId, key, rules, byDate.get(key))) &&
+            !canReserveRestaurant(resolveCalendarDay(restauranteId, key, nextRules, byDate.get(key)))
           );
         })
         .map(({ fecha, _count }) => ({
@@ -332,13 +355,14 @@ export class CalendarService {
         },
       });
       for (const { id, ...data } of input.reglas.filter((rule) => rule.id)) {
-        await db.timeSlot.update({ where: { id }, data });
+        await db.timeSlot.update({ where: { id }, data: { ...data, servicios: data.servicios ?? ['RESTAURANTE'] } });
       }
-      const newRules = input.reglas.filter((rule) => !rule.id);
+      const newRules = input.reglas.length ? input.reglas.filter((rule) => !rule.id) : nextRules;
       if (newRules.length)
         await db.timeSlot.createMany({
           data: newRules.map((rule) => ({
             ...rule,
+            servicios: rule.servicios ?? ['RESTAURANTE'],
             restaurantId: restauranteId,
             diaSemana,
           })),
@@ -361,7 +385,7 @@ export class CalendarService {
     return this.write(async (db) => {
       await this.requireSingleRestaurant(db, restauranteId);
       const date = calendarDate(fecha);
-      const count = input.abierto
+      const count = input.abierto && (input.servicios ?? ['RESTAURANTE']).includes('RESTAURANTE')
         ? 0
         : await db.reservation.count({
             where: { fecha: date, estado: ReservationStatus.CONFIRMADA },
@@ -373,6 +397,8 @@ export class CalendarService {
       const { confirmarReservasAfectadas: _confirmation, ...body } = input;
       const data = {
         ...body,
+        servicios: body.servicios ?? ['RESTAURANTE'],
+        soloPorReserva: false,
         horaApertura: body.horaApertura ?? null,
         horaCierre: body.horaCierre ?? null,
         motivo: body.motivo ?? null,
@@ -405,12 +431,11 @@ export class CalendarService {
         where: {
           restaurantId: restauranteId,
           diaSemana: where.fecha.getUTCDay(),
-          activo: true,
         },
       });
       const closes =
         exception.abierto &&
-        !resolveCalendarDay(restauranteId, fecha, rules).abierto;
+        !canReserveRestaurant(resolveCalendarDay(restauranteId, fecha, rules));
       const count = closes
         ? await db.reservation.count({
             where: { fecha: where.fecha, estado: ReservationStatus.CONFIRMADA },
@@ -425,3 +450,6 @@ export class CalendarService {
     });
   }
 }
+
+// Abrir pesca/motos no habilita mesas ni evita la advertencia de reservas afectadas.
+export const canReserveRestaurant = (day: CalendarDayResult) => day.abierto && (day.servicios ?? ['RESTAURANTE']).includes('RESTAURANTE');

@@ -14,6 +14,7 @@ export const rule = (changes: Partial<TimeSlot> = {}): TimeSlot => ({
   abierto: true,
   activo: true,
   aforoMaximo: 30,
+  servicios: ['RESTAURANTE'],
   ...changes,
 });
 export const exception = (changes: Partial<CalendarDay> = {}): CalendarDay => ({
@@ -25,6 +26,7 @@ export const exception = (changes: Partial<CalendarDay> = {}): CalendarDay => ({
   horaCierre: '11:00',
   soloPorReserva: true,
   motivo: 'Evento',
+  servicios: ['RESTAURANTE'],
   ...changes,
 });
 
