@@ -11,8 +11,8 @@ export function formatCop(value: number) {
 export function formatCivilDate(value: string, options?: Intl.DateTimeFormatOptions) {
   const [year, month, day] = value.split('-').map(Number);
   return new Intl.DateTimeFormat('es-CO', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    timeZone: 'UTC', ...options,
+    ...(options ?? { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+    timeZone: 'UTC',
   }).format(new Date(Date.UTC(year, month - 1, day, 12)));
 }
 

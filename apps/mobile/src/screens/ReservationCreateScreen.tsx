@@ -234,7 +234,7 @@ export function ReservationCreateScreen({
             <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{t('reservations.chooseDate')}</Text>
             <View style={styles.weekHeader}>
               <Action label="‹" disabled={windowOffset === 0} onPress={() => moveWindow(Math.max(0, windowOffset - 7))} />
-              <Text style={[typography.cuerpoM, { color: colors.texto.primario }]}>{formatCivilDate(days[0])}</Text>
+              <Text style={[typography.cuerpoM, styles.weekLabel, { color: colors.texto.primario }]}>{formatCivilDate(days[0])}</Text>
               <Action label="›" disabled={shiftDate(today, windowOffset + 7) > maxDate} onPress={() => moveWindow(windowOffset + 7)} />
             </View>
             <ScrollView
@@ -332,6 +332,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' },
   weekHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  // Dejo que la fecha ocupe varias líneas sin empujar las flechas fuera del panel.
+  weekLabel: { flex: 1, textAlign: 'center', marginHorizontal: 8 },
   days: { flexDirection: 'row', paddingVertical: 4 },
   day: { width: 76, marginRight: 8 },
   dishRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginVertical: 4 },
