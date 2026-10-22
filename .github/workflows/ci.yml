@@ -72,6 +72,9 @@ jobs:
       - name: Test mobile app
         run: npm run test --workspace=@encanto/mobile
 
+      - name: Check mobile interface texts
+        run: npm run check:i18n --workspace=@encanto/mobile
+
       - name: Check deployment script
         run: |
           bash -n scripts/deploy-vps.sh
