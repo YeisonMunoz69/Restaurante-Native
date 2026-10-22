@@ -21,3 +21,6 @@ export * from './schemas/menu-admin.schema';
 
 // Compartimos reglas y respuestas del flujo de reservas.
 export * from './schemas/reservation.schema';
+
+// Compartimos datos de cobro externo editables por el dueño, sin procesar pagos.
+export * from './schemas/payment.schema';
