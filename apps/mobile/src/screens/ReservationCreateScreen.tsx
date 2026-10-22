@@ -209,9 +209,18 @@ export function ReservationCreateScreen({
   const launchWhatsApp = async () => {
     if (!result) return;
     const phone = result.whatsapp.replace(/\D/g, '');
-    const text = encodeURIComponent(`${result.reserva.ticket}\n\n${result.instruccionesPago}`);
+    if (!/^[1-9]\d{9,14}$/.test(phone)) {
+      setError(t('reservations.whatsappUnavailable'));
+      return;
+    }
+    const text = encodeURIComponent(`${result.reserva.codigo}\n${result.reserva.ticket}\n\n${result.instruccionesPago}`);
     const url = `https://wa.me/${phone}?text=${text}`;
-    if (await Linking.canOpenURL(url)) await Linking.openURL(url);
+    try {
+      if (!(await Linking.canOpenURL(url))) throw new Error();
+      await Linking.openURL(url);
+    } catch {
+      setError(t('reservations.whatsappUnavailable'));
+    }
   };
 
   const updateQuantity = (id: string, delta: number) => {

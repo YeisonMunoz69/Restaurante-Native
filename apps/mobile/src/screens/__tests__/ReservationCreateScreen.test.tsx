@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { BackHandler, TextInput } from 'react-native';
+import { BackHandler, Linking, TextInput } from 'react-native';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { useConnection } from '../../context/ConnectionContext';
@@ -113,6 +113,27 @@ describe('ReservationCreateScreen', () => {
     expect(api.create).toHaveBeenCalledTimes(1);
     ReactTestRenderer.act(() => tree!.unmount());
     subscription.mockRestore();
+  });
+
+  it.each(['sin-aplicacion', 'error-al-abrir', 'telefono-no-configurado'])('conserva código y ticket cuando WhatsApp falla: %s', async scenario => {
+    const canOpen = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(scenario !== 'sin-aplicacion');
+    const open = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('No disponible'));
+    if (scenario === 'telefono-no-configurado') api.create.mockResolvedValue({ ...response, whatsapp: '' } as never);
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.sendWhatsApp')!.props.onPress(); });
+    if (scenario === 'telefono-no-configurado') expect(canOpen).not.toHaveBeenCalled();
+    else expect(canOpen).toHaveBeenCalledWith(expect.stringContaining('EC-20310223-ABCD1234'));
+    expect(open).toHaveBeenCalledTimes(scenario === 'error-al-abrir' ? 1 : 0);
+    expect(tree!.root.findAllByProps({ children: 'reservations.whatsappUnavailable' }).length).toBeGreaterThan(0);
+    expect(tree!.root.findAllByProps({ children: response.reserva.ticket }).length).toBeGreaterThan(0);
+    ReactTestRenderer.act(() => tree!.unmount());
+    canOpen.mockRestore(); open.mockRestore();
   });
 
   it('consulta franjas y envía una solicitud antes de mostrar la confirmación real', async () => {
