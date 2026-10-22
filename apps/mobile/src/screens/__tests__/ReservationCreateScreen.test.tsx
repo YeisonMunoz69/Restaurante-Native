@@ -9,6 +9,7 @@ import { reservationsApi } from '../../services/reservations.service';
 import { paymentApi } from '../../services/payment.service';
 import { ReservationCreateScreen } from '../ReservationCreateScreen';
 import { ReservationCalendar } from '../../components/calendar/ReservationCalendar';
+import { OrderDraftProvider, useOrderDraft } from '../../context/OrderDraftContext';
 
 // Aíslo el calendario (probado aparte) sin ocultar su selección ni su disponibilidad.
 jest.mock('../../components/calendar/ReservationCalendar', () => {
@@ -321,10 +322,41 @@ describe('ReservationCreateScreen', () => {
         </ThemeProvider>,
       );
     });
+    expect(tree!.root.findAllByProps({ children: 'reservations.loginPreserveSelection' })).toHaveLength(0);
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
     });
     expect(api.slots).toHaveBeenCalledWith(expect.objectContaining({ numComensales: 7 }));
     ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('revalida Mi Pedido, conserva cantidades y solo lo limpia cuando el servidor acepta', async () => {
+    let draft!: ReturnType<typeof useOrderDraft>;
+    function Observe() { draft = useOrderDraft(); return null; }
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    const shell = (form: boolean) => <ThemeProvider><OrderDraftProvider scope="qa">
+      <Observe />{form && <ReservationCreateScreen onBack={onBack} onCreated={onCreated} />}
+    </OrderDraftProvider></ThemeProvider>;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(shell(false)); });
+    // Propongo dos platos desde la carta; uno deja de ofrecerse al consultar la fecha.
+    ReactTestRenderer.act(() => {
+      draft.setQuantity(availableDish, 2, '2031-02-23');
+      draft.setQuantity({ ...availableDish, id: '00000000-0000-4000-8000-000000000013' }, 1, '2031-02-23');
+    });
+    menu.dishes.mockResolvedValue({ restauranteId: restaurantId, fecha: '2031-02-23', data: [{ ...availableDish, precio: 35000 }], paginacion: { pagina: 1, tamanoPagina: 20, total: 1, totalPaginas: 1 } });
+    await ReactTestRenderer.act(async () => { tree.update(shell(true)); });
+    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    expect(draft.lines).toEqual([{ dish: { ...availableDish, precio: 35000 }, cantidad: 2 }]);
+    expect(tree.root.findAllByProps({ children: 'discovery.revalidate' }).length).toBeGreaterThan(0);
+    ReactTestRenderer.act(() => tree.root.findAllByType(Action).find(a => a.props.label === 'reservations.reviewRequest')!.props.onPress());
+    api.create.mockRejectedValueOnce(new Error('Conflicto al enviar'));
+    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
+    expect(draft.lines[0].cantidad).toBe(2);
+    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
+    expect(api.create).toHaveBeenLastCalledWith(expect.objectContaining({ lineas: [{ platoId: dishId, cantidad: 2 }] }));
+    expect(draft.lines).toEqual([]);
+    ReactTestRenderer.act(() => tree.unmount());
   });
 });

@@ -91,6 +91,10 @@ export function ReservationCreateScreen({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Al regresar autenticado retiro el aviso del desvío, sin borrar selección ni pedido.
+  useEffect(() => {
+    if (isAuthenticated) setMessage(current => current === t('reservations.loginPreserveSelection') ? null : current);
+  }, [isAuthenticated, t]);
 
   const goBackStep = useCallback(() => {
     if (busy) return;
