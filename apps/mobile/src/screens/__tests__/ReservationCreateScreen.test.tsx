@@ -6,11 +6,12 @@ import { Action } from '../../components/attention/Controls';
 import { useConnection } from '../../context/ConnectionContext';
 import { menuApi } from '../../services/menu.service';
 import { reservationsApi } from '../../services/reservations.service';
+import { paymentApi } from '../../services/payment.service';
 import { ReservationCreateScreen } from '../ReservationCreateScreen';
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
+const mockTranslate = (key: string) => key;
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: mockTranslate }) }));
+jest.mock('../../services/payment.service', () => ({ paymentApi: { current: jest.fn() } }));
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
@@ -30,6 +31,8 @@ const restaurantId = '00000000-0000-4000-8000-000000000011';
 const dishId = '00000000-0000-4000-8000-000000000012';
 const api = jest.mocked(reservationsApi);
 const menu = jest.mocked(menuApi);
+const payments = jest.mocked(paymentApi);
+const currentPayment = { whatsapp: '+573000000000', mediosPago: 'Medios ficticios', instruccionesPago: 'Solo prueba; no pagar', version: 1, configurada: true };
 
 const availableDish = {
   id: dishId,
@@ -65,6 +68,7 @@ describe('ReservationCreateScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    payments.current.mockResolvedValue(currentPayment);
     jest.mocked(useConnection).mockReturnValue({
       settings: { environment: 'dev', localUrl: '', restauranteId: restaurantId },
       isSaving: false,
@@ -118,7 +122,7 @@ describe('ReservationCreateScreen', () => {
   it.each(['sin-aplicacion', 'error-al-abrir', 'telefono-no-configurado'])('conserva código y ticket cuando WhatsApp falla: %s', async scenario => {
     const canOpen = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(scenario !== 'sin-aplicacion');
     const open = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('No disponible'));
-    if (scenario === 'telefono-no-configurado') api.create.mockResolvedValue({ ...response, whatsapp: '' } as never);
+    if (scenario === 'telefono-no-configurado') payments.current.mockResolvedValue({ ...currentPayment, whatsapp: '', configurada: false });
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
     await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
@@ -130,10 +134,33 @@ describe('ReservationCreateScreen', () => {
     if (scenario === 'telefono-no-configurado') expect(canOpen).not.toHaveBeenCalled();
     else expect(canOpen).toHaveBeenCalledWith(expect.stringContaining('EC-20310223-ABCD1234'));
     expect(open).toHaveBeenCalledTimes(scenario === 'error-al-abrir' ? 1 : 0);
-    expect(tree!.root.findAllByProps({ children: 'reservations.whatsappUnavailable' }).length).toBeGreaterThan(0);
+    expect(tree!.root.findAllByProps({ children: scenario === 'telefono-no-configurado' ? 'payments.unconfigured' : 'reservations.whatsappUnavailable' }).length).toBeGreaterThan(0);
     expect(tree!.root.findAllByProps({ children: response.reserva.ticket }).length).toBeGreaterThan(0);
     ReactTestRenderer.act(() => tree!.unmount());
     canOpen.mockRestore(); open.mockRestore();
+  });
+
+  it('consulta datos vigentes antes de WhatsApp y no reutiliza cuentas antiguas sin red', async () => {
+    const canOpen = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true);
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
+    payments.current.mockResolvedValue({ ...currentPayment, whatsapp: '+573000000002', mediosPago: 'Llave nueva de prueba', version: 2 });
+    await ReactTestRenderer.act(async () => { await tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.sendWhatsApp')!.props.onPress(); });
+    expect(open).toHaveBeenCalledWith(expect.stringContaining('wa.me/573000000002'));
+    expect(decodeURIComponent(open.mock.calls[0][0])).toContain('Llave nueva de prueba');
+    expect(decodeURIComponent(open.mock.calls[0][0])).toContain(response.reserva.codigo);
+    payments.current.mockRejectedValue(new Error('Sin red'));
+    await ReactTestRenderer.act(async () => { await tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.sendWhatsApp')!.props.onPress(); });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(tree!.root.findAllByProps({ children: 'payments.loadError' }).length).toBeGreaterThan(0);
+    expect(tree!.root.findAllByProps({ children: 'Llave nueva de prueba' })).toHaveLength(0);
+    ReactTestRenderer.act(() => tree!.unmount()); canOpen.mockRestore(); open.mockRestore();
   });
 
   it('consulta franjas y envía una solicitud antes de mostrar la confirmación real', async () => {

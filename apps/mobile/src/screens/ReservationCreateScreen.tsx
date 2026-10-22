@@ -15,6 +15,7 @@ import {
 import {
   ReservationCreateSchema,
   ReservationSlotsQuerySchema,
+  type PaymentConfigResult,
   type MenuDish,
   type ReservationSlot,
 } from '@encanto/shared';
@@ -28,6 +29,7 @@ import { Action, Field, Note, Panel } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { menuApi } from '../services/menu.service';
 import { reservationsApi } from '../services/reservations.service';
+import { paymentApi } from '../services/payment.service';
 import { formatCivilDate, formatCop, todayInBogota } from '../utils/formatters';
 
 type Step = 'date' | 'slot' | 'order' | 'review' | 'sent';
@@ -82,10 +84,30 @@ export function ReservationCreateScreen({
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [note, setNote] = useState('');
   const [result, setResult] = useState<CreateReservationResult | null>(null);
+  const [payment, setPayment] = useState<PaymentConfigResult | null>(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
   const [step, setStep] = useState<Step>('date');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Al volver a la solicitud enviada vuelvo a leer los datos; una cuenta puede haber cambiado.
+  useEffect(() => {
+    if (step !== 'sent' || !isActive) return;
+    let active = true;
+    setPayment(null); setPaymentBusy(true);
+    paymentApi.current().then(next => { if (active) setPayment(next); })
+      .catch(() => { if (active) setError(t('payments.loadError')); })
+      .finally(() => { if (active) setPaymentBusy(false); });
+    return () => { active = false; };
+  }, [step, isActive, t]);
+
+  const refreshPayment = async () => {
+    setPayment(null); setPaymentBusy(true); setError(null);
+    try { const next = await paymentApi.current(); setPayment(next); return next; }
+    catch { setError(t('payments.loadError')); return null; }
+    finally { setPaymentBusy(false); }
+  };
 
   const goBackStep = useCallback(() => {
     if (busy) return;
@@ -207,13 +229,16 @@ export function ReservationCreateScreen({
   };
 
   const launchWhatsApp = async () => {
-    if (!result) return;
-    const phone = result.whatsapp.replace(/\D/g, '');
-    if (!/^[1-9]\d{9,14}$/.test(phone)) {
-      setError(t('reservations.whatsappUnavailable'));
+    if (!result || paymentBusy) return;
+    // Antes de salir verifico datos vigentes; no reutilizo cuentas de una respuesta anterior.
+    const current = await refreshPayment();
+    if (!current) return;
+    const phone = current.whatsapp.replace(/\D/g, '');
+    if (!current.configurada || !/^[1-9]\d{9,14}$/.test(phone)) {
+      setError(t('payments.unconfigured'));
       return;
     }
-    const text = encodeURIComponent(`${result.reserva.codigo}\n${result.reserva.ticket}\n\n${result.instruccionesPago}`);
+    const text = encodeURIComponent(`${result.reserva.codigo}\n${result.reserva.ticket}\n\n${current.mediosPago}\n${current.instruccionesPago}`);
     const url = `https://wa.me/${phone}?text=${text}`;
     try {
       if (!(await Linking.canOpenURL(url))) throw new Error();
@@ -339,7 +364,15 @@ export function ReservationCreateScreen({
             <Note>{t('reservations.pendingApproval')}</Note>
             <Note>{t('reservations.total')}: {formatCop(result.reserva.total)}</Note>
             <Text selectable style={[typography.cuerpoM, { color: colors.texto.primario }]}>{result.reserva.ticket}</Text>
-            <Note>{result.instruccionesPago}</Note>
+            <Note>{t('payments.currentTitle')}</Note>
+            {paymentBusy && <ActivityIndicator accessibilityLabel={t('common.loading')} />}
+            {payment && <>
+              {!!payment.mediosPago && <Text selectable style={[typography.cuerpoM, { color: colors.texto.primario }]}>{payment.mediosPago}</Text>}
+              {!!payment.instruccionesPago && <Note>{payment.instruccionesPago}</Note>}
+              {!!payment.whatsapp && <Text selectable style={[typography.cuerpoM, { color: colors.texto.primario }]}>{payment.whatsapp}</Text>}
+              {!payment.configurada && <Note live>{t('payments.unconfigured')}</Note>}
+            </>}
+            <Action label={t('payments.reload')} disabled={paymentBusy} onPress={() => { refreshPayment(); }} />
             <Action label={t('reservations.copyCode')} onPress={() => {
               Clipboard.setString(result.reserva.codigo);
               Alert.alert(t('reservations.codeCopied'));
@@ -348,7 +381,7 @@ export function ReservationCreateScreen({
               Clipboard.setString(result.reserva.ticket);
               Alert.alert(t('reservations.ticketCopied'));
             }} />
-            <Action label={t('reservations.sendWhatsApp')} onPress={() => void launchWhatsApp()} />
+            <Action label={t('reservations.sendWhatsApp')} disabled={paymentBusy} onPress={() => void launchWhatsApp()} />
             <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: result.reserva.ticket })} />
             <Action label={t('reservations.backToList')} onPress={() => void onCreated()} />
           </Panel>
