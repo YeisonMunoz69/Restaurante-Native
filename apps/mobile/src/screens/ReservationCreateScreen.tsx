@@ -88,20 +88,26 @@ export function ReservationCreateScreen({
   const [message, setMessage] = useState<string | null>(null);
 
   const goBackStep = useCallback(() => {
+    if (busy) return;
+    if (step === 'sent') {
+      void onCreated();
+      return;
+    }
     setStep(current => current === 'slot' ? 'date'
       : current === 'order' ? 'slot'
         : current === 'review' ? 'order' : 'date');
-  }, []);
+  }, [busy, onCreated, step]);
 
   useEffect(() => {
     if (!isActive) return undefined;
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (busy) return true;
       if (step === 'date') onBack();
       else goBackStep();
       return true;
     });
     return () => subscription.remove();
-  }, [goBackStep, isActive, onBack, step]);
+  }, [busy, goBackStep, isActive, onBack, step]);
 
   const people = Number(peopleText);
   const orderLines = useMemo(
@@ -117,9 +123,13 @@ export function ReservationCreateScreen({
   );
 
   const findSlots = async () => {
+    if (busy) return;
     setError(null);
     setMessage(null);
     setSelectedSlot(null);
+    // Al volver a consultar no arrastro platos de una fecha o grupo anterior.
+    setQuantities({});
+    setDishes([]);
     if (!isAuthenticated) {
       setMessage(t('reservations.loginPreserveSelection'));
       onRequireLogin();
@@ -165,6 +175,12 @@ export function ReservationCreateScreen({
   };
 
   const create = async () => {
+    if (busy) return;
+    if (!isAuthenticated) {
+      setMessage(t('reservations.loginPreserveSelection'));
+      onRequireLogin();
+      return;
+    }
     if (!selectedSlot) return;
     const payload = {
       fecha: selectedDate,
@@ -222,7 +238,7 @@ export function ReservationCreateScreen({
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Action label={t('common.back')} onPress={step === 'date' ? onBack : goBackStep} />
+        <Action label={t('common.back')} disabled={busy} onPress={step === 'date' ? onBack : goBackStep} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>{t(step === 'sent' ? 'reservations.sentTitle' : 'reservations.createTitle')}</Text>
         {step !== 'sent' && <Note>{t(`reservations.steps.${step}`)}</Note>}
         {error && <Note live>{error}</Note>}

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -34,6 +35,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // pantalla de ajustes con gestion de tema, idioma y estado de autenticacion segura
 export const SettingsScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { t } = useTranslation();
   const { isDark, toggleTheme, colors, typography, spacing, radii } =
     useTheme();
@@ -49,6 +52,14 @@ export const SettingsScreen: React.FC = () => {
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
   const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | null>(null);
+
+  // Regreso al formulario que quedó montado en Reservas después de autenticar.
+  useEffect(() => {
+    if (isAuthenticated && route.params?.returnTo === 'Reservations') {
+      navigation.setParams({ returnTo: undefined });
+      navigation.navigate('Reservations');
+    }
+  }, [isAuthenticated, navigation, route.params?.returnTo]);
 
   // Valido los campos con el mismo esquema compartido por la API.
   const handleSubmit = async () => {

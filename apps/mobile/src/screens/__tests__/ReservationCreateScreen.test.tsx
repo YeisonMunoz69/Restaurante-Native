@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { TextInput } from 'react-native';
+import { BackHandler, TextInput } from 'react-native';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { useConnection } from '../../context/ConnectionContext';
@@ -84,6 +84,35 @@ describe('ReservationCreateScreen', () => {
       paginacion: { pagina: 1, tamanoPagina: 20, total: 1, totalPaginas: 1 },
     });
     api.create.mockResolvedValue(response as never);
+  });
+
+  it('el botón físico vuelve por cada paso y desde enviada termina sin abrir otro formulario', async () => {
+    let back!: () => boolean | null | undefined;
+    const subscription = jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_event, handler) => {
+      back = () => handler({} as never);
+      return { remove: jest.fn() };
+    });
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => { expect(back()).toBe(true); });
+    expect(tree!.root.findByProps({ testID: 'reservation-find-slots' })).toBeDefined();
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => { back(); });
+    expect(tree!.root.findByProps({ testID: 'reservation-continue-order' })).toBeDefined();
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress());
+    ReactTestRenderer.act(() => { back(); });
+    expect(tree!.root.findByProps({ testID: 'reservation-continue-without-order' })).toBeDefined();
+    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
+    await ReactTestRenderer.act(async () => { back(); });
+    expect(onCreated).toHaveBeenCalledTimes(1);
+    expect(api.create).toHaveBeenCalledTimes(1);
+    ReactTestRenderer.act(() => tree!.unmount());
+    subscription.mockRestore();
   });
 
   it('consulta franjas y envía una solicitud antes de mostrar la confirmación real', async () => {
