@@ -249,7 +249,7 @@ export function ReservationCreateScreen({
               ))}
             </ScrollView>
             <Note>{t('reservations.maxAdvance')}</Note>
-            <Field label={t('reservations.people')} value={peopleText} onChangeText={setPeopleText} keyboardType="number-pad" />
+            <Field label={t('reservations.groupSize')} value={peopleText} onChangeText={setPeopleText} keyboardType="number-pad" />
             {people >= 15 && <Note>{t('reservations.weekdayGroup')}</Note>}
             <Action testID="reservation-find-slots" label={t('reservations.findSlots')} disabled={busy} onPress={() => void findSlots()} />
           </Panel>

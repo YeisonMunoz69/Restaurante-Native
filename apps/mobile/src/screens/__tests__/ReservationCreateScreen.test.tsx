@@ -135,7 +135,7 @@ describe('ReservationCreateScreen', () => {
       );
     });
     ReactTestRenderer.act(() => {
-      tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.people')!.props.onChangeText('8');
+      tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.groupSize')!.props.onChangeText('8');
     });
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
@@ -200,7 +200,7 @@ describe('ReservationCreateScreen', () => {
       );
     });
     ReactTestRenderer.act(() => {
-      tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.people')!.props.onChangeText('7');
+      tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.groupSize')!.props.onChangeText('7');
     });
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();

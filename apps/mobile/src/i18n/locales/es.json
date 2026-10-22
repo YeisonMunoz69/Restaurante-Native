@@ -91,6 +91,7 @@
     "createError": "No se pudo crear la solicitud. El aforo puede haber cambiado; consulta otra vez las franjas.",
     "pendingApproval": "Quedó pendiente de revisión. No es una reserva confirmada todavía.",
     "sendWhatsApp": "Continuar por WhatsApp",
+    "groupSize": "Número de personas",
     "shareTicket": "Compartir ticket",
     "copyTicket": "Copiar ticket",
     "ticketCopied": "Ticket copiado al portapapeles.",
