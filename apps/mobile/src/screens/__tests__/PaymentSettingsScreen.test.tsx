@@ -1,6 +1,7 @@
 import React from 'react';
 import Renderer from 'react-test-renderer';
-import { Alert, Text, TextInput } from 'react-native';
+import { Text, TextInput } from 'react-native';
+import { Feedback as Alert } from '../../components/feedback/Feedback';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { useAuth } from '../../context/AuthContext';
@@ -25,7 +26,7 @@ beforeEach(() => {
   api.adminCurrent.mockResolvedValue(initial);
   api.save.mockResolvedValue({ ...initial, version: 3 });
 });
-afterEach(() => { Renderer.act(() => tree?.unmount()); jest.restoreAllMocks(); });
+afterEach(() => { Renderer.act(() => tree?.unmount()); Alert.clear(); jest.restoreAllMocks(); });
 
 it.each(['COMENSAL', 'STAFF'])('no carga datos ni ofrece edición al rol %s', async rol => {
   jest.mocked(useAuth).mockReturnValue({ user: { id: 'u', rol } } as never);
@@ -71,7 +72,7 @@ it('pide confirmación al salir con una edición pendiente', async () => {
   const alert = jest.spyOn(Alert, 'alert');
   Renderer.act(() => action('common.back').props.onPress());
   expect(onBack).not.toHaveBeenCalled();
-  Renderer.act(() => alert.mock.calls[0][2]!.find(button => button.style === 'destructive')!.onPress!());
+  Renderer.act(() => { alert.mock.calls[0][2]!.find(button => button.style === 'destructive')!.onPress!(); });
   expect(onBack).toHaveBeenCalledTimes(1);
 });
 it('ofrece reintento sin un formulario falso cuando falla la carga inicial', async () => {

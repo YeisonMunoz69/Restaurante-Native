@@ -1,6 +1,7 @@
 import React from 'react';
 import Renderer from 'react-test-renderer';
-import { Alert, Text } from 'react-native';
+import { Text } from 'react-native';
+import { Feedback as Alert } from '../../components/feedback/Feedback';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { useAuth } from '../../context/AuthContext';
@@ -29,7 +30,7 @@ beforeEach(() => {
   jest.mocked(useAuth).mockReturnValue({ user: { id: 'u1' }, isLoading: false } as never);
   api.mine.mockResolvedValue([{ ...base }] as never);
 });
-afterEach(() => { Renderer.act(() => tree?.unmount()); jest.useRealTimers(); jest.restoreAllMocks(); });
+afterEach(() => { Renderer.act(() => tree?.unmount()); Alert.clear(); jest.useRealTimers(); jest.restoreAllMocks(); });
 
 it('permite cancelar a 60 minutos, actualiza el límite sin salir de la pantalla y no escribe sin confirmar', async () => {
   await mount();

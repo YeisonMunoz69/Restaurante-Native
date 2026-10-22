@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { ActivityIndicator, Alert, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
+import { Feedback as Alert } from '../components/feedback/Feedback';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -101,7 +102,7 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
             <Action label={t('reservations.reject')} disabled={busyId === reservation.id || (reasons[reservation.id] ?? '').trim().length < 3} onPress={() => void act(reservation.id, () => reservationsApi.reject(reservation.id, { motivo: reasons[reservation.id].trim() }))} />
             <Action label={t('reservations.copyTicket')} onPress={() => {
               Clipboard.setString(reservation.ticket);
-              Alert.alert(t('reservations.ticketCopied'));
+              Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
             }} />
             <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: reservation.ticket })} />
           </Panel>
@@ -119,7 +120,7 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
             {reservation.estado === 'EN_CURSO' && <Action label={t('reservations.complete')} disabled={busyId === reservation.id} onPress={() => void act(reservation.id, () => reservationsApi.complete(reservation.id))} />}
             <Action label={t('reservations.copyTicket')} onPress={() => {
               Clipboard.setString(reservation.ticket);
-              Alert.alert(t('reservations.ticketCopied'));
+              Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
             }} />
             <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: reservation.ticket })} />
           </Panel>

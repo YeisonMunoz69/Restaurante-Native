@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {
-  Alert,
   ActivityIndicator,
   BackHandler,
   Image,
@@ -30,6 +29,7 @@ import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { menuApi } from '../services/menu.service';
 import { reservationsApi } from '../services/reservations.service';
 import { paymentApi } from '../services/payment.service';
+import { Feedback as Alert } from '../components/feedback/Feedback';
 import { formatCivilDate, formatCop, todayInBogota } from '../utils/formatters';
 
 type Step = 'date' | 'slot' | 'order' | 'review' | 'sent';
@@ -275,7 +275,7 @@ export function ReservationCreateScreen({
         <Action label={t('common.back')} disabled={busy} onPress={step === 'date' ? onBack : goBackStep} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>{t(step === 'sent' ? 'reservations.sentTitle' : 'reservations.createTitle')}</Text>
         {step !== 'sent' && <Note>{t(`reservations.steps.${step}`)}</Note>}
-        {error && <Note live>{error}</Note>}
+        {error && <Note live tone="error">{error}</Note>}
         {message && <Note live>{message}</Note>}
         {busy && <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />}
 
@@ -370,16 +370,16 @@ export function ReservationCreateScreen({
               {!!payment.mediosPago && <Text selectable style={[typography.cuerpoM, { color: colors.texto.primario }]}>{payment.mediosPago}</Text>}
               {!!payment.instruccionesPago && <Note>{payment.instruccionesPago}</Note>}
               {!!payment.whatsapp && <Text selectable style={[typography.cuerpoM, { color: colors.texto.primario }]}>{payment.whatsapp}</Text>}
-              {!payment.configurada && <Note live>{t('payments.unconfigured')}</Note>}
+              {!payment.configurada && <Note live tone="warning">{t('payments.unconfigured')}</Note>}
             </>}
             <Action label={t('payments.reload')} disabled={paymentBusy} onPress={() => { refreshPayment(); }} />
             <Action label={t('reservations.copyCode')} onPress={() => {
               Clipboard.setString(result.reserva.codigo);
-              Alert.alert(t('reservations.codeCopied'));
+              Alert.alert(t('reservations.codeCopied'), undefined, [], { kind: 'success' });
             }} />
             <Action label={t('reservations.copyTicket')} onPress={() => {
               Clipboard.setString(result.reserva.ticket);
-              Alert.alert(t('reservations.ticketCopied'));
+              Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
             }} />
             <Action label={t('reservations.sendWhatsApp')} disabled={paymentBusy} onPress={() => void launchWhatsApp()} />
             <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: result.reserva.ticket })} />

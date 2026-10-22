@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {
   ActivityIndicator,
-  Alert,
   Share,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { Action, Note, Panel } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { reservationsApi } from '../services/reservations.service';
+import { Feedback as Alert } from '../components/feedback/Feedback';
 import { ReservationCreateScreen } from './ReservationCreateScreen';
 import { formatCop, formatDateDdMmYyyy } from '../utils/formatters';
 
@@ -206,7 +206,7 @@ export const ReservationsScreen: React.FC = () => {
               <View style={styles.flex}><Action label={t('reservations.tabUpcoming')} selected={tab === 'upcoming'} onPress={() => setTab('upcoming')} /></View>
               <View style={styles.flex}><Action label={t('reservations.tabHistory')} selected={tab === 'history'} onPress={() => setTab('history')} /></View>
             </View>
-            {error && <Note live>{error}</Note>}
+            {error && <Note live tone="error">{error}</Note>}
             {loading && <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />}
             {!loading && ordered.length === 0 ? (
               <Panel>
@@ -255,7 +255,7 @@ export const ReservationsScreen: React.FC = () => {
                 ) : null}
                 <Action label={t('reservations.copyTicket')} onPress={() => {
                   Clipboard.setString(reservation.ticket);
-                  Alert.alert(t('reservations.ticketCopied'));
+                  Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
                 }} />
                 <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: reservation.ticket })} />
               </Panel>

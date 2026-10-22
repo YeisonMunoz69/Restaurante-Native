@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -28,6 +27,7 @@ import {
 import { Action, Field, Note, Panel } from './Controls';
 import { useTheme } from '../../theme/ThemeContext';
 import { todayInBogota } from '../../utils/formatters';
+import { Feedback as Alert } from '../feedback/Feedback';
 
 export const commercialToday = todayInBogota;
 type Pending = {
@@ -60,7 +60,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
   const showError = (error: unknown) => {
     const text = t(`attention.${attentionError(error)}`);
     setMessage(text);
-    Alert.alert(t('attention.errorTitle'), text);
+    Alert.alert(t('attention.errorTitle'), text, [], { kind: 'error' });
   };
   // Recargo del servidor para recuperar también los IDs recién creados.
   const load = async () => {

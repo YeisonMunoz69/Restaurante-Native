@@ -33,6 +33,11 @@
     "noPhotos": "Este plato todavía no tiene fotos publicadas.",
     "allergens": "Alérgenos"
   },
+  "feedback": {
+    "understood": "Entendido",
+    "errorTitle": "No pudimos completar la acción",
+    "actionError": "Revisa el estado actual antes de volver a intentarlo. No confirmamos cambios que el servidor no haya aceptado."
+  },
   "payments": {
     "title": "Contacto y medios de pago",
     "help": "Escribe los medios que aceptan y sus datos: efectivo, Nequi, llave de transferencia u otros. Incluye solo información para recibir pagos, nunca PIN ni contraseñas. Puedes editarla cuando cambie. Dejar los campos vacíos retira las instrucciones publicadas.",

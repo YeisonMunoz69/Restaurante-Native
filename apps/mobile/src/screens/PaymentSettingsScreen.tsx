@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   BackHandler,
   StyleSheet,
   Text,
@@ -18,6 +17,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { Action, Field, Note, Panel } from '../components/attention/Controls';
 import { paymentApi } from '../services/payment.service';
+import { Feedback as Alert } from '../components/feedback/Feedback';
 
 // Separo contacto y cobro en una subpantalla del dueño, con lectura y guardado explícitos.
 export function PaymentSettingsScreen({ onBack }: { onBack: () => void }) {
@@ -140,7 +140,7 @@ export function PaymentSettingsScreen({ onBack }: { onBack: () => void }) {
         </Text>
         <Note>{t('payments.help')}</Note>
         {busy && <ActivityIndicator accessibilityLabel={t('common.loading')} />}
-        {!!message && <Note live>{message}</Note>}
+        {!!message && <Note live tone={message === t('payments.saved') ? 'success' : 'error'}>{message}</Note>}
         {form && (
           <Panel>
             <Field
