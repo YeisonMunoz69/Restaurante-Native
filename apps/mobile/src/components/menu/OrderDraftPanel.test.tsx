@@ -1,6 +1,6 @@
 import React from 'react';
 import Renderer from 'react-test-renderer';
-import { Modal } from 'react-native';
+import { BackHandler, Modal } from 'react-native';
 import type { MenuDish } from '@encanto/shared';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import {
@@ -48,6 +48,7 @@ it('revisa y modifica cantidades antes de continuar sin enviar una reserva', () 
     tree.root.findByProps({ testID: 'order-open' }).props.onPress(),
   );
   Renderer.act(() => action('+').props.onPress());
+  expect(tree.root.findAllByType(Modal)).toHaveLength(0);
   expect(draft.lines[0].cantidad).toBe(3);
   expect(reserve).not.toHaveBeenCalled();
   Renderer.act(() =>
@@ -57,12 +58,14 @@ it('revisa y modifica cantidades antes de continuar sin enviar una reserva', () 
   expect(reserve).toHaveBeenCalledTimes(1);
 });
 it('solo mesa confirma el descarte; volver/cerrar no pierde platos', () => {
+  let back!: () => boolean | undefined | null;
+  jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_event, handler) => { back = () => handler({} as never); return { remove: jest.fn() }; });
   const confirm = jest.spyOn(Feedback, 'alert');
   Renderer.act(() => draft.setQuantity(dish, 1, '2026-10-25'));
   Renderer.act(() =>
     tree.root.findByProps({ testID: 'order-open' }).props.onPress(),
   );
-  Renderer.act(() => tree.root.findByType(Modal).props.onRequestClose());
+  Renderer.act(() => { back(); });
   expect(draft.lines).toHaveLength(1);
   Renderer.act(() =>
     tree.root.findByProps({ testID: 'order-open' }).props.onPress(),

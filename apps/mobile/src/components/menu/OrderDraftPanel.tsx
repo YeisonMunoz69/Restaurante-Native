@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { BackHandler, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useOrderDraft } from '../../context/OrderDraftContext';
@@ -21,17 +21,17 @@ export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
     (sum, line) => sum + line.cantidad * line.dish.precio,
     0,
   );
-  const reserve = () => {
-    setOpen(false);
-    draft.request();
-    onReserve();
-  };
+  // La hoja vive en la pantalla, sin abrir otra ventana nativa al cambiar de pestaña.
+  useEffect(() => {
+    if (!open) return;
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => { setOpen(false); return true; });
+    return () => listener.remove();
+  }, [open]);
+  const reserve = () => { setOpen(false); draft.request(); onReserve(); };
   const tableOnly = () => {
     const proceed = () => {
       draft.clear();
-      setOpen(false);
-      draft.request();
-      onReserve();
+      reserve();
     };
     if (!draft.lines.length) {
       proceed();
@@ -63,13 +63,7 @@ export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
           onPress={() => setOpen(true)}
         />
       </View>
-      <Modal
-        transparent
-        visible={open}
-        animationType="slide"
-        onRequestClose={() => setOpen(false)}
-      >
-        <View style={styles.overlay}>
+      {open && <View testID="order-sheet" style={styles.overlay} accessibilityViewIsModal>
           <View
             style={[
               styles.sheet,
@@ -174,15 +168,16 @@ export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
               />
             </ScrollView>
           </View>
-        </View>
-      </Modal>
+        </View>}
     </>
   );
 }
 const styles = StyleSheet.create({
   bar: { paddingHorizontal: 16, paddingVertical: 6, borderTopWidth: 1 },
   overlay: {
-    flex: 1,
+    position: 'absolute', top: 0, bottom: 0, left: 0, right: 0,
+    zIndex: 20,
+    elevation: 20,
     backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
     alignItems: 'center',
