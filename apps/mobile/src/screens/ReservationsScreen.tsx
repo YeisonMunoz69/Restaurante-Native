@@ -49,9 +49,10 @@ export const ReservationsScreen: React.FC = () => {
   const [tab, setTab] = useState<ReservationTab>('upcoming');
   const [creating, setCreating] = useState(false);
   const draft = useOrderDraft();
+  const { pending, consume } = draft;
   useEffect(() => {
-    if (isFocused && draft.pending) { setCreating(true); draft.consume(); }
-  }, [isFocused, draft.pending, draft.consume]);
+    if (isFocused && pending) { setCreating(true); consume(); }
+  }, [isFocused, pending, consume]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestVersion = useRef(0);
