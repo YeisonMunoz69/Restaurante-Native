@@ -10,6 +10,7 @@ import { Action, Field, Note, Panel } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { reservationsApi, type ReservationWithCustomer } from '../services/reservations.service';
 import { todayInBogota } from '../utils/formatters';
+import { BackButton } from '../components/navigation/BackButton';
 
 type Tab = 'requests' | 'agenda';
 
@@ -86,7 +87,7 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Action label={t('common.back')} onPress={onBack} />
+        <BackButton onPress={onBack} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>{t('reservations.adminTitle')}</Text>
         <Field label={t('reservations.agendaDate')} value={date} onChangeText={setDate} placeholder={t('reservations.datePlaceholder')} />
         {isAdmin && (

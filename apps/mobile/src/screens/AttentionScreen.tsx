@@ -11,6 +11,7 @@ import { CalendarPanel } from '../components/attention/CalendarPanel';
 import { AvailabilityPanel } from '../components/attention/AvailabilityPanel';
 import { ConnectionForm } from '../components/ConnectionForm';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
+import { BackButton } from '../components/navigation/BackButton';
 
 // Mantengo las cinco pestañas y protejo también el acceso visual administrativo.
 export function AttentionScreen({ onBack }: { onBack: () => void }) {
@@ -46,7 +47,7 @@ export function AttentionScreen({ onBack }: { onBack: () => void }) {
         // Conservo las vistas al alternar formularios para que Android no deje controles recortados.
         removeClippedSubviews={false}
       >
-        <Action label={t('attention.back')} onPress={onBack} />
+        <BackButton onPress={onBack} />
         <Note>{t('attention.title')}</Note>
         <Action
           label={t('attention.configure')}

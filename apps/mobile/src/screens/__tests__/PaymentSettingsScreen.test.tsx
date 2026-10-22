@@ -1,4 +1,5 @@
 import React from 'react';
+import { BackButton } from '../../components/navigation/BackButton';
 import Renderer from 'react-test-renderer';
 import { Text, TextInput } from 'react-native';
 import { Feedback as Alert } from '../../components/feedback/Feedback';
@@ -70,7 +71,7 @@ it('conserva la edición ante conflicto y exige recarga explícita', async () =>
 it('pide confirmación al salir con una edición pendiente', async () => {
   await mount(); edit('payments.instructions', 'Edición sin guardar');
   const alert = jest.spyOn(Alert, 'alert');
-  Renderer.act(() => action('common.back').props.onPress());
+  Renderer.act(() => tree.root.findByType(BackButton).props.onPress());
   expect(onBack).not.toHaveBeenCalled();
   Renderer.act(() => { alert.mock.calls[0][2]!.find(button => button.style === 'destructive')!.onPress!(); });
   expect(onBack).toHaveBeenCalledTimes(1);

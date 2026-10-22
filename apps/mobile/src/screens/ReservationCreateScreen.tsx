@@ -27,6 +27,7 @@ import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { menuApi } from '../services/menu.service';
 import { reservationsApi } from '../services/reservations.service';
 import { PaymentInstructions } from '../components/PaymentInstructions';
+import { BackButton } from '../components/navigation/BackButton';
 import { Feedback as Alert } from '../components/feedback/Feedback';
 import { formatCivilDate, formatCop, todayInBogota } from '../utils/formatters';
 
@@ -230,7 +231,7 @@ export function ReservationCreateScreen({
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Action label={t('common.back')} disabled={busy} onPress={step === 'date' ? onBack : goBackStep} />
+        <BackButton disabled={busy} onPress={step === 'date' ? onBack : goBackStep} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>{t(step === 'sent' ? 'reservations.sentTitle' : 'reservations.createTitle')}</Text>
         {step !== 'sent' && <Note>{t(`reservations.steps.${step}`)}</Note>}
         {error && <Note live tone="error">{error}</Note>}

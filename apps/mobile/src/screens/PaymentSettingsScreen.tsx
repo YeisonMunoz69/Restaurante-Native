@@ -18,6 +18,7 @@ import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { Action, Field, Note, Panel } from '../components/attention/Controls';
 import { paymentApi } from '../services/payment.service';
 import { Feedback as Alert } from '../components/feedback/Feedback';
+import { BackButton } from '../components/navigation/BackButton';
 
 // Separo contacto y cobro en una subpantalla del dueño, con lectura y guardado explícitos.
 export function PaymentSettingsScreen({ onBack }: { onBack: () => void }) {
@@ -134,7 +135,7 @@ export function PaymentSettingsScreen({ onBack }: { onBack: () => void }) {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Action label={t('common.back')} onPress={leave} disabled={busy} />
+        <BackButton onPress={leave} disabled={busy} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>
           {t('payments.title')}
         </Text>
