@@ -33,6 +33,7 @@ export const exception = (changes: Partial<CalendarDay> = {}): CalendarDay => ({
 // Simulo Prisma, incluidas las transacciones, sin construir un cliente ni conectarnos.
 export function prismaMock() {
   const db = {
+    user: { findUnique: vi.fn().mockResolvedValue({ rol: 'ADMIN', activo: true }) },
     restaurant: {
       findUnique: vi.fn().mockResolvedValue({ id: restaurantId }),
       count: vi.fn().mockResolvedValue(1),

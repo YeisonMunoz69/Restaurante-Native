@@ -132,3 +132,7 @@ Usamos `Feedback`/`FeedbackHost` para nuevos diálogos generales y `FeedbackMess
 Confirmamos acciones destructivas, publicación de cambios relevantes y descarte de formularios modificados; no interrumpimos cada toque con una confirmación. Mostramos éxito después de que la API confirme, no solo después de pulsar el botón. Diferenciamos información, éxito, advertencia y error sin depender únicamente del color, con textos en recursos, tema claro/oscuro, contenido desplazable y áreas seguras. Probamos atrás físico, doble toque y cambio de cuenta para que nunca ejecuten una operación pendiente por accidente.
 
 Los estados de carga, vacío, error y reintento también forman parte de cada entrega. Tener estos componentes no certifica por sí solo RNF-09/10 ni sustituye las pruebas de contraste, lector de pantalla, tamaños de fuente y pantallas pequeñas.
+
+## 9. Mínimo inamovible de administradores
+
+Conservamos al menos tres cuentas ADMIN activas. Ninguna función, importador, seed, baja, desactivación o cambio de rol puede reducirlas por debajo de tres; primero designamos reemplazos con cuentas reales. Una instalación anterior con menos de tres solo puede aumentar el número, nunca reducirlo. No creamos administradores ficticios para cuadrar el conteo. Protegemos la regla en la API y en PostgreSQL, incluida la concurrencia, no solo con botones deshabilitados. Retirar administración conserva la cuenta y el historial. Registramos el actor y el cambio de permisos; los JWT anteriores no deben conservar privilegios retirados.

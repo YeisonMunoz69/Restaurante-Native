@@ -10,6 +10,7 @@ import { DishAvailabilityModule } from './dish-availability/dish-availability.mo
 import { MenuAdminModule } from './menu-admin/menu-admin.module.js';
 import { ReservationsModule } from './reservations/reservations.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
+import { AdminsModule } from './admins/admins.module.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PaymentsModule } from './payments/payments.module.js';
     MenuAdminModule,
     ReservationsModule,
     PaymentsModule,
+    AdminsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
