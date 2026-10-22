@@ -20,4 +20,4 @@ Si hoy existe uno o dos administradores, la migración **no inventa los que falt
 
 En PostgreSQL desechable comprobamos dos retiros simultáneos desde cuatro: solo uno se acepta y quedan tres. Al llegar al mínimo fallan desactivación y borrado directos. Después de designar un cuarto se puede retirar otro. Comprobamos también rechazo de JWT ADMIN cuyo rol ya no está vigente y confirmación móvil antes de designar. No cambiamos roles reales en Supabase o VPS durante QA.
 
-**Pendiente actualizar requisitos en Drive y Word local:** RF-ADM15/RN-14 y actores ADMIN: designación por cuenta existente, retiro de permisos sin borrado de historial y mínimo inamovible de tres activos. TOTP de acciones críticas conserva su historia pendiente; no lo presentamos como implementado.
+**Pendiente actualizar requisitos en Drive y Word local:** RF-ADM15/RN-15 y actores ADMIN: designación por cuenta existente, retiro de permisos sin borrado de historial y mínimo inamovible de tres activos. TOTP de acciones críticas conserva su historia pendiente; no lo presentamos como implementado.

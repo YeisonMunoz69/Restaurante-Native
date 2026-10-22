@@ -61,6 +61,8 @@ El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejand
 | B-12 | Días y actividades     | Acuerdo del 22/10: domingos y festivos nacionales colombianos por defecto, deshabilitables por ADMIN. Sábados y cualquier otro día se habilitan explícitamente. Cada fecha combina Restaurante, Pesca y/o Motos, horario general y nota pública. Solo Restaurante permite mesas en la app. Retiramos el mínimo de 15 entre semana; fechas sin atención de restaurante se coordinan por WhatsApp, sin prometer apertura. |
 | B-13 | Zona VIP "Mirador"     | Hasta 10 personas + 2 niños, con costo adicional de servicio. Se coordina por WhatsApp, no se reserva desde la app                                                                                                       |
 | B-14 | Impuestos              | Sin impuestos. Solo el valor del plato                                                                                                                                                                                   |
+| B-15 | Administradores activos | Acuerdo inamovible del 22/10: mínimo tres cuentas ADMIN activas. Primero designamos reemplazos antes de retirar/desactivar/eliminar; la API y la BD protegen concurrencia. Retirar permisos conserva cuenta e historial. Si una base anterior tiene menos de tres, solo permitimos aumentarlos, sin crear cuentas ficticias. |
+| B-16 | Carta original | Cargamos 44 productos de Carta final.pdf sin fotos, todos disponibles inicialmente y editables por ADMIN. Los ocho habituales también pueden desactivarse. Empanada unidad $1.000; porción de seis $6.000, confirmado por Yeison. La importación conserva ediciones existentes y no ejecuta el seed de usuarios. |
 
 ### Flujo de reserva acordado
 

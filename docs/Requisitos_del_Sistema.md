@@ -82,6 +82,7 @@ Las siguientes reglas, acordadas en el proceso de toma de decisiones, son de cum
 - **RN-12 (Calendario de Apertura Discontinuo, acuerdo 22/10):** domingos y festivos nacionales colombianos abren por defecto y ADMIN puede deshabilitarlos. Sábados y otros días requieren apertura explícita. Cada día combina Restaurante, Pesca y/o Motos, horario general y nota pública. Solo Restaurante permite reservar mesas. Retiramos el mínimo de quince personas entre semana: en fechas sin Restaurante se ofrece contacto por WhatsApp para coordinar, sin confirmar apertura ni reserva.
 - **RN-13 (Zona VIP Mirador):** Capacidad máxima de 10 adultos más 2 niños con tarifa de servicio adicional. Se gestiona fuera de la app mediante enlace directo a WhatsApp.
 - **RN-14 (Moneda e Impuestos):** Todos los valores monetarios se expresan en Pesos Colombianos (COP) sin decimales, con separador de miles. No se desglosa ni cobra IVA/impoconsumo en la aplicación.
+- **RN-15 (Administradores, inamovible):** mantenemos al menos tres administradores activos. Retirar permisos, desactivar o eliminar no puede reducir ese mínimo, tampoco con operaciones concurrentes. Primero designamos reemplazos con cuentas reales. Una instalación anterior con menos de tres solo puede aumentar su número. Retirar permisos conserva cuenta e historial; no se inventan administradores para cumplir el conteo.
 
 ---
 
@@ -168,6 +169,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-ADM12** | Copia de ticket para cocina    | Botón de acción que copia el ticket estructurado al portapapeles del móvil para pegarlo en el chat de WhatsApp de cocina.            |   **M**   | Sprint 3  | EP-06     |
 | **RF-ADM13** | Indicadores agregados          | Gráficas consolidadas de reservas atendidas, volumen de comensales y platos más solicitados.                                         |   **C**   |  Backlog  | —         |
 | **RF-ADM14** | Bitácora de auditoría          | Registro inmutable de acciones administrativas sensibles (usuario, acción, fecha, valores antes y después).                          |   **S**   | Sprint 5* | EP-10     |
+| **RF-ADM15** | Gestión compartida de administradores | Un ADMIN designa cuentas existentes o retira su rol con confirmación; conservamos mínimo de tres activos, protección concurrente en API/BD, auditoría y rechazo de JWT ADMIN con permisos retirados. No equivale a borrar la cuenta ni a implementar TOTP. | **M** | Backlog, ajuste 22/10 | Pendiente historia propia |
 
 _\*Sujeto a capacidad disponible de Sprint 5._
 
