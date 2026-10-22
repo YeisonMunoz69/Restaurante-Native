@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {
   ActivityIndicator,
@@ -48,17 +48,40 @@ export const ReservationsScreen: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestVersion = useRef(0);
+  const [clock, setClock] = useState(Date.now());
+
+  // Quito datos de la sesión anterior e invalido respuestas pendientes al cambiar de cuenta.
+  useEffect(() => {
+    requestVersion.current += 1;
+    setItems([]);
+    setDetails({});
+    setDetailOpenId(null);
+    setDetailErrorId(null);
+    return () => { requestVersion.current += 1; };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!isFocused) return;
+    setClock(Date.now());
+    const timer = setInterval(() => setClock(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [isFocused]);
 
   const load = useCallback(async () => {
     if (!user) return;
+    const version = requestVersion.current;
     setLoading(true);
     setError(null);
     try {
-      setItems(await reservationsApi.mine());
+      const next = await reservationsApi.mine();
+      if (version !== requestVersion.current) return;
+      setItems(next);
+      setDetails({});
     } catch (cause) {
-      setError(requestMessage(cause, t('reservations.loadError')));
+      if (version === requestVersion.current) setError(requestMessage(cause, t('reservations.loadError')));
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }, [user, t]);
 
@@ -75,15 +98,19 @@ export const ReservationsScreen: React.FC = () => {
         text: t('reservations.cancelAction'),
         style: 'destructive',
         onPress: async () => {
+          const version = requestVersion.current;
           try {
             setError(null);
             await reservationsApi.cancel(reservation.id);
+            if (version !== requestVersion.current) return;
             await load();
           } catch (cause) {
+            if (version !== requestVersion.current) return;
             setError(requestMessage(cause, t('reservations.cancelError')));
             // Recargo después de un conflicto para mostrar el estado más reciente del servidor.
             try {
-              setItems(await reservationsApi.mine());
+              const next = await reservationsApi.mine();
+              if (version === requestVersion.current) setItems(next);
             } catch {
               // Conservo el error de cancelación si tampoco hay conexión para recargar.
             }
@@ -94,6 +121,7 @@ export const ReservationsScreen: React.FC = () => {
   };
 
   const toggleDetails = async (id: string) => {
+    const version = requestVersion.current;
     if (detailOpenId === id && detailErrorId !== id) {
       setDetailOpenId(null);
       return;
@@ -103,11 +131,14 @@ export const ReservationsScreen: React.FC = () => {
     setDetailErrorId(null);
     try {
       const detail = await reservationsApi.detail(id);
+      if (version !== requestVersion.current) return;
       setDetails(current => ({ ...current, [id]: detail }));
+      // La respuesta de detalle puede reflejar una aprobación o rechazo posterior a la lista.
+      setItems(current => current.map(item => item.id === id ? detail : item));
     } catch {
-      setDetailErrorId(id);
+      if (version === requestVersion.current) setDetailErrorId(id);
     } finally {
-      setDetailLoadingId(null);
+      if (version === requestVersion.current) setDetailLoadingId(null);
     }
   };
 
@@ -131,7 +162,7 @@ export const ReservationsScreen: React.FC = () => {
         onBack={() => setCreating(false)}
         isAuthenticated={Boolean(user)}
         isActive={isFocused}
-        onRequireLogin={() => navigation.navigate('Settings')}
+        onRequireLogin={() => navigation.navigate('Settings', { returnTo: 'Reservations' })}
         onCreated={async () => {
           setCreating(false);
           setTab('upcoming');
@@ -186,7 +217,7 @@ export const ReservationsScreen: React.FC = () => {
               </Panel>
             ) : ordered.map(reservation => {
               const detail = details[reservation.id] ?? reservation;
-              const minutesRemaining = minutesUntilReservation(reservation);
+              const minutesRemaining = minutesUntilReservation(reservation, clock);
               const cancellationTooLate = reservation.estado === 'CONFIRMADA' && minutesRemaining < 60;
               return (
               <Panel key={reservation.id}>
@@ -247,7 +278,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
 });
 
-function minutesUntilReservation(reservation: ReservationResult) {
+function minutesUntilReservation(reservation: ReservationResult, now: number) {
   const start = Date.parse(`${reservation.fecha}T${reservation.horaInicio}:00-05:00`);
-  return Math.floor((start - Date.now()) / 60_000);
+  return (start - now) / 60_000;
 }
