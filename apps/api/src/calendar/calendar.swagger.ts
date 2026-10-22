@@ -34,6 +34,7 @@ export const calendarRuleBody: SchemaObject = {
     horaCierre: { ...time, example: '17:00' },
     abierto: { type: 'boolean', default: true },
     activo: { type: 'boolean', default: true },
+    servicios: { type: 'array', minItems: 1, maxItems: 3, uniqueItems: true, items: { type: 'string', enum: ['RESTAURANTE', 'PESCA', 'MOTOS'] } },
   },
 };
 export const calendarConfirmationBody: SchemaObject = {
@@ -58,6 +59,7 @@ export const calendarExceptionBody: SchemaObject = {
     horaCierre: { ...time, nullable: true, example: '17:00' },
     soloPorReserva: { type: 'boolean', default: false },
     motivo: { type: 'string', nullable: true, maxLength: 500 },
+    servicios: { type: 'array', minItems: 1, maxItems: 3, uniqueItems: true, items: { type: 'string', enum: ['RESTAURANTE', 'PESCA', 'MOTOS'] } },
   },
   description:
     'Si abierto=true, exigimos horas ordenadas. Si está cerrado, omitimos horas (o null) y soloPorReserva=false. Reemplazo completo, sin horarios nocturnos.',

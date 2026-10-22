@@ -95,6 +95,17 @@ describe('Calendario HTTP con módulo real y Prisma simulado', () => {
     });
   });
 
+  it('publica servicios y notas por rango sin autenticar y rechaza más de 42 fechas', async () => {
+    db.calendarDay.findMany.mockResolvedValue([exception({ fecha: new Date('2026-10-24T00:00:00Z'), servicios: ['PESCA', 'MOTOS'], motivo: 'Cocina cerrada' })]);
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/calendario/rango${query}&desde=2026-10-24&hasta=2026-10-25`).expect(200);
+    expect(response.body.dias).toHaveLength(2);
+    expect(response.body.dias[0]).toMatchObject({ servicios: ['PESCA', 'MOTOS'], motivo: 'Cocina cerrada' });
+    db.restaurant.findUnique.mockClear();
+    await request(app.getHttpServer()).get(`/api/v1/calendario/rango${query}&desde=2026-10-01&hasta=2026-11-12`).expect(400);
+    expect(db.restaurant.findUnique).not.toHaveBeenCalled();
+  });
+
   it('la excepción HTTP cierra una apertura semanal y luego abre solo por reserva', async () => {
     db.timeSlot.findMany.mockResolvedValue([rule()]);
     db.calendarDay.findUnique.mockResolvedValue(
@@ -366,6 +377,8 @@ describe('Calendario HTTP con módulo real y Prisma simulado', () => {
     const write = doc.paths['/api/v1/admin/calendario/excepciones/{fecha}'].put;
     expect(write.security).toEqual([{ bearer: [] }]);
     expect(write.requestBody).toHaveProperty('content');
+    expect(JSON.stringify(write.requestBody)).toContain('servicios');
+    expect(doc.paths['/api/v1/calendario/rango'].get.parameters.map(parameter => 'name' in parameter ? parameter.name : '')).toEqual(expect.arrayContaining(['desde', 'hasta', 'restauranteId']));
     for (const status of ['200', '400', '401', '403', '404', '409'])
       expect(write.responses[status]).toBeDefined();
     expect(JSON.stringify(write.responses['409'])).toContain(

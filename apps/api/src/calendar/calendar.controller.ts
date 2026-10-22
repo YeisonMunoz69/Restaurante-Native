@@ -28,6 +28,8 @@ export class CalendarController {
 
   @Get('rango')
   @ApiOperation({ summary: 'Consultar hasta 42 días con servicios, horarios y notas' })
+  @ApiQuery({ name: 'desde', required: true, schema: calendarDateProperty })
+  @ApiQuery({ name: 'hasta', required: true, schema: calendarDateProperty })
   range(@Query() query: unknown) {
     const { restauranteId, desde, hasta } = parseCalendar(CalendarRangeQuerySchema, query);
     return this.calendar.range(restauranteId, desde, hasta);
