@@ -67,7 +67,7 @@ export const NewsScreen: React.FC = () => {
             { color: colors.texto.primario, marginTop: spacing.s },
           ]}
         >
-          ¡Gran apertura de temporada este fin de semana festivo!
+          {t('news.sampleTitle')}
         </Text>
 
         <Text
@@ -76,8 +76,7 @@ export const NewsScreen: React.FC = () => {
             { color: colors.texto.secundario, marginTop: spacing.s },
           ]}
         >
-          Los esperamos en la vereda Las Huacas para disfrutar de nuestros
-          mejores platos campestres, aire puro y música tradicional.
+          {t('news.sampleBody')}
         </Text>
       </View>
     </ScrollView>

@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { Action, Field, Note, Panel } from '../components/attention/Controls';
+import { BackButton } from '../components/navigation/BackButton';
 import {
   adminMenuApi,
   type AdminCategory,
@@ -253,7 +254,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content}>
-        <Action label={t('common.back')} onPress={onBack} />
+        <BackButton onPress={onBack} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>{t('menuAdmin.title')}</Text>
         <Note>{t('menuAdmin.subtitle')}</Note>
 
@@ -359,7 +360,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
                         ))}
                       </>
                     )}
-                    <Action label={t('common.back')} onPress={() => {
+                    <BackButton onPress={() => {
                       setShowDishForm(false);
                       setSelectedDishId(null);
                       setDraft(emptyDish());

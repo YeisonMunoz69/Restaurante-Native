@@ -8,6 +8,7 @@ import {
   type TextInputProps,
 } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import { FeedbackMessage, type FeedbackKind } from '../feedback/Feedback';
 
 // Mantengo etiquetas visibles, contraste del tema y objetivos táctiles de al menos 48 dp.
 export function Action({
@@ -16,18 +17,21 @@ export function Action({
   disabled,
   selected,
   testID,
+  accessibilityLabel,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   selected?: boolean;
   testID?: string;
+  accessibilityLabel?: string;
 }) {
   const { colors } = useTheme();
   return (
     <TouchableOpacity
       testID={testID}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: !!disabled, selected: !!selected }}
       disabled={disabled}
       onPress={onPress}
@@ -73,11 +77,14 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
 export function Note({
   children,
   live,
+  tone,
 }: {
   children: React.ReactNode;
   live?: boolean;
+  tone?: FeedbackKind;
 }) {
   const { colors } = useTheme();
+  if (live) return <FeedbackMessage kind={tone}>{children}</FeedbackMessage>;
   return (
     <Text
       accessibilityLiveRegion={live ? 'polite' : 'none'}

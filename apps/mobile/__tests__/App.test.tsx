@@ -9,6 +9,7 @@ import App from '../App';
 // Aíslo el arranque de la app para no montar pantallas que llaman servicios reales.
 jest.mock('../src/context/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAuth: () => ({ user: null }),
 }));
 
 // Mantengo la prueba centrada en proveedores y estructura raíz, sin navegación de red.

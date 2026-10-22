@@ -14,6 +14,13 @@ jest.mock('react-i18next', () => ({
 
 // Simulo el contrato de autenticación y evito llamadas de red en esta prueba.
 jest.mock('../../context/AuthContext', () => ({ useAuth: jest.fn() }));
+const mockNavigate = jest.fn();
+const mockSetParams = jest.fn();
+let mockParams: { returnTo?: string } | undefined;
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate, setParams: mockSetParams }),
+  useRoute: () => ({ params: mockParams }),
+}));
 
 describe('SettingsScreen authentication form', () => {
   const login = jest.fn();
@@ -23,6 +30,7 @@ describe('SettingsScreen authentication form', () => {
   // Dejo la sesión como invitado para verificar los formularios de acceso.
   beforeEach(() => {
     jest.clearAllMocks();
+    mockParams = undefined;
     jest.mocked(useAuth).mockReturnValue({
       user: null,
       isAuthenticated: false,
@@ -32,6 +40,19 @@ describe('SettingsScreen authentication form', () => {
       logout,
       checkSession: jest.fn(),
     });
+  });
+
+  it('regresa a Reservas únicamente si el login fue solicitado desde ese flujo', () => {
+    mockParams = { returnTo: 'Reservations' };
+    jest.mocked(useAuth).mockReturnValue({
+      user: { id: 'test', correo: 'prueba@example.test', rol: 'COMENSAL' },
+      isAuthenticated: true, isLoading: false, login, register, logout, checkSession: jest.fn(),
+    });
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    ReactTestRenderer.act(() => { tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>); });
+    expect(mockSetParams).toHaveBeenCalledWith({ returnTo: undefined });
+    expect(mockNavigate).toHaveBeenCalledWith('Reservations');
+    ReactTestRenderer.act(() => tree!.unmount());
   });
 
   // El selector espera a que termine cualquier restauración o cambio de sesión.

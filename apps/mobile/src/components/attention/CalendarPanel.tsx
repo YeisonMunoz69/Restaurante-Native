@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -17,6 +16,7 @@ import {
   type CalendarDayResult,
   type CalendarExceptionInput,
   type CalendarRuleInput,
+  type CalendarServiceKind,
 } from '@encanto/shared';
 import {
   attentionApi,
@@ -27,19 +27,10 @@ import {
 } from '../../services/attention.service';
 import { Action, Field, Note, Panel } from './Controls';
 import { useTheme } from '../../theme/ThemeContext';
+import { todayInBogota } from '../../utils/formatters';
+import { Feedback as Alert } from '../feedback/Feedback';
 
-// Tomo la fecha comercial por componentes para evitar cambiarla por el huso del teléfono.
-export const commercialToday = () => {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Bogota',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  return ['year', 'month', 'day']
-    .map(type => parts.find(part => part.type === type)!.value)
-    .join('-');
-};
+export const commercialToday = todayInBogota;
 type Pending = {
   warning: CalendarClosureWarning;
   execute: (count?: number) => Promise<unknown>;
@@ -70,7 +61,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
   const showError = (error: unknown) => {
     const text = t(`attention.${attentionError(error)}`);
     setMessage(text);
-    Alert.alert(t('attention.errorTitle'), text);
+    Alert.alert(t('attention.errorTitle'), text, [], { kind: 'error' });
   };
   // Recargo del servidor para recuperar también los IDs recién creados.
   const load = async () => {
@@ -96,8 +87,9 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
             abierto: saved.abierto,
             horaApertura: saved.horaApertura,
             horaCierre: saved.horaCierre,
-            soloPorReserva: saved.soloPorReserva,
+            soloPorReserva: false,
             motivo: saved.motivo,
+            servicios: saved.servicios ?? ['RESTAURANTE'],
           }
         : {
             abierto: true,
@@ -105,6 +97,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
             horaCierre: '18:00',
             soloPorReserva: false,
             motivo: '',
+            servicios: ['RESTAURANTE'],
           },
     );
   };
@@ -265,6 +258,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
               value={rule.activo}
               onValueChange={activo => updateRule(index, { activo })}
             />
+            <ServiceChoices value={rule.servicios ?? ['RESTAURANTE']} disabled={locked} onChange={servicios => updateRule(index, { servicios })} />
             <Action
               label={t('attention.removeRule')}
               disabled={locked}
@@ -284,6 +278,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
                 horaCierre: '18:00',
                 abierto: true,
                 activo: true,
+                servicios: ['RESTAURANTE'],
               },
             ])
           }
@@ -342,6 +337,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
                   .join('')}
               </Note>
             )}
+            {!!day?.servicios?.length && <Note>{day.servicios.map(service => t(`discovery.service_${service}`)).join(' · ')}</Note>}
             <Note>
               {t(
                 exception
@@ -380,19 +376,11 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
                   editable={!locked}
                   onChangeText={horaCierre => setForm({ ...form, horaCierre })}
                 />
-                <Note>{t('attention.reservationOnly')}</Note>
-                <Switch
-                  accessibilityLabel={t('attention.reservationOnly')}
-                  disabled={locked}
-                  value={form.soloPorReserva}
-                  onValueChange={soloPorReserva =>
-                    setForm({ ...form, soloPorReserva })
-                  }
-                />
+                <ServiceChoices value={form.servicios ?? ['RESTAURANTE']} disabled={locked} onChange={servicios => setForm({ ...form, servicios, soloPorReserva: false })} />
               </>
             )}
             <Field
-              label={t('attention.reason')}
+              label={t('discovery.dayNote')}
               value={form.motivo ?? ''}
               maxLength={500}
               editable={!locked}
@@ -434,6 +422,11 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
       </Panel>
     </View>
   );
+}
+// Las tres etiquetas son combinables; nunca dejamos un día abierto sin actividad.
+function ServiceChoices({ value, disabled, onChange }: { value: CalendarServiceKind[]; disabled: boolean; onChange: (value: CalendarServiceKind[]) => void }) {
+  const { t } = useTranslation();
+  return <View><Note>{t('discovery.services')}</Note>{(['RESTAURANTE', 'PESCA', 'MOTOS'] as const).map(service => <Action key={service} label={t(`discovery.service_${service}`)} selected={value.includes(service)} disabled={disabled || (value.length === 1 && value.includes(service))} onPress={() => onChange(value.includes(service) ? value.filter(item => item !== service) : [...value, service])} />)}</View>;
 }
 const styles = StyleSheet.create({
   weekdays: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

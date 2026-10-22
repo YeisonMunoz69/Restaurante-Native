@@ -22,8 +22,10 @@ import {
   dateKey,
   resolveCalendarDay,
   todayInBogota,
+  canReserveRestaurant,
 } from '../calendar/calendar.service.js';
 import { canTransitionReservation } from './reservation-state.js';
+import { paymentConfig, paymentInstructions } from '../payments/payments.service.js';
 
 const activeStatuses = [
   ReservationStatus.SOLICITADA,
@@ -203,6 +205,9 @@ export class ReservationsService {
         id: true,
         nombre: true,
         whatsapp: true,
+        mediosPago: true,
+        instruccionesPago: true,
+        pagoVersion: true,
         toleranciaMin: true,
         aforoTotal: true,
         duracionReservaHasta4Min: true,
@@ -254,7 +259,6 @@ export class ReservationsService {
         where: {
           restaurantId,
           diaSemana: date.getUTCDay(),
-          activo: true,
         },
         orderBy: [{ horaApertura: 'asc' }, { id: 'asc' }],
       }),
@@ -278,7 +282,7 @@ export class ReservationsService {
     aforoTotal: number,
   ) {
     const { rules, exception, day } = await this.calendar(db, restaurantId, fecha);
-    if (!day.abierto) return { day, capacity: 0, compatible: false };
+    if (!canReserveRestaurant(day)) return { day, capacity: 0, compatible: false };
     const start = minuteOf(horaInicio);
     const end = minuteOf(horaFin);
     const fitsHours = day.horarios.some(
@@ -286,10 +290,10 @@ export class ReservationsService {
         minuteOf(hours.horaApertura) <= start && minuteOf(hours.horaCierre) >= end,
     );
     if (!fitsHours) return { day, capacity: 0, compatible: false };
-    if (exception) return { day, capacity: aforoTotal, compatible: true };
+    if (exception || day.origen.startsWith('BASE_')) return { day, capacity: aforoTotal, compatible: true };
     const compatible = rules.some(
       (rule) =>
-        rule.abierto &&
+        rule.abierto && rule.activo && (rule.servicios ?? ['RESTAURANTE']).includes('RESTAURANTE') &&
         minuteOf(rule.horaApertura) <= start &&
         minuteOf(rule.horaCierre) >= end,
     );
@@ -301,7 +305,7 @@ export class ReservationsService {
   }
 
   private weeklyCapacity(
-    rules: { abierto: boolean; horaApertura: string; horaCierre: string; aforoMaximo: number | null }[],
+    rules: { abierto: boolean; activo?: boolean; servicios?: string[]; horaApertura: string; horaCierre: string; aforoMaximo: number | null }[],
     horaInicio: string,
     horaFin: string,
     aforoTotal: number,
@@ -310,7 +314,7 @@ export class ReservationsService {
     const end = minuteOf(horaFin);
     const matchingRules = rules.filter(
       (rule) =>
-        rule.abierto &&
+        rule.abierto && rule.activo !== false && (rule.servicios ?? ['RESTAURANTE']).includes('RESTAURANTE') &&
         minuteOf(rule.horaApertura) <= start &&
         minuteOf(rule.horaCierre) >= end,
     );
@@ -345,35 +349,18 @@ export class ReservationsService {
       restaurant.id,
       query.fecha,
     );
-    const weekday = calendarDate(query.fecha).getUTCDay();
-    if (
-      day.soloPorReserva &&
-      weekday >= 1 &&
-      weekday <= 5 &&
-      query.numComensales < restaurant.minPersonasEntreSemana
-    ) {
-      return {
-        fecha: query.fecha,
-        zonaHoraria: 'America/Bogota' as const,
-        duracionMin: query.numComensales <= 4
-          ? restaurant.duracionReservaHasta4Min
-          : restaurant.duracionReservaDesde5Min,
-        franjas: [] as ReservationSlot[],
-        mensaje: `Este día se atiende solo por reserva para grupos de ${restaurant.minPersonasEntreSemana} personas o más`,
-      };
-    }
     const duration =
       query.numComensales <= 4
         ? restaurant.duracionReservaHasta4Min
         : restaurant.duracionReservaDesde5Min;
-    if (query.numComensales > restaurant.aforoTotal || !day.abierto) {
+    if (query.numComensales > restaurant.aforoTotal || !canReserveRestaurant(day)) {
       return {
         fecha: query.fecha,
         zonaHoraria: 'America/Bogota' as const,
         duracionMin: duration,
         franjas: [] as ReservationSlot[],
-        mensaje: !day.abierto
-          ? 'El restaurante no tiene un horario abierto configurado para esta fecha'
+        mensaje: !canReserveRestaurant(day)
+          ? 'No hay atención de restaurante reservable en esta fecha; consulte por WhatsApp para coordinar otra visita'
           : 'El grupo supera el aforo total configurado',
       };
     }
@@ -385,6 +372,7 @@ export class ReservationsService {
     });
     const slots = new Map<string, ReservationSlot>();
     for (const hours of day.horarios) {
+      if (!exception && !day.origen.startsWith('BASE_') && !rules.some(rule => rule.activo && rule.abierto && (rule.servicios ?? ['RESTAURANTE']).includes('RESTAURANTE') && rule.horaApertura <= hours.horaApertura && rule.horaCierre >= hours.horaCierre)) continue;
       const open = minuteOf(hours.horaApertura);
       const close = minuteOf(hours.horaCierre);
       for (
@@ -404,7 +392,7 @@ export class ReservationsService {
         ) {
           continue;
         }
-        const capacity = exception
+        const capacity = exception || day.origen.startsWith('BASE_')
           ? restaurant.aforoTotal
           : this.weeklyCapacity(
               rules,
@@ -559,8 +547,8 @@ export class ReservationsService {
       return {
         reserva: serialize(created),
         whatsapp: restaurant.whatsapp,
-        instruccionesPago:
-          'El pago se realiza por fuera de la aplicación. Solicite al restaurante los datos por WhatsApp; la reserva seguirá pendiente hasta que el equipo revise el comprobante.',
+        instruccionesPago: paymentInstructions(paymentConfig(restaurant)),
+        pago: paymentConfig(restaurant),
       };
     });
   }

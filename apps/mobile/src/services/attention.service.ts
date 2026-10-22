@@ -18,6 +18,8 @@ export type AdminException = CalendarExceptionInput & {
 };
 // Reutilizo las rutas integradas; todas las llamadas administrativas pasan por el JWT existente.
 export const attentionApi = {
+  range: async (restauranteId: string, desde: string, hasta: string) =>
+    (await apiClient.get<{ dias: CalendarDayResult[]; whatsapp?: string }>('/calendario/rango', { params: { restauranteId, desde, hasta } })).data,
   rules: async (restauranteId: string) =>
     (
       await apiClient.get<AdminRule[]>('/admin/calendario/reglas', {

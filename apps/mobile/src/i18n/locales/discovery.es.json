@@ -1,0 +1,16 @@
+{
+  "title": "Mi Pedido", "add": "Agregar a Mi Pedido", "remove": "Quitar", "empty": "Todavía no elegiste platos.",
+  "edit": "Revisar Mi Pedido", "reserve": "Continuar con mi reserva", "tableOnly": "Solo mesa · pediré en el restaurante",
+  "estimate": "Total estimado: {{total}}. Confirmaremos precios y disponibilidad para la fecha elegida.",
+  "draftDate": "Pedido para {{date}}", "clearTitle": "¿Reservar solo mesa?", "clearBody": "Quitaremos los platos del borrador. Para grupos de ocho o más se sigue requiriendo pedido anticipado.",
+  "close": "Cerrar Mi Pedido", "moreCategories": "Otras categorías", "previousCategories": "Categorías anteriores", "loadMore": "Cargar más platos", "emptyCategory": "No hay platos cargados en esta categoría.",
+  "previousMonth": "Mes anterior", "nextMonth": "Mes siguiente", "calendarError": "No pudimos consultar el calendario. Reintenta antes de reservar.",
+  "weekdays": { "0": "L", "1": "M", "2": "X", "3": "J", "4": "V", "5": "S", "6": "D" },
+  "service_RESTAURANTE": "Restaurante", "service_PESCA": "Pesca", "service_MOTOS": "Motos",
+  "calendarLegend": "Verde: restaurante · naranja: pesca · ámbar: motos. Toca un día para ver horarios y notas.",
+  "open": "Abierto", "closed": "Sin atención programada", "noRestaurant": "Este día no tiene mesas disponibles por la app. Puedes consultar otra visita directamente con el restaurante.",
+  "contact": "Consultar por WhatsApp", "contactMessage": "Hola, quisiera consultar una visita para el {{date}}.", "noContact": "El restaurante todavía no publicó un WhatsApp válido.",
+  "selectOpenDay": "Elige un día con atención de restaurante para consultar franjas.", "dayNote": "Nota pública del día", "services": "Actividades de este día",
+  "revalidate": "Al cambiar de fecha revisaremos de nuevo tus platos. Los que no estén disponibles se retiran del borrador; revisa el resumen antes de enviar.",
+  "quantity": "Cantidad de {{name}}", "decrease": "Reducir {{name}}", "increase": "Añadir {{name}}"
+}
