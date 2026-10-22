@@ -9,6 +9,7 @@ import { MenuModule } from './menu/menu.module.js';
 import { DishAvailabilityModule } from './dish-availability/dish-availability.module.js';
 import { MenuAdminModule } from './menu-admin/menu-admin.module.js';
 import { ReservationsModule } from './reservations/reservations.module.js';
+import { PaymentsModule } from './payments/payments.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ReservationsModule } from './reservations/reservations.module.js';
     DishAvailabilityModule,
     MenuAdminModule,
     ReservationsModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

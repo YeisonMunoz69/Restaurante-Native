@@ -24,6 +24,7 @@ import {
   todayInBogota,
 } from '../calendar/calendar.service.js';
 import { canTransitionReservation } from './reservation-state.js';
+import { paymentConfig, paymentInstructions } from '../payments/payments.service.js';
 
 const activeStatuses = [
   ReservationStatus.SOLICITADA,
@@ -203,6 +204,9 @@ export class ReservationsService {
         id: true,
         nombre: true,
         whatsapp: true,
+        mediosPago: true,
+        instruccionesPago: true,
+        pagoVersion: true,
         toleranciaMin: true,
         aforoTotal: true,
         duracionReservaHasta4Min: true,
@@ -559,8 +563,8 @@ export class ReservationsService {
       return {
         reserva: serialize(created),
         whatsapp: restaurant.whatsapp,
-        instruccionesPago:
-          'El pago se realiza por fuera de la aplicación. Solicite al restaurante los datos por WhatsApp; la reserva seguirá pendiente hasta que el equipo revise el comprobante.',
+        instruccionesPago: paymentInstructions(paymentConfig(restaurant)),
+        pago: paymentConfig(restaurant),
       };
     });
   }

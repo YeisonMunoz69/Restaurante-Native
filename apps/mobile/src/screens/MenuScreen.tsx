@@ -28,44 +28,13 @@ import { MenuDishDetailModal } from '../components/menu/MenuDishDetailModal';
 import { menuApi } from '../services/menu.service';
 import { publicMenuPhotoUrl } from '../components/menu/menu-photo';
 import { useTheme } from '../theme/ThemeContext';
-
-function todayInBogota() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Bogota',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const value = (type: string) =>
-    parts.find(part => part.type === type)?.value ?? '01';
-  return `${value('year')}-${value('month')}-${value('day')}`;
-}
+import { formatCivilDate, formatCop, todayInBogota } from '../utils/formatters';
 
 // Avanzo fechas civiles en UTC para que el celular no cambie de día por zona horaria.
 function shiftCivilDate(fecha: string, amount: number) {
   const [year, month, day] = fecha.split('-').map(Number);
   const next = new Date(Date.UTC(year, month - 1, day + amount));
   return next.toISOString().slice(0, 10);
-}
-
-function formatCivilDate(fecha: string) {
-  const [year, month, day] = fecha.split('-').map(Number);
-  return new Intl.DateTimeFormat('es-CO', {
-    timeZone: 'UTC',
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(Date.UTC(year, month - 1, day, 12)));
-}
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 function errorStatus(error: unknown) {
@@ -563,7 +532,7 @@ export const MenuScreen: React.FC = () => {
                           { color: colors.marca.acento },
                         ]}
                       >
-                        {formatPrice(item.precio)}
+                        {formatCop(item.precio)}
                       </Text>
                       <Text
                         style={[

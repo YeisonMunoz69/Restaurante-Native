@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
+import { Feedback } from '../../components/feedback/Feedback';
 import { useAuth } from '../../context/AuthContext';
 import { reservationsApi } from '../../services/reservations.service';
 import { AdminReservationsScreen } from '../AdminReservationsScreen';
@@ -61,6 +62,7 @@ describe('AdminReservationsScreen', () => {
   });
 
   it('permite a ADMIN aprobar una solicitud usando la API y refresca la lista', async () => {
+    const dialog = jest.spyOn(Feedback, 'alert');
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => {
       tree = ReactTestRenderer.create(
@@ -71,12 +73,15 @@ describe('AdminReservationsScreen', () => {
       await tree!.root.findAllByType(Action).find(action => action.props.label === 'reservations.approve')!.props.onPress();
     });
 
+    expect(api.approve).not.toHaveBeenCalled();
+    await ReactTestRenderer.act(async () => { await dialog.mock.calls[0][2]![1].onPress!(); });
     expect(api.approve).toHaveBeenCalledWith('reservation-id');
     expect(api.requests).toHaveBeenCalled();
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
   it('permite a STAFF registrar llegada y no muestra aprobación de solicitudes', async () => {
+    const dialog = jest.spyOn(Feedback, 'alert');
     jest.mocked(useAuth).mockReturnValue({
       ...admin,
       user: { ...admin.user, rol: 'STAFF' },
@@ -96,6 +101,8 @@ describe('AdminReservationsScreen', () => {
     await ReactTestRenderer.act(async () => {
       await tree!.root.findAllByType(Action).find(action => action.props.label === 'reservations.markArrival')!.props.onPress();
     });
+    expect(api.markArrival).not.toHaveBeenCalled();
+    await ReactTestRenderer.act(async () => { await dialog.mock.calls[0][2]![1].onPress!(); });
     expect(api.markArrival).toHaveBeenCalledWith('reservation-id');
     ReactTestRenderer.act(() => tree!.unmount());
   });

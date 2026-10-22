@@ -85,7 +85,7 @@ export const UpcomingScreen: React.FC = () => {
                 },
               ]}
             >
-              PRÓXIMAMENTE
+              {t('upcoming.comingSoon')}
             </Text>
           </View>
         </View>
@@ -143,7 +143,7 @@ export const UpcomingScreen: React.FC = () => {
                 },
               ]}
             >
-              PRÓXIMAMENTE
+              {t('upcoming.comingSoon')}
             </Text>
           </View>
         </View>

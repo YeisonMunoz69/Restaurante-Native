@@ -1,16 +1,17 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { TextInput } from 'react-native';
+import { BackHandler, Linking, Text, TextInput } from 'react-native';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { useConnection } from '../../context/ConnectionContext';
 import { menuApi } from '../../services/menu.service';
 import { reservationsApi } from '../../services/reservations.service';
+import { paymentApi } from '../../services/payment.service';
 import { ReservationCreateScreen } from '../ReservationCreateScreen';
 
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
+const mockTranslate = (key: string) => key;
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: mockTranslate }) }));
+jest.mock('../../services/payment.service', () => ({ paymentApi: { current: jest.fn() } }));
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
@@ -30,6 +31,8 @@ const restaurantId = '00000000-0000-4000-8000-000000000011';
 const dishId = '00000000-0000-4000-8000-000000000012';
 const api = jest.mocked(reservationsApi);
 const menu = jest.mocked(menuApi);
+const payments = jest.mocked(paymentApi);
+const currentPayment = { whatsapp: '+573000000000', mediosPago: 'Medios ficticios', instruccionesPago: 'Solo prueba; no pagar', version: 1, configurada: true };
 
 const availableDish = {
   id: dishId,
@@ -65,6 +68,7 @@ describe('ReservationCreateScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    payments.current.mockResolvedValue(currentPayment);
     jest.mocked(useConnection).mockReturnValue({
       settings: { environment: 'dev', localUrl: '', restauranteId: restaurantId },
       isSaving: false,
@@ -84,6 +88,79 @@ describe('ReservationCreateScreen', () => {
       paginacion: { pagina: 1, tamanoPagina: 20, total: 1, totalPaginas: 1 },
     });
     api.create.mockResolvedValue(response as never);
+  });
+
+  it('el botón físico vuelve por cada paso y desde enviada termina sin abrir otro formulario', async () => {
+    let back!: () => boolean | null | undefined;
+    const subscription = jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_event, handler) => {
+      back = () => handler({} as never);
+      return { remove: jest.fn() };
+    });
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => { expect(back()).toBe(true); });
+    expect(tree!.root.findByProps({ testID: 'reservation-find-slots' })).toBeDefined();
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => { back(); });
+    expect(tree!.root.findByProps({ testID: 'reservation-continue-order' })).toBeDefined();
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress());
+    ReactTestRenderer.act(() => { back(); });
+    expect(tree!.root.findByProps({ testID: 'reservation-continue-without-order' })).toBeDefined();
+    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
+    await ReactTestRenderer.act(async () => { back(); });
+    expect(onCreated).toHaveBeenCalledTimes(1);
+    expect(api.create).toHaveBeenCalledTimes(1);
+    ReactTestRenderer.act(() => tree!.unmount());
+    subscription.mockRestore();
+  });
+
+  it.each(['sin-aplicacion', 'error-al-abrir', 'telefono-no-configurado'])('conserva código y ticket cuando WhatsApp falla: %s', async scenario => {
+    const canOpen = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(scenario !== 'sin-aplicacion');
+    const open = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('No disponible'));
+    if (scenario === 'telefono-no-configurado') payments.current.mockResolvedValue({ ...currentPayment, whatsapp: '', configurada: false });
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.sendWhatsApp')!.props.onPress(); });
+    if (scenario === 'telefono-no-configurado') expect(canOpen).not.toHaveBeenCalled();
+    else expect(canOpen).toHaveBeenCalledWith(expect.stringContaining('EC-20310223-ABCD1234'));
+    expect(open).toHaveBeenCalledTimes(scenario === 'error-al-abrir' ? 1 : 0);
+    expect(tree!.root.findAllByProps({ children: scenario === 'telefono-no-configurado' ? 'payments.unconfigured' : 'reservations.whatsappUnavailable' }).length).toBeGreaterThan(0);
+    expect(tree!.root.findAllByProps({ children: response.reserva.ticket }).length).toBeGreaterThan(0);
+    ReactTestRenderer.act(() => tree!.unmount());
+    canOpen.mockRestore(); open.mockRestore();
+  });
+
+  it('consulta datos vigentes antes de WhatsApp y no reutiliza cuentas antiguas sin red', async () => {
+    const canOpen = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true);
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
+    payments.current.mockResolvedValue({ ...currentPayment, whatsapp: '+573000000002', mediosPago: 'Llave nueva de prueba', version: 2 });
+    await ReactTestRenderer.act(async () => { await tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.sendWhatsApp')!.props.onPress(); });
+    expect(open).toHaveBeenCalledWith(expect.stringContaining('wa.me/573000000002'));
+    expect(decodeURIComponent(open.mock.calls[0][0])).toContain('Llave nueva de prueba');
+    expect(decodeURIComponent(open.mock.calls[0][0])).toContain(response.reserva.codigo);
+    payments.current.mockRejectedValue(new Error('Sin red'));
+    await ReactTestRenderer.act(async () => { await tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.sendWhatsApp')!.props.onPress(); });
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(tree!.root.findAllByProps({ children: 'payments.loadError' }).length).toBeGreaterThan(0);
+    expect(tree!.root.findAllByProps({ children: 'Llave nueva de prueba' })).toHaveLength(0);
+    ReactTestRenderer.act(() => tree!.unmount()); canOpen.mockRestore(); open.mockRestore();
   });
 
   it('consulta franjas y envía una solicitud antes de mostrar la confirmación real', async () => {
@@ -109,7 +186,7 @@ describe('ReservationCreateScreen', () => {
       await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress();
     });
     await ReactTestRenderer.act(async () => {
-      tree!.root.findAllByType(Action).find(action => action.props.label === 'reservations.reviewRequest')!.props.onPress();
+      await tree!.root.findByProps({ testID: 'reservation-continue-without-order' }).props.onPress();
     });
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress();
@@ -125,6 +202,24 @@ describe('ReservationCreateScreen', () => {
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
+  it('repasa las líneas y su subtotal en el resumen antes de enviar', async () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => {
+      const add = tree!.root.findAllByType(Action).find(a => a.props.label === '+')!;
+      add.props.onPress(); add.props.onPress();
+    });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.reviewRequest')!.props.onPress());
+    const texts = tree!.root.findAllByType(Text).flatMap(node => node.props.children);
+    expect(texts).toContain('reservations.orderLine');
+    expect(texts.map(value => typeof value === 'string' ? value.replace(/\s/g, '') : value)).toContain('$64.000');
+    expect(api.create).not.toHaveBeenCalled();
+    ReactTestRenderer.act(() => tree!.unmount());
+  });
+
   it('no permite revisar un grupo de ocho sin pedido anticipado', async () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => {
@@ -135,7 +230,7 @@ describe('ReservationCreateScreen', () => {
       );
     });
     ReactTestRenderer.act(() => {
-      tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.people')!.props.onChangeText('8');
+      tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.groupSize')!.props.onChangeText('8');
     });
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
@@ -181,6 +276,45 @@ describe('ReservationCreateScreen', () => {
     });
 
     expect(api.slots).toHaveBeenCalledWith({ fecha: nextWeek, numComensales: 2 });
+    ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('pide iniciar sesión antes de consultar y conserva el grupo seleccionado', async () => {
+    const onRequireLogin = jest.fn();
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(
+        <ThemeProvider>
+          <ReservationCreateScreen
+            onBack={onBack}
+            onCreated={onCreated}
+            isAuthenticated={false}
+            onRequireLogin={onRequireLogin}
+          />
+        </ThemeProvider>,
+      );
+    });
+    ReactTestRenderer.act(() => {
+      tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.groupSize')!.props.onChangeText('7');
+    });
+    await ReactTestRenderer.act(async () => {
+      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
+    });
+
+    expect(onRequireLogin).toHaveBeenCalledTimes(1);
+    expect(api.slots).not.toHaveBeenCalled();
+
+    await ReactTestRenderer.act(async () => {
+      tree!.update(
+        <ThemeProvider>
+          <ReservationCreateScreen onBack={onBack} onCreated={onCreated} isAuthenticated />
+        </ThemeProvider>,
+      );
+    });
+    await ReactTestRenderer.act(async () => {
+      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
+    });
+    expect(api.slots).toHaveBeenCalledWith(expect.objectContaining({ numComensales: 7 }));
     ReactTestRenderer.act(() => tree!.unmount());
   });
 });

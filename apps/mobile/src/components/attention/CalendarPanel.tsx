@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -27,19 +26,10 @@ import {
 } from '../../services/attention.service';
 import { Action, Field, Note, Panel } from './Controls';
 import { useTheme } from '../../theme/ThemeContext';
+import { todayInBogota } from '../../utils/formatters';
+import { Feedback as Alert } from '../feedback/Feedback';
 
-// Tomo la fecha comercial por componentes para evitar cambiarla por el huso del teléfono.
-export const commercialToday = () => {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Bogota',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  return ['year', 'month', 'day']
-    .map(type => parts.find(part => part.type === type)!.value)
-    .join('-');
-};
+export const commercialToday = todayInBogota;
 type Pending = {
   warning: CalendarClosureWarning;
   execute: (count?: number) => Promise<unknown>;
@@ -70,7 +60,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
   const showError = (error: unknown) => {
     const text = t(`attention.${attentionError(error)}`);
     setMessage(text);
-    Alert.alert(t('attention.errorTitle'), text);
+    Alert.alert(t('attention.errorTitle'), text, [], { kind: 'error' });
   };
   // Recargo del servidor para recuperar también los IDs recién creados.
   const load = async () => {
