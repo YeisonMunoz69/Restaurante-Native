@@ -9,7 +9,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import type { ReservationResult } from '@encanto/shared';
 import { useTranslation } from 'react-i18next';
 import { CalendarCheck } from 'lucide-react-native';
@@ -20,17 +20,10 @@ import { Action, Note, Panel } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { reservationsApi } from '../services/reservations.service';
 import { ReservationCreateScreen } from './ReservationCreateScreen';
+import { formatCop, formatDateDdMmYyyy } from '../utils/formatters';
 
 type ReservationTab = 'upcoming' | 'history';
 const upcomingStates = new Set(['SOLICITADA', 'CONFIRMADA', 'EN_CURSO']);
-
-function price(value: number) {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 function requestMessage(error: unknown, fallback: string) {
   const message = (error as { response?: { data?: { message?: unknown } } })
@@ -43,9 +36,14 @@ export const ReservationsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
   const { colors, typography, spacing } = useTheme();
   const { width } = useWindowDimensions();
   const [items, setItems] = useState<ReservationResult[]>([]);
+  const [details, setDetails] = useState<Record<string, ReservationResult>>({});
+  const [detailOpenId, setDetailOpenId] = useState<string | null>(null);
+  const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null);
+  const [detailErrorId, setDetailErrorId] = useState<string | null>(null);
   const [tab, setTab] = useState<ReservationTab>('upcoming');
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -83,10 +81,34 @@ export const ReservationsScreen: React.FC = () => {
             await load();
           } catch (cause) {
             setError(requestMessage(cause, t('reservations.cancelError')));
+            // Recargo después de un conflicto para mostrar el estado más reciente del servidor.
+            try {
+              setItems(await reservationsApi.mine());
+            } catch {
+              // Conservo el error de cancelación si tampoco hay conexión para recargar.
+            }
           }
         },
       },
     ]);
+  };
+
+  const toggleDetails = async (id: string) => {
+    if (detailOpenId === id && detailErrorId !== id) {
+      setDetailOpenId(null);
+      return;
+    }
+    setDetailOpenId(id);
+    setDetailLoadingId(id);
+    setDetailErrorId(null);
+    try {
+      const detail = await reservationsApi.detail(id);
+      setDetails(current => ({ ...current, [id]: detail }));
+    } catch {
+      setDetailErrorId(id);
+    } finally {
+      setDetailLoadingId(null);
+    }
   };
 
   const visible = items.filter(item =>
@@ -94,11 +116,22 @@ export const ReservationsScreen: React.FC = () => {
       ? upcomingStates.has(item.estado)
       : !upcomingStates.has(item.estado),
   );
+  const ordered = [...visible].sort((left, right) => {
+    if (tab === 'upcoming') {
+      const pendingFirst = Number(right.estado === 'SOLICITADA') - Number(left.estado === 'SOLICITADA');
+      if (pendingFirst) return pendingFirst;
+      return `${left.fecha}T${left.horaInicio}`.localeCompare(`${right.fecha}T${right.horaInicio}`);
+    }
+    return `${right.fecha}T${right.horaInicio}`.localeCompare(`${left.fecha}T${left.horaInicio}`);
+  });
 
   if (creating) {
     return (
       <ReservationCreateScreen
         onBack={() => setCreating(false)}
+        isAuthenticated={Boolean(user)}
+        isActive={isFocused}
+        onRequireLogin={() => navigation.navigate('Settings')}
         onCreated={async () => {
           setCreating(false);
           setTab('upcoming');
@@ -128,6 +161,7 @@ export const ReservationsScreen: React.FC = () => {
             <CalendarCheck size={40} color={colors.marca.primario} />
             <Text style={[typography.tituloM, { color: colors.texto.primario, marginTop: spacing.m }]}>{t('reservations.loginRequired')}</Text>
             <Note>{t('reservations.loginDescription')}</Note>
+            <Action testID="reservation-new" label={t('reservations.btnNewReservation')} onPress={() => setCreating(true)} />
             <Action label={t('reservations.openSettings')} onPress={() => navigation.navigate('Settings')} />
           </Panel>
         ) : (
@@ -143,23 +177,50 @@ export const ReservationsScreen: React.FC = () => {
             </View>
             {error && <Note live>{error}</Note>}
             {loading && <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />}
-            {!loading && visible.length === 0 ? (
+            {!loading && ordered.length === 0 ? (
               <Panel>
                 <CalendarCheck size={40} color={colors.texto.secundario} />
                 <Text style={[typography.tituloM, { color: colors.texto.primario, marginTop: spacing.m, textAlign: 'center' }]}>
                   {t(tab === 'upcoming' ? 'reservations.emptyUpcoming' : 'reservations.emptyHistory')}
                 </Text>
               </Panel>
-            ) : visible.map(reservation => (
+            ) : ordered.map(reservation => {
+              const detail = details[reservation.id] ?? reservation;
+              const minutesRemaining = minutesUntilReservation(reservation);
+              const cancellationTooLate = reservation.estado === 'CONFIRMADA' && minutesRemaining < 60;
+              return (
               <Panel key={reservation.id}>
                 <Text style={[typography.codigo, { color: colors.marca.primario }]}>{reservation.codigo}</Text>
-                <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{formatReservationDate(reservation.fecha)} · {reservation.horaInicio}–{reservation.horaFin}</Text>
+                <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{formatDateDdMmYyyy(reservation.fecha)} · {reservation.horaInicio}–{reservation.horaFin}</Text>
                 <Note>{t('reservations.people', { count: reservation.numComensales })} · {t(`reservations.status.${reservation.estado}`)}</Note>
-                <Note>{t('reservations.total')}: {price(reservation.total)}</Note>
+                <Note>{t('reservations.total')}: {formatCop(reservation.total)}</Note>
                 {reservation.motivoRechazo && <Note>{t('reservations.rejectionReason')}: {reservation.motivoRechazo}</Note>}
-                <Text selectable style={[typography.pie, { color: colors.texto.secundario }]}>{reservation.ticket}</Text>
+                {detailOpenId === reservation.id && (
+                  <>
+                    {detailLoadingId === reservation.id ? (
+                      <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />
+                    ) : detailErrorId === reservation.id ? (
+                      <Note live>{t('reservations.detailError')}</Note>
+                    ) : (
+                      <>
+                        {detail.lineas.length ? detail.lineas.map(line => (
+                          <Note key={line.platoId}>{t('reservations.orderLine', { quantity: line.cantidad, name: line.nombre })} · {formatCop(line.subtotal)}</Note>
+                        )) : <Note>{t('reservations.noOrder')}</Note>}
+                        {detail.nota && <Note>{t('reservations.note')}: {detail.nota}</Note>}
+                      </>
+                    )}
+                  </>
+                )}
+                <Action
+                  label={detailErrorId === reservation.id ? t('reservations.retryDetails') : detailOpenId === reservation.id ? t('reservations.hideDetails') : t('reservations.viewDetails')}
+                  disabled={detailLoadingId === reservation.id}
+                  onPress={() => void toggleDetails(reservation.id)}
+                />
                 {reservation.estado === 'SOLICITADA' || reservation.estado === 'CONFIRMADA' ? (
-                  <Action label={t('reservations.cancelAction')} onPress={() => cancel(reservation)} />
+                  <>
+                    {cancellationTooLate && <Note>{t('reservations.cancelTooLate')}</Note>}
+                    <Action label={t('reservations.cancelAction')} disabled={cancellationTooLate} onPress={() => cancel(reservation)} />
+                  </>
                 ) : null}
                 <Action label={t('reservations.copyTicket')} onPress={() => {
                   Clipboard.setString(reservation.ticket);
@@ -167,7 +228,8 @@ export const ReservationsScreen: React.FC = () => {
                 }} />
                 <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: reservation.ticket })} />
               </Panel>
-            ))}
+              );
+            })}
             <Action label={t('common.retry')} onPress={() => void load()} disabled={loading} />
           </>
         )}
@@ -175,16 +237,6 @@ export const ReservationsScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-function formatReservationDate(value: string) {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Intl.DateTimeFormat('es-CO', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(year, month - 1, day, 12)));
-}
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -194,3 +246,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8, marginTop: 8 },
   flex: { flex: 1 },
 });
+
+function minutesUntilReservation(reservation: ReservationResult) {
+  const start = Date.parse(`${reservation.fecha}T${reservation.horaInicio}:00-05:00`);
+  return Math.floor((start - Date.now()) / 60_000);
+}

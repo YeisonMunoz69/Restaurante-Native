@@ -15,15 +15,7 @@ import type { MenuDish } from '@encanto/shared';
 import { useTheme } from '../../theme/ThemeContext';
 import { menuApi } from '../../services/menu.service';
 import { publicMenuPhotoUrl } from './menu-photo';
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
+import { formatCop } from '../../utils/formatters';
 
 export function MenuDishDetailModal({
   visible,
@@ -169,7 +161,7 @@ export function MenuDishDetailModal({
               {dish.nombre}
             </Text>
             <Text style={[typography.tituloM, { color: colors.marca.acento }]}>
-              {formatPrice(dish.precio)}
+              {formatCop(dish.precio)}
             </Text>
             <Text
               style={[

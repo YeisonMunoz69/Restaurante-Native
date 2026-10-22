@@ -8,16 +8,9 @@ import { useTheme } from '../theme/ThemeContext';
 import { Action, Field, Note, Panel } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { reservationsApi, type ReservationWithCustomer } from '../services/reservations.service';
+import { todayInBogota } from '../utils/formatters';
 
 type Tab = 'requests' | 'agenda';
-
-function todayInBogota() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).formatToParts(new Date());
-  const get = (type: string) => parts.find(part => part.type === type)?.value ?? '01';
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
 
 function errorText(error: unknown, fallback: string) {
   const message = (error as { response?: { data?: { message?: unknown } } })
@@ -84,7 +77,7 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Action label={t('common.back')} onPress={onBack} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>{t('reservations.adminTitle')}</Text>
-        <Field label={t('reservations.agendaDate')} value={date} onChangeText={setDate} placeholder="AAAA-MM-DD" />
+        <Field label={t('reservations.agendaDate')} value={date} onChangeText={setDate} placeholder={t('reservations.datePlaceholder')} />
         {isAdmin && (
           <View style={styles.row}>
             <View style={styles.flex}><Action label={t('reservations.requests')} selected={tab === 'requests'} onPress={() => setTab('requests')} /></View>
