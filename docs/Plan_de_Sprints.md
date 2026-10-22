@@ -2,6 +2,8 @@
 
 ### App móvil — El Encanto Campestre
 
+**Continuación del 22 de octubre:** PR #15 incorpora pagos editables por ADMIN y componentes propios de confirmación/aviso. Pasan 202 pruebas API y 77 móviles; Docker ejecuta la imagen compilada sin montajes y S21 completa login, solicitudes de siete/ocho personas, actualización de estado, cancelación y edición de pagos con datos locales. Recorrimos cinco páginas/cien platos; falta rendimiento representativo de EC-22. Bucket `platos` y carga/lectura/limpieza real aprobados con autorización; falta galería integral de EC-27. EC-35 registra la decisión directamente en Jira y EC-27 su evidencia, sin marcar Listo. No fusionamos ni desplegamos. [Acta vigente](Pagos_Dinamicos_y_QA_2026-10-22.md); Google sigue preparado, no implementado.
+
 **Versión:** 0.5 · **Plan base:** 20 de agosto de 2026 · **Corte de estado:** 16 de octubre de 2026 · Complementa a `Sprint0_Analisis_y_Diseno.md`
 
 **Corte de cierre del 16 de octubre:** integramos PR #11 en `dev`, merge `0245146`, conservando el subconjunto de PR #10 y todos los commits posteriores. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles. Registramos en Jira que Yeison asume EC-22/23/24/26/27/28/29/30; EC-25 conserva a Fabián. EC-22 mantiene pendiente la prueba física con 100 platos y EC-27 la validación real de Storage, ambas sin Listo. Los resultados de VPS, estados finales y registro del sprint están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md). Este corte prevalece sobre las notas históricas siguientes.

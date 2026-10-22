@@ -10,6 +10,8 @@ El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejand
 
 **Estado de implementación al cierre del 16 de octubre:** H-10–H-12 están codificadas y probadas, integradas en `dev` mediante PR #11 (`0245146`). La aceptación de Sprint 3 y la sincronización de sus actividades conservan seguimiento independiente. Google y la reorganización de Ajustes siguen pendientes para Sprint 5; no se implementaron en este cierre. En Sprint 2, EC-22 conserva la prueba de 100 platos y EC-27 Storage real; [el acta de cierre](Cierre_Sprint2_2026-10-16.md) distingue lo integrado de lo aceptado.
 
+**Decisión y avance del 22 de octubre:** Yeison confirmó que el dueño debe poder cambiar contacto y medios de pago desde su panel, con texto manual. Lo implementamos en PR #15, sin merge: datos persistidos, acceso ADMIN y consulta vigente del comensal. Registramos el alcance directamente en EC-35. También adelantamos el componente propio de diálogos/avisos de RNF-09/10; no damos por completada toda la auditoría de accesibilidad ni todos los estados de carga. Evidencia y pendientes en [Pagos_Dinamicos_y_QA_2026-10-22.md](Pagos_Dinamicos_y_QA_2026-10-22.md).
+
 ---
 
 ## Ficha
@@ -54,7 +56,7 @@ El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejand
 | B-7  | Pedido anticipado      | Desde 8 personas se seleccionan los platos en la app, se arma la lista y se separa mesa. Se puede adicionar después de confirmado pagando el excedente. Sin reembolsos; sí cambios por productos de igual o mayor precio |
 | B-8  | Combinación de mesas   | Sin tope de dos: se unen las que hagan falta, hasta mesas de 40 personas                                                                                                                                                 |
 | B-9  | Confirmación           | Manual. Cada reserva la acepta un dueño después de verificar el pago. Puede haber varias cuentas con ese rol                                                                                                             |
-| B-10 | Pagos                  | Fuera de la app: efectivo, PSE o Nequi al número del dueño. Sin límite de reservas activas: lo que regula es la aprobación del dueño                                                                                     |
+| B-10 | Pagos                  | Fuera de la app, sin pasarela ni aprobación automática. ADMIN/dueño escribe y modifica WhatsApp con indicativo, medios/datos para recibir pagos e instrucciones: efectivo, Nequi, llave de transferencia u otros, sin catálogo cerrado. Los clientes consultan los datos vigentes; nunca almacenamos PIN ni contraseñas bancarias. Sin límite de reservas activas: regula la aprobación del dueño. |
 | B-11 | Inasistencias          | No se restringe al usuario. El panel muestra al dueño una alerta con el número de cancelaciones previas                                                                                                                  |
 | B-12 | Días de atención       | Calendario anual que el dueño marca. Base: fines de semana y festivos de Colombia. Entre semana solo se abre por reserva de 15+ personas                                                                                 |
 | B-13 | Zona VIP "Mirador"     | Hasta 10 personas + 2 niños, con costo adicional de servicio. Se coordina por WhatsApp, no se reserva desde la app                                                                                                       |
@@ -67,7 +69,7 @@ Cliente elige fecha, personas y platos (obligatorio desde 8 personas)
         ↓
 La app genera un ticket con el detalle y el total
         ↓
-Cliente paga por fuera (efectivo / PSE / Nequi) y envía comprobante por WhatsApp
+Cliente consulta los medios vigentes configurados por el dueño, paga por fuera y coordina el comprobante por WhatsApp
         ↓
 El dueño verifica y ACEPTA la reserva desde el panel
         ↓

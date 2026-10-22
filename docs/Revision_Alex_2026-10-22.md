@@ -1,5 +1,7 @@
 # Revisión de Alex y continuación de reservas, 22 de octubre
 
+**Continuación del mismo día:** esta acta conserva la primera ronda. Después probamos Docker, el recorrido autenticado en S21, pagos editables, diálogos propios y acceso/carga/limpieza real de Storage. Actualizamos EC-35 y registramos evidencia de EC-27 sin cerrar historias. Los resultados vigentes y pendientes sustituyen los de esta primera ronda en [Pagos_Dinamicos_y_QA_2026-10-22.md](Pagos_Dinamicos_y_QA_2026-10-22.md).
+
 Revisamos GitHub, Jira y código. No fusionamos en `dev` ni `main`, no cambiamos estados/responsables en Jira y no hicimos escrituras de prueba en Supabase compartido ni VPS. EC-22/27 conservan sus pendientes; esta revisión no cierra Sprint 3.
 
 ## Entrega real
