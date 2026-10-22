@@ -5,6 +5,7 @@ import { useConnection } from '../../context/ConnectionContext';
 import { menuApi } from '../../services/menu.service';
 import { MenuScreen } from '../MenuScreen';
 import { ThemeProvider } from '../../theme/ThemeContext';
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: jest.fn() }) }));
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
