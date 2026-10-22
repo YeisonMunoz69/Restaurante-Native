@@ -12,11 +12,14 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FeedbackHost } from './src/components/feedback/Feedback';
 import { BottomTabNavigator } from './src/navigation/BottomTabNavigator';
 import { ConnectionProvider } from './src/context/ConnectionContext';
+import { useConnection } from './src/context/ConnectionContext';
+import { OrderDraftProvider } from './src/context/OrderDraftContext';
 
 // componente interno que conecta el tema de React Navigation con nuestro ThemeContext
 const AppContent: React.FC = () => {
   const { isDark, colors } = useTheme();
   const { user } = useAuth();
+  const { settings } = useConnection();
 
   // adaptamos el tema de navegacion para que coincida con nuestros tokens
   const navTheme = isDark
@@ -46,7 +49,9 @@ const AppContent: React.FC = () => {
   return (
     <NavigationContainer theme={navTheme}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <BottomTabNavigator />
+      <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
+        <BottomTabNavigator />
+      </OrderDraftProvider>
       <FeedbackHost scope={user?.id} />
     </NavigationContainer>
   );
