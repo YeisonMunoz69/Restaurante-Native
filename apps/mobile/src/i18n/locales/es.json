@@ -33,6 +33,27 @@
     "noPhotos": "Este plato todavía no tiene fotos publicadas.",
     "allergens": "Alérgenos"
   },
+  "payments": {
+    "title": "Contacto y medios de pago",
+    "help": "Escribe los medios que aceptan y sus datos: efectivo, Nequi, llave de transferencia u otros. Incluye solo información para recibir pagos, nunca PIN ni contraseñas. Puedes editarla cuando cambie. Dejar los campos vacíos retira las instrucciones publicadas.",
+    "whatsapp": "WhatsApp con indicativo (por ejemplo +57 seguido del número)",
+    "methods": "Medios y datos para pagar (texto libre)",
+    "instructions": "Instrucciones de pago y envío del comprobante",
+    "save": "Guardar datos de pago",
+    "reload": "Consultar datos vigentes",
+    "confirmTitle": "¿Publicar estos datos de pago?",
+    "confirmBody": "Los clientes verán estos datos al consultar las instrucciones. Verifica números, titular y llave antes de guardar. Esto no aprueba ninguna reserva.",
+    "saved": "Guardamos los datos. Ya se pueden consultar sin reiniciar la aplicación.",
+    "loadError": "No pudimos consultar los datos vigentes. Reintenta antes de pagar o enviar un comprobante.",
+    "saveError": "No pudimos guardar. Conservamos lo que escribiste para reintentar.",
+    "invalid": "Revisa el teléfono con + e indicativo y la longitud de las instrucciones.",
+    "conflict": "Otro administrador cambió los datos. Conservamos tu edición; recarga los datos vigentes antes de volver a guardar.",
+    "discardTitle": "¿Descartar los cambios sin guardar?",
+    "discardBody": "Todavía tienes una edición pendiente en este formulario.",
+    "discard": "Descartar cambios",
+    "unconfigured": "El restaurante todavía no publicó todos los datos de pago y contacto. Tu solicitud sigue pendiente; consulta más tarde las instrucciones vigentes.",
+    "currentTitle": "Datos de pago vigentes del restaurante"
+  },
   "reservations": {
     "title": "Mis Reservas",
     "subtitle": "Consulta el estado de tus solicitudes o programa tu visita",
@@ -233,6 +254,7 @@
     "loggingIn": "Iniciando sesión..."
   },
   "common": {
+    "cancel": "Cancelar",
     "loading": "Cargando...",
     "error": "Ocurrió un error inesperado",
     "retry": "Reintentar",
