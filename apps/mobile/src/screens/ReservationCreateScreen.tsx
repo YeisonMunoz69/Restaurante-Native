@@ -320,6 +320,11 @@ export function ReservationCreateScreen({
             <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{t('reservations.reviewTitle')}</Text>
             <Note>{formatCivilDate(selectedDate)} · {selectedSlot.horaInicio}–{selectedSlot.horaFin}</Note>
             <Note>{t('reservations.people', { count: people })}</Note>
+            {orderLines.length ? orderLines.map(([id, quantity]) => {
+              // Repaso cada plato antes de enviar; la API vuelve a validar precios y disponibilidad.
+              const dish = dishes.find(item => item.id === id)!;
+              return <Note key={id}>{t('reservations.orderLine', { quantity, name: dish.nombre })} · {formatCop(dish.precio * quantity)}</Note>;
+            }) : <Note>{t('reservations.noOrder')}</Note>}
             <Note>{t('reservations.orderTotal')}: {formatCop(total)}</Note>
             <Note>{t('reservations.paymentNotice')}</Note>
             <Note>{t('reservations.cancellationPolicy')}</Note>

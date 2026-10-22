@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { BackHandler, Linking, TextInput } from 'react-native';
+import { BackHandler, Linking, Text, TextInput } from 'react-native';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { useConnection } from '../../context/ConnectionContext';
@@ -172,6 +172,24 @@ describe('ReservationCreateScreen', () => {
       lineas: [],
     }));
     expect(tree!.root.findAllByType(Action).some(action => action.props.label === 'reservations.sendWhatsApp')).toBe(true);
+    ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('repasa las líneas y su subtotal en el resumen antes de enviar', async () => {
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
+    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    ReactTestRenderer.act(() => {
+      const add = tree!.root.findAllByType(Action).find(a => a.props.label === '+')!;
+      add.props.onPress(); add.props.onPress();
+    });
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.reviewRequest')!.props.onPress());
+    const texts = tree!.root.findAllByType(Text).flatMap(node => node.props.children);
+    expect(texts).toContain('reservations.orderLine');
+    expect(texts.map(value => typeof value === 'string' ? value.replace(/\s/g, '') : value)).toContain('$64.000');
+    expect(api.create).not.toHaveBeenCalled();
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
