@@ -21,6 +21,7 @@ import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
 import { PaymentSettingsScreen } from './PaymentSettingsScreen';
+import { AdminsScreen } from './AdminsScreen';
 import { useConnection } from '../context/ConnectionContext';
 import {
   Moon,
@@ -52,7 +53,7 @@ export const SettingsScreen: React.FC = () => {
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
-  const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | 'payments' | null>(null);
+  const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | 'payments' | 'admins' | null>(null);
 
   // Regreso al formulario que quedó montado en Reservas después de autenticar.
   useEffect(() => {
@@ -92,6 +93,8 @@ export const SettingsScreen: React.FC = () => {
 
   if (adminView === 'attention' && user?.rol === 'ADMIN')
     return <AttentionScreen onBack={() => setAdminView(null)} />;
+  if (adminView === 'admins' && user?.rol === 'ADMIN')
+    return <AdminsScreen onBack={() => setAdminView(null)} />;
   if (adminView === 'payments' && user?.rol === 'ADMIN')
     return <PaymentSettingsScreen onBack={() => setAdminView(null)} />;
   if (adminView === 'menu' && user?.rol === 'ADMIN')
@@ -127,6 +130,7 @@ export const SettingsScreen: React.FC = () => {
         <View>
           <Action label={t('menuAdmin.title')} onPress={() => setAdminView('menu')} />
           <Action label={t('payments.title')} onPress={() => setAdminView('payments')} />
+          <Action label={t('admins.title')} onPress={() => setAdminView('admins')} />
           <Action label={t('reservations.adminTitle')} onPress={() => setAdminView('reservations')} />
           <Action
             label={t('attention.title')}
