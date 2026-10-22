@@ -21,6 +21,8 @@ try {
   for (const n of [2, 3]) await db.user.upsert({ where: { correo: `qa-admin-${n}@example.test` }, update: {}, create: { nombre: `Administrador QA ${n}`, correo: `qa-admin-${n}@example.test`, telefono: '', passwordHash: admin.passwordHash, rol: 'ADMIN' } });
   // Retiro únicamente el producto sintético de esta ejecución; no borro registros ni fotos.
   await db.dish.update({ where: { id: state.dishId }, data: { activo: false } });
+  const synthetic = await db.dish.findUniqueOrThrow({ where: { id: state.dishId }, select: { categoryId: true } });
+  await db.category.update({ where: { id: synthetic.categoryId }, data: { activa: false } });
   await db.timeSlot.deleteMany({ where: { restaurantId: state.restaurantId } });
   await db.timeSlot.createMany({ data: [{ restaurantId: state.restaurantId, diaSemana: 0, horaApertura: '10:00', horaCierre: '18:00', abierto: true, servicios: ['RESTAURANTE', 'PESCA'] }, { restaurantId: state.restaurantId, diaSemana: 1, horaApertura: '10:00', horaCierre: '18:00', abierto: true, servicios: ['RESTAURANTE'] }] });
   await db.calendarDay.upsert({ where: { restaurantId_fecha: { restaurantId: state.restaurantId, fecha: new Date('2026-10-24') } }, update: {}, create: { restaurantId: state.restaurantId, fecha: new Date('2026-10-24'), abierto: true, horaApertura: '08:00', horaCierre: '16:00', servicios: ['PESCA', 'MOTOS'], motivo: 'Jornada informativa de pesca y motos; cocina cerrada.' } });
