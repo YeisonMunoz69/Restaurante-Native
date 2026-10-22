@@ -60,6 +60,9 @@
     "currentTitle": "Datos de pago vigentes del restaurante"
   },
   "reservations": {
+    "confirmChange": "¿Aplicar este cambio a la reserva?",
+    "applyChange": "Sí, aplicar cambio",
+    "confirmOperation": "Revisa la reserva {{code}} y la acción que elegiste. Confirma solo si corresponde; para aprobar debes haber verificado el pago. Los estados finales no se pueden deshacer.",
     "title": "Mis Reservas",
     "subtitle": "Consulta el estado de tus solicitudes o programa tu visita",
     "btnNewReservation": "Solicitar nueva reserva",

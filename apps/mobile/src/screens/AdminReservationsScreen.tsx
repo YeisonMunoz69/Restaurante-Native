@@ -57,7 +57,7 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
     void load();
   }, [load]);
 
-  const act = async (id: string, operation: () => Promise<unknown>) => {
+  const executeAct = async (id: string, operation: () => Promise<unknown>) => {
     if (busyId) return;
     setBusyId(id);
     setError(null);
@@ -69,6 +69,16 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
     } finally {
       setBusyId(null);
     }
+  };
+
+  // Una pulsación abre la confirmación; el cambio solo se envía al aceptar expresamente.
+  const act = (id: string, operation: () => Promise<unknown>, label: string) => {
+    if (busyId) return;
+    const reservation = [...requests, ...agenda].find(item => item.id === id);
+    Alert.alert(label, t('reservations.confirmOperation', { code: reservation?.codigo ?? id }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: label, onPress: () => executeAct(id, operation) },
+    ]);
   };
 
   if (!isAdmin && !isStaff) return <Note>{t('menuAdmin.forbidden')}</Note>;
@@ -97,9 +107,9 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
             <Note>{reservation.cliente.telefono} · {t('reservations.people', { count: reservation.numComensales })}</Note>
             {(reservation.cliente.cancelaciones > 0 || reservation.cliente.inasistencias > 0) && <Note>{t('reservations.previousRecords', { cancellations: reservation.cliente.cancelaciones, noShows: reservation.cliente.inasistencias })}</Note>}
             <Text selectable style={[typography.pie, { color: colors.texto.secundario }]}>{reservation.ticket}</Text>
-            <Action label={t('reservations.approve')} disabled={busyId === reservation.id} onPress={() => void act(reservation.id, () => reservationsApi.approve(reservation.id))} />
+            <Action label={t('reservations.approve')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.approve(reservation.id), t('reservations.approve'))} />
             <Field label={t('reservations.rejectionReason')} value={reasons[reservation.id] ?? ''} onChangeText={value => setReasons(current => ({ ...current, [reservation.id]: value }))} maxLength={500} />
-            <Action label={t('reservations.reject')} disabled={busyId === reservation.id || (reasons[reservation.id] ?? '').trim().length < 3} onPress={() => void act(reservation.id, () => reservationsApi.reject(reservation.id, { motivo: reasons[reservation.id].trim() }))} />
+            <Action label={t('reservations.reject')} disabled={busyId === reservation.id || (reasons[reservation.id] ?? '').trim().length < 3} onPress={() => act(reservation.id, () => reservationsApi.reject(reservation.id, { motivo: reasons[reservation.id].trim() }), t('reservations.reject'))} />
             <Action label={t('reservations.copyTicket')} onPress={() => {
               Clipboard.setString(reservation.ticket);
               Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
@@ -115,9 +125,9 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
             <Note>{reservation.cliente.telefono} · {t('reservations.people', { count: reservation.numComensales })} · {t(`reservations.status.${reservation.estado}`)}</Note>
             {(reservation.cliente.cancelaciones > 0 || reservation.cliente.inasistencias > 0) && <Note>{t('reservations.previousRecords', { cancellations: reservation.cliente.cancelaciones, noShows: reservation.cliente.inasistencias })}</Note>}
             <Text selectable style={[typography.pie, { color: colors.texto.secundario }]}>{reservation.ticket}</Text>
-            {reservation.estado === 'CONFIRMADA' && <Action label={t('reservations.markArrival')} disabled={busyId === reservation.id} onPress={() => void act(reservation.id, () => reservationsApi.markArrival(reservation.id))} />}
-            {reservation.estado === 'CONFIRMADA' && reservation.puedeMarcarInasistencia && <Action label={t('reservations.markNoShow')} disabled={busyId === reservation.id} onPress={() => void act(reservation.id, () => reservationsApi.markNoShow(reservation.id))} />}
-            {reservation.estado === 'EN_CURSO' && <Action label={t('reservations.complete')} disabled={busyId === reservation.id} onPress={() => void act(reservation.id, () => reservationsApi.complete(reservation.id))} />}
+            {reservation.estado === 'CONFIRMADA' && <Action label={t('reservations.markArrival')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.markArrival(reservation.id), t('reservations.markArrival'))} />}
+            {reservation.estado === 'CONFIRMADA' && reservation.puedeMarcarInasistencia && <Action label={t('reservations.markNoShow')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.markNoShow(reservation.id), t('reservations.markNoShow'))} />}
+            {reservation.estado === 'EN_CURSO' && <Action label={t('reservations.complete')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.complete(reservation.id), t('reservations.complete'))} />}
             <Action label={t('reservations.copyTicket')} onPress={() => {
               Clipboard.setString(reservation.ticket);
               Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
