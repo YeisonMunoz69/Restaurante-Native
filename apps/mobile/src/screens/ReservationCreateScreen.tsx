@@ -233,7 +233,7 @@ export function ReservationCreateScreen({
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
-      <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView key={step} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <BackButton disabled={busy} onPress={step === 'date' ? onBack : goBackStep} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>{t(step === 'sent' ? 'reservations.sentTitle' : 'reservations.createTitle')}</Text>
         {step !== 'sent' && <Note>{t(`reservations.steps.${step}`)}</Note>}

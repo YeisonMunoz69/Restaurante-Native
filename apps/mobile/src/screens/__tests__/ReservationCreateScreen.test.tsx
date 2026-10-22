@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { BackHandler, Linking, Text, TextInput } from 'react-native';
+import { BackHandler, Linking, ScrollView, Text, TextInput } from 'react-native';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { useConnection } from '../../context/ConnectionContext';
@@ -184,9 +184,12 @@ describe('ReservationCreateScreen', () => {
       );
     });
 
+    const initialScroll = tree!.root.findByType(ScrollView);
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
     });
+    // Cada paso remonta solo el desplazamiento; conservo la selección en el formulario padre.
+    expect(tree!.root.findByType(ScrollView)).not.toBe(initialScroll);
     await ReactTestRenderer.act(async () => {
       tree!.root
         .findAllByType(Action)
