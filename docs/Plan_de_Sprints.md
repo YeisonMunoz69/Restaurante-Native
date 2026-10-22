@@ -1,5 +1,7 @@
 # Plan de sprints — 28 de agosto al 13 de noviembre de 2026
 
+**Ampliación del 22 de octubre, todavía en PR #16:** continuamos desde PR #15 sin merge. Entregamos Mi Pedido, carta original sin fotos, calendario por actividades y dos APK de ensayo; EC-33/29/22 tienen actualización directa en Jira. Añadimos EC-73 (Yeison, En curso, backlog) para gestión de administradores con mínimo de tres activos. No reabrimos el sprint cerrado ni movemos puntos a Listo por código local. Google necesita configuración manual e implementación; EC-22/27 conservan su aceptación pendiente. [Acta y evidencia](Pedido_y_Calendario_2026-10-22.md).
+
 ### App móvil — El Encanto Campestre
 
 **Continuación del 22 de octubre:** PR #15 incorpora pagos editables por ADMIN y componentes propios de confirmación/aviso. Pasan 202 pruebas API y 77 móviles; Docker ejecuta la imagen compilada sin montajes y S21 completa login, solicitudes de siete/ocho personas, actualización de estado, cancelación y edición de pagos con datos locales. Recorrimos cinco páginas/cien platos; falta rendimiento representativo de EC-22. Bucket `platos` y carga/lectura/limpieza real aprobados con autorización; falta galería integral de EC-27. EC-35 registra la decisión directamente en Jira y EC-27 su evidencia, sin marcar Listo. No fusionamos ni desplegamos. [Acta vigente](Pagos_Dinamicos_y_QA_2026-10-22.md); Google sigue preparado, no implementado.

@@ -29,3 +29,28 @@ Quitar Restaurante de una fecha con reservas confirmadas exige la advertencia de
 Actualizamos B-12, RN-12, RF-MEN01, RF-RES01/03/04/17 y RF-ADM06. El cierre de implementación, comandos, pruebas, capturas y referencia de Jira se completan después de validar; este documento no declara historias Listo por anticipado.
 
 **Pendiente actualizar requisitos en Drive y Word local:** B-12/RN-12 (domingos/festivos, actividades y retiro de mínimo de quince), RF-RES01/03/04/17 y RF-ADM06 (calendario/contacto), RF-MEN01 (tres carruseles y Mi Pedido). Debemos registrar también el cambio directamente en Jira; editar Markdown no sincroniza esos sistemas.
+
+## Validación e integración
+
+Publicamos [PR #16 hacia dev](https://github.com/YeisonMunoz69/Restaurante-Native/pull/16). Continúa sobre PR #15, aún sin integrar: incluye sus commits y requiere revisar esa dependencia. No fusionamos en dev/main ni ejecutamos migraciones o cargas en Supabase/VPS.
+
+| Comprobación | Resultado y límite |
+| --- | --- |
+| `npm run test --workspace=api`, con las dos variables de test apuntando a PostgreSQL local dedicado | 216 pruebas en 27 archivos, sin omisiones; build y lint API aprobados. |
+| `npm run test --workspace=@encanto/mobile` | 91 pruebas en 28 suites; TypeScript/i18n aprobados. Lint: 0 errores, 51 advertencias. |
+| `assembleLocalDebug`, `assembleVpsDebug`, ARM64 | Compilados e instalados. VPS incluye bundle; recompilado tras corregir Mi Pedido. Firma debug comprobada. `vpsRelease` no aprobado: error CMake/Ninja de Windows. |
+| Docker, runtime construido y ejecutado | Mismo ID `sha256:4f7e9fa762a09e07e33a54b1da9d8741040aa89650777ac323b1bc7b679500ca`, comando `node dist/main.js`, cero montajes, salud conectada dentro/fuera. Nueve migraciones aplicadas en esquema local temporal. |
+| `npx tsx apps/api/test/prepare-redesign-qa.ts`, opt-in con archivo privado externo | 44 productos sin fotos; Pesca/Motos sin franjas de mesa; lunes habilitado para dos; ADMIN 401/403/200, mínimo 409, correo inválido 400 y cuenta inexistente 404. Rechaza destinos fuera de la base/esquema local dedicado. |
+| S21 | Pedido editable/recalculo, notas/servicios, Pesca/Motos con consulta de mesas deshabilitada y carta original desde Docker. EncantoApp reiniciada sin reverse de Metro consultó HTTPS; esa carta aún tiene los datos anteriores de VPS, no certifica importación remota. |
+
+La prueba física detectó errores de montaje de vistas al cerrar un Modal nativo y navegar inmediatamente. Sustituimos la hoja por una superposición propia dentro de la pantalla: conserva atrás físico, confirmación para solo mesa y borrador. Las pruebas verifican que no abre otra ventana Modal. No equivale a certificar lector de pantalla, todos los tamaños o rendimiento en 4G. [Capturas y alcance](evidencias/pedido-calendario-s21-2026-10-22/README.md).
+
+Jira actualizado directamente: EC-33, criterios de Mi Pedido y pedido opcional 1–7/obligatorio desde ocho; EC-29, calendario/servicios y retiro de la regla anterior; EC-22, comentario de carta real con rendimiento pendiente. Creamos [EC-73](https://yjmunoz.atlassian.net/browse/EC-73), En curso y a cargo de Yeison, para mínimo de tres administradores. No reabrimos ni cerramos Sprint 2 por esta ampliación.
+
+## Ampliaciones y pendientes manuales
+
+La [carta original](Carta_Original_2026-10-22.md) contiene 44 referencias, todas disponibles inicialmente por confirmación de Yeison, editables y sin fotos. Empanada unidad $1.000, porción de seis $6.000. Repetir el importador no reactiva ni reemplaza precios de registros editados. Falta previsualizar/aprobar la carga en la VPS después de revisar/integrar.
+
+La regla [mínimo de tres administradores](Administradores_Minimo_Tres.md) quedó en Reglas.md §9, B-15, RN-15 y RF-ADM15: historial conservado, protección concurrente y auditoría. Una base anterior con menos de tres requiere designar personas reales; no creamos cuentas ficticias compartidas. Pendiente actualizar requisitos en Drive y Word local: estas nuevas secciones y B-16/carta original.
+
+La [guía Google](Google_Login_Preparacion.md) explica dos clientes Android, un cliente Web y variables públicas/privadas. Falta crearlos manualmente e implementar/verificar Google. No pedimos Client secret ni exponemos service_role en el APK. Faltan aceptación integral de galería EC-27 y horarios reales del dueño antes de desplegar.
