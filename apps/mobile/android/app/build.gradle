@@ -7,6 +7,12 @@ apply plugin: "com.facebook.react"
  * By default you don't need to apply any configuration, just uncomment the lines you need.
  */
 react {
+    // React Native 0.87 instala el compilador en hermes-compiler, fuera de react-native/sdks.
+    def hostOs = System.getProperty("os.name").toLowerCase()
+    def hermesPlatform = hostOs.contains("windows") ? "win64-bin" : (hostOs.contains("mac") ? "osx-bin" : "linux64-bin")
+    hermesCommand = file("../../../../node_modules/hermes-compiler/hermesc/${hermesPlatform}/hermesc${hostOs.contains('windows') ? '.exe' : ''}").absolutePath
+    // Solo Local usa Metro; VPS incluye JS incluso en su APK de ensayo firmado como debug.
+    debuggableVariants = ["localDebug"]
     // Resuelvo los paquetes desde la raíz del monorepo sin duplicar instalaciones.
     reactNativeDir = file("../../../../node_modules/react-native")
     codegenDir = file("../../../../node_modules/@react-native/codegen")
@@ -77,6 +83,7 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
+    buildFeatures { buildConfig true }
     // Acorto las rutas temporales de C++ en Windows para respetar el límite de Ninja.
     if (System.getProperty("os.name").toLowerCase().contains("windows")) {
         externalNativeBuild {
@@ -101,6 +108,20 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        buildConfigField "String", "GOOGLE_WEB_CLIENT_ID", '"' + (System.getenv("ENCANTO_GOOGLE_WEB_CLIENT_ID") ?: "") + '"'
+    }
+    // Dos instalaciones separadas, con almacenamiento y sesiones independientes.
+    flavorDimensions "environment"
+    productFlavors {
+        local {
+            dimension "environment"
+            applicationIdSuffix ".local"
+            buildConfigField "String", "BACKEND_ENV", '"local"'
+        }
+        vps {
+            dimension "environment"
+            buildConfigField "String", "BACKEND_ENV", '"dev"'
+        }
     }
     signingConfigs {
         debug {

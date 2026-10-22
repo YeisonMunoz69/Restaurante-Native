@@ -12,8 +12,10 @@ class MainApplication : Application(), ReactApplication {
   override val reactHost: ReactHost by lazy {
     getDefaultReactHost(
       context = applicationContext,
+      useDevSupport = BuildConfig.DEBUG && BuildConfig.BACKEND_ENV == "local",
       packageList =
         PackageList(this).packages.apply {
+          add(EncantoBuildPackage())
           // Registro aquí los paquetes nativos que React Native no pueda enlazar automáticamente.
         },
     )
