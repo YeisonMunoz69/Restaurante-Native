@@ -11,6 +11,7 @@ import { ReservationsScreen } from '../ReservationsScreen';
 const mockTranslate = (key: string) => key;
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: mockTranslate }) }));
 jest.mock('../../context/AuthContext', () => ({ useAuth: jest.fn() }));
+jest.mock('../../components/PaymentInstructions', () => ({ PaymentInstructions: () => null }));
 jest.mock('@react-navigation/native', () => ({
   useIsFocused: () => true,
   useNavigation: () => ({ navigate: jest.fn() }),

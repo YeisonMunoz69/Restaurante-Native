@@ -20,6 +20,7 @@ import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { reservationsApi } from '../services/reservations.service';
 import { Feedback as Alert } from '../components/feedback/Feedback';
 import { ReservationCreateScreen } from './ReservationCreateScreen';
+import { PaymentInstructions } from '../components/PaymentInstructions';
 import { formatCop, formatDateDdMmYyyy } from '../utils/formatters';
 
 type ReservationTab = 'upcoming' | 'history';
@@ -238,6 +239,7 @@ export const ReservationsScreen: React.FC = () => {
                           <Note key={line.platoId}>{t('reservations.orderLine', { quantity: line.cantidad, name: line.nombre })} · {formatCop(line.subtotal)}</Note>
                         )) : <Note>{t('reservations.noOrder')}</Note>}
                         {detail.nota && <Note>{t('reservations.note')}: {detail.nota}</Note>}
+                        {(detail.estado === 'SOLICITADA' || detail.estado === 'CONFIRMADA') && <PaymentInstructions codigo={detail.codigo} ticket={detail.ticket} />}
                       </>
                     )}
                   </>
