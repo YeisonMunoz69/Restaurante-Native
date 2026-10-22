@@ -215,6 +215,7 @@ export function ReservationCreateScreen({
     try {
       setResult(await reservationsApi.create(parsed.data));
       draft.clear();
+      setMessage(null);
       setStep('sent');
     } catch (cause) {
       setError(errorText(cause, t('reservations.createError')));

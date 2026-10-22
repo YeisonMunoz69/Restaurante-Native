@@ -360,6 +360,7 @@ describe('ReservationCreateScreen', () => {
     await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
     expect(api.create).toHaveBeenLastCalledWith(expect.objectContaining({ lineas: [{ platoId: dishId, cantidad: 2 }] }));
     expect(draft.lines).toEqual([]);
+    expect(tree.root.findAllByProps({ children: 'discovery.revalidate' })).toHaveLength(0);
     ReactTestRenderer.act(() => tree.unmount());
   });
 });
