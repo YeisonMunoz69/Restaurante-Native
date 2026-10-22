@@ -45,6 +45,8 @@ Publicamos [PR #16 hacia dev](https://github.com/YeisonMunoz69/Restaurante-Nativ
 
 La prueba física detectó errores de montaje de vistas al cerrar un Modal nativo y navegar inmediatamente. Sustituimos la hoja por una superposición propia dentro de la pantalla: conserva atrás físico, confirmación para solo mesa y borrador. Las pruebas verifican que no abre otra ventana Modal. No equivale a certificar lector de pantalla, todos los tamaños o rendimiento en 4G. [Capturas y alcance](evidencias/pedido-calendario-s21-2026-10-22/README.md).
 
+Completamos también en S21 el envío real contra Docker: desde la carta original elegimos Costilla Ahumada, cambiamos al lunes 26, grupo de dos, desvío al login y retorno conservando la selección, franja 14:00–15:30, resumen $30.000 y solicitud enviada pendiente de revisión. Una consulta Prisma independiente comprobó `SOLICITADA`, dos comensales, una línea y precio unitario/total de $30.000. Mi Pedido volvió a cero tras aceptar la API. No confirmamos ni pagamos la reserva. Al cambiar de paso remontamos solo el desplazamiento para que el encabezado no herede la posición final de una carta larga; las selecciones siguen en el padre. Retiramos el aviso de revalidación al terminar el envío.
+
 Jira actualizado directamente: EC-33, criterios de Mi Pedido y pedido opcional 1–7/obligatorio desde ocho; EC-29, calendario/servicios y retiro de la regla anterior; EC-22, comentario de carta real con rendimiento pendiente. Creamos [EC-73](https://yjmunoz.atlassian.net/browse/EC-73), En curso y a cargo de Yeison, para mínimo de tres administradores. No reabrimos ni cerramos Sprint 2 por esta ampliación.
 
 ## Ampliaciones y pendientes manuales
