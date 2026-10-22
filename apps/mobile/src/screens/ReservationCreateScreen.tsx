@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {
   ActivityIndicator,
   BackHandler,
   Image,
-  ScrollView,
   Share,
   StyleSheet,
   Text,
@@ -28,6 +27,8 @@ import { menuApi } from '../services/menu.service';
 import { reservationsApi } from '../services/reservations.service';
 import { PaymentInstructions } from '../components/PaymentInstructions';
 import { BackButton } from '../components/navigation/BackButton';
+import { useOrderDraft } from '../context/OrderDraftContext';
+import { ReservationCalendar } from '../components/calendar/ReservationCalendar';
 import { Feedback as Alert } from '../components/feedback/Feedback';
 import { formatCivilDate, formatCop, todayInBogota } from '../utils/formatters';
 
@@ -71,16 +72,19 @@ export function ReservationCreateScreen({
 }) {
   const { t } = useTranslation();
   const { settings } = useConnection();
+  const draft = useOrderDraft();
   const { colors, typography } = useTheme();
   const today = useMemo(todayInBogota, []);
   const maxDate = useMemo(() => addMonths(today, 3), [today]);
-  const [selectedDate, setSelectedDate] = useState(shiftDate(today, 2));
-  const [windowOffset, setWindowOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(draft.fecha && draft.fecha >= today && draft.fecha <= maxDate ? draft.fecha : shiftDate(today, 2));
+  const [dayAvailable, setDayAvailable] = useState(false);
   const [peopleText, setPeopleText] = useState('2');
   const [slots, setSlots] = useState<ReservationSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<ReservationSlot | null>(null);
   const [dishes, setDishes] = useState<MenuDish[]>([]);
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => Object.fromEntries(draft.lines.map(line => [line.dish.id, line.cantidad])));
+  const quantitiesRef = useRef(quantities);
+  quantitiesRef.current = quantities;
   const [note, setNote] = useState('');
   const [result, setResult] = useState<CreateReservationResult | null>(null);
   const [step, setStep] = useState<Step>('date');
@@ -125,11 +129,11 @@ export function ReservationCreateScreen({
 
   const findSlots = async () => {
     if (busy) return;
+    if (!dayAvailable) { setError(t('discovery.selectOpenDay')); return; }
     setError(null);
     setMessage(null);
     setSelectedSlot(null);
-    // Al volver a consultar no arrastro platos de una fecha o grupo anterior.
-    setQuantities({});
+    // Conservo cantidades propuestas y vuelvo a validar la carta para la fecha elegida.
     setDishes([]);
     if (!isAuthenticated) {
       setMessage(t('reservations.loginPreserveSelection'));
@@ -166,7 +170,14 @@ export function ReservationCreateScreen({
         const next = await menuApi.dishes(settings.restauranteId, selectedDate, page);
         all.push(...next.data);
       }
-      setDishes(all.filter(dish => dish.disponible));
+      const available = all.filter(dish => dish.disponible);
+      setDishes(available);
+      for (const line of draft.lines) {
+        const fresh = available.find(dish => dish.id === line.dish.id);
+        draft.setQuantity(fresh ?? line.dish, fresh ? quantities[line.dish.id] ?? line.cantidad : 0, selectedDate);
+      }
+      setQuantities(current => Object.fromEntries(Object.entries(current).filter(([id]) => available.some(dish => dish.id === id))));
+      if (draft.lines.length) setMessage(t('discovery.revalidate'));
       setStep('order');
     } catch (cause) {
       setError(errorText(cause, t('reservations.menuError')));
@@ -199,6 +210,7 @@ export function ReservationCreateScreen({
     setError(null);
     try {
       setResult(await reservationsApi.create(parsed.data));
+      draft.clear();
       setStep('sent');
     } catch (cause) {
       setError(errorText(cause, t('reservations.createError')));
@@ -208,24 +220,11 @@ export function ReservationCreateScreen({
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setQuantities(current => {
-      const next = Math.max(0, (current[id] ?? 0) + delta);
-      return { ...current, [id]: next };
-    });
-  };
-
-  const days = Array.from({ length: 7 }, (_, index) => shiftDate(today, windowOffset + index))
-    .filter(day => day <= maxDate);
-
-  // Al cambiar de semana mantengo la selección si sigue visible; de lo contrario
-  // selecciono el primer día de la nueva semana para que la consulta coincida.
-  const moveWindow = (nextOffset: number) => {
-    const firstDay = shiftDate(today, nextOffset);
-    const lastDay = shiftDate(today, nextOffset + 6);
-    setWindowOffset(nextOffset);
-    setSelectedDate(current =>
-      current < firstDay || current > lastDay ? firstDay : current,
-    );
+    const next = Math.min(99, Math.max(0, (quantitiesRef.current[id] ?? 0) + delta));
+    quantitiesRef.current = { ...quantitiesRef.current, [id]: next };
+    const dish = dishes.find(item => item.id === id);
+    if (dish) draft.setQuantity(dish, next, selectedDate);
+    setQuantities(quantitiesRef.current);
   };
 
   return (
@@ -241,26 +240,10 @@ export function ReservationCreateScreen({
         {step === 'date' && (
           <Panel>
             <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{t('reservations.chooseDate')}</Text>
-            <View style={styles.weekHeader}>
-              <Action label="‹" disabled={windowOffset === 0} onPress={() => moveWindow(Math.max(0, windowOffset - 7))} />
-              <Text style={[typography.cuerpoM, styles.weekLabel, { color: colors.texto.primario }]}>{formatCivilDate(days[0])}</Text>
-              <Action label="›" disabled={shiftDate(today, windowOffset + 7) > maxDate} onPress={() => moveWindow(windowOffset + 7)} />
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.days}
-            >
-              {days.map(day => (
-                <View key={day} style={styles.day}>
-                  <Action label={formatCivilDate(day, { weekday: 'short', day: 'numeric' })} selected={selectedDate === day} onPress={() => setSelectedDate(day)} />
-                </View>
-              ))}
-            </ScrollView>
+            {isActive && <ReservationCalendar restauranteId={settings.restauranteId} value={selectedDate} min={today} max={maxDate} onChange={setSelectedDate} onAvailability={setDayAvailable} />}
             <Note>{t('reservations.maxAdvance')}</Note>
             <Field label={t('reservations.groupSize')} value={peopleText} onChangeText={setPeopleText} keyboardType="number-pad" />
-            {people >= 15 && <Note>{t('reservations.weekdayGroup')}</Note>}
-            <Action testID="reservation-find-slots" label={t('reservations.findSlots')} disabled={busy} onPress={() => void findSlots()} />
+            <Action testID="reservation-find-slots" label={t('reservations.findSlots')} disabled={busy || !dayAvailable} onPress={() => void findSlots()} />
           </Panel>
         )}
 
@@ -285,9 +268,9 @@ export function ReservationCreateScreen({
                   <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>{dish.nombre}</Text>
                   <Text style={[typography.pie, { color: colors.texto.secundario }]}>{formatCop(dish.precio)}</Text>
                 </View>
-                <Action label="−" disabled={!quantities[dish.id]} onPress={() => updateQuantity(dish.id, -1)} />
+                <Action label="−" accessibilityLabel={t('discovery.decrease', { name: dish.nombre })} disabled={!quantities[dish.id]} onPress={() => updateQuantity(dish.id, -1)} />
                 <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>{quantities[dish.id] ?? 0}</Text>
-                <Action label="+" onPress={() => updateQuantity(dish.id, 1)} />
+                <Action label="+" accessibilityLabel={t('discovery.increase', { name: dish.nombre })} disabled={(quantities[dish.id] ?? 0) >= 99} onPress={() => updateQuantity(dish.id, 1)} />
               </View>
             ))}
             <Field label={t('reservations.note')} value={note} onChangeText={setNote} multiline maxLength={500} />
@@ -344,11 +327,6 @@ export function ReservationCreateScreen({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' },
-  weekHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  // Dejo que la fecha ocupe varias líneas sin empujar las flechas fuera del panel.
-  weekLabel: { flex: 1, textAlign: 'center', marginHorizontal: 8 },
-  days: { flexDirection: 'row', paddingVertical: 4 },
-  day: { width: 76, marginRight: 8 },
   dishRow: { flexDirection: 'row', gap: 8, alignItems: 'center', marginVertical: 4 },
   thumbnail: { width: 48, height: 48, borderRadius: 8 },
   flex: { flex: 1 },

@@ -5,6 +5,7 @@ import ts from 'typescript';
 const root = path.resolve('src');
 const translations = JSON.parse(fs.readFileSync(path.join(root, 'i18n/locales/es.json'), 'utf8'));
 translations.attention = JSON.parse(fs.readFileSync(path.join(root, 'i18n/locales/attention.es.json'), 'utf8'));
+translations.discovery = JSON.parse(fs.readFileSync(path.join(root, 'i18n/locales/discovery.es.json'), 'utf8'));
 const uiAttributes = new Set([
   'accessibilityHint',
   'accessibilityLabel',

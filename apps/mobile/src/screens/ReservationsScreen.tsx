@@ -22,6 +22,7 @@ import { Feedback as Alert } from '../components/feedback/Feedback';
 import { ReservationCreateScreen } from './ReservationCreateScreen';
 import { PaymentInstructions } from '../components/PaymentInstructions';
 import { formatCop, formatDateDdMmYyyy } from '../utils/formatters';
+import { useOrderDraft } from '../context/OrderDraftContext';
 
 type ReservationTab = 'upcoming' | 'history';
 const upcomingStates = new Set(['SOLICITADA', 'CONFIRMADA', 'EN_CURSO']);
@@ -47,6 +48,10 @@ export const ReservationsScreen: React.FC = () => {
   const [detailErrorId, setDetailErrorId] = useState<string | null>(null);
   const [tab, setTab] = useState<ReservationTab>('upcoming');
   const [creating, setCreating] = useState(false);
+  const draft = useOrderDraft();
+  useEffect(() => {
+    if (isFocused && draft.pending) { setCreating(true); draft.consume(); }
+  }, [isFocused, draft.pending, draft.consume]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestVersion = useRef(0);
@@ -160,6 +165,7 @@ export const ReservationsScreen: React.FC = () => {
   if (creating) {
     return (
       <ReservationCreateScreen
+        key={draft.requestId}
         onBack={() => setCreating(false)}
         isAuthenticated={Boolean(user)}
         isActive={isFocused}

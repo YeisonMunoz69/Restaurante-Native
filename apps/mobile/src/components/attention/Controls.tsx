@@ -17,18 +17,21 @@ export function Action({
   disabled,
   selected,
   testID,
+  accessibilityLabel,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   selected?: boolean;
   testID?: string;
+  accessibilityLabel?: string;
 }) {
   const { colors } = useTheme();
   return (
     <TouchableOpacity
       testID={testID}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: !!disabled, selected: !!selected }}
       disabled={disabled}
       onPress={onPress}

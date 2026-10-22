@@ -8,6 +8,16 @@ import { menuApi } from '../../services/menu.service';
 import { reservationsApi } from '../../services/reservations.service';
 import { paymentApi } from '../../services/payment.service';
 import { ReservationCreateScreen } from '../ReservationCreateScreen';
+import { ReservationCalendar } from '../../components/calendar/ReservationCalendar';
+
+// Aíslo el calendario (probado aparte) sin ocultar su selección ni su disponibilidad.
+jest.mock('../../components/calendar/ReservationCalendar', () => {
+  const ReactRuntime = require('react');
+  return { ReservationCalendar: (props: { onAvailability: (value: boolean) => void }) => {
+    ReactRuntime.useEffect(() => { props.onAvailability(true); }, [props.onAvailability]);
+    return null;
+  } };
+});
 
 const mockTranslate = (key: string) => key;
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: mockTranslate }) }));
@@ -246,7 +256,7 @@ describe('ReservationCreateScreen', () => {
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
-  it('selecciona un día visible al avanzar de semana antes de consultar franjas', async () => {
+  it('consulta franjas para la fecha elegida en el calendario mensual', async () => {
     const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/Bogota',
       year: 'numeric',
@@ -269,7 +279,7 @@ describe('ReservationCreateScreen', () => {
     });
 
     ReactTestRenderer.act(() => {
-      tree!.root.findAllByType(Action).find(action => action.props.label === '›')!.props.onPress();
+      tree!.root.findByType(ReservationCalendar).props.onChange(nextWeek);
     });
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
