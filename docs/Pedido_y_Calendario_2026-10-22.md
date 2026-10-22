@@ -20,6 +20,8 @@ La migración `20261022180000_servicios_calendario` añade listas de servicios a
 
 `GET /api/v1/calendario/rango?restauranteId=…&desde=…&hasta=…` admite hasta 42 fechas y entrega días, servicios, horarios, notas y WhatsApp público. No lleva claves privadas. El cálculo nacional incluye fechas fijas, Semana Santa y traslados de la [Ley 51 de 1983](https://www1.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=4954); no añade festivos de otros países. Cambios legales posteriores requieren revisar esta función y sus pruebas.
 
+Incluimos también el nuevo festivo de Chiquinquirá desde 2026, trasladado en ese año al 13 de julio según la [Circular 23 de MinTIC](https://normograma.mintic.gov.co/mintic/compilacion/docs/circular_mintic_0023_2026.htm), que aplica la Ley 2578/2026. La prueba de 2026 espera 19 fechas distintas, no el listado tradicional de 18.
+
 Quitar Restaurante de una fecha con reservas confirmadas exige la advertencia de afectación existente. No cancelamos ni reembolsamos reservas automáticamente. No migramos ni probamos escrituras en Supabase compartido o VPS en esta ronda.
 
 ## Seguimiento y documentos manuales

@@ -5,9 +5,12 @@ import { CalendarService, canReserveRestaurant, resolveCalendarDay } from './cal
 import { exception, prismaMock, restaurantId, rule } from '../../test/calendar.fixture.js';
 
 describe('Calendario acordado el 22 de octubre', () => {
-  it('calcula los 18 festivos nacionales de 2026 con traslados y Semana Santa', () => {
+  it('calcula los 19 festivos nacionales de 2026 con Chiquinquirá, traslados y Semana Santa', () => {
     const days = colombiaHolidays(2026);
-    expect(days.size).toBe(18);
+    expect(days.size).toBe(19);
+    expect(days.has('2026-07-13')).toBe(true);
+    expect(days.has('2026-07-09')).toBe(false);
+    expect(colombiaHolidays(2025).has('2025-07-14')).toBe(false);
     for (const day of ['2026-01-12', '2026-03-23', '2026-04-02', '2026-04-03', '2026-05-18', '2026-06-08', '2026-06-15', '2026-10-12', '2026-12-25']) expect(days.has(day)).toBe(true);
     expect(days.has('2026-01-06')).toBe(false);
     expect(days.has('2026-07-04')).toBe(false);

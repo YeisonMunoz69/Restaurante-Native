@@ -9,6 +9,8 @@ export function colombiaHolidays(year: number): Set<string> {
   for (const [m, d] of [[1, 6], [3, 19], [6, 29], [8, 15], [10, 12], [11, 1], [11, 11]]) {
     result.add(monday(new Date(`${key(m, d)}T00:00:00Z`)));
   }
+  // La Ley 2578/2026 añadió el 9 de julio, trasladable al lunes (MinTIC, circular 23/2026).
+  if (year >= 2026) result.add(monday(new Date(`${key(7, 9)}T00:00:00Z`)));
   // Uso el cómputo gregoriano de Pascua; Jueves/Viernes Santos no se trasladan.
   const a = year % 19, b = Math.floor(year / 100), c = year % 100;
   const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
