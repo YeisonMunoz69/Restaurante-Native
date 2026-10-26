@@ -4,7 +4,15 @@ Construimos este proyecto académico de Electiva V para el restaurante El Encant
 
 Trabajamos Yeison Muñoz, Alex Santacruz y Fabián Hoyos. Respetamos [Reglas.md](Reglas.md) para identidad, commits y trabajo en equipo.
 
-## Estado real al 9 de octubre de 2026
+## Continuidad vigente al 26 de octubre de 2026
+
+Alex asume la continuidad mientras Yeison y Fabián no estarán disponibles. Trabajamos en este repositorio original; ApoloByteExample es una práctica separada. [Encargo, prioridades y procedimiento](docs/Continuidad_Alex_2026-10-26.md), [evidencia Samsung](docs/evidencias/continuidad-s21-2026-10-26/README.md) y [tarea de VPS/entornos EC-74](https://yjmunoz.atlassian.net/browse/EC-74).
+
+`dev` conserva `f28c21e`; la API HTTPS responde con base conectada y 16 platos. [PR #16](https://github.com/YeisonMunoz69/Restaurante-Native/pull/16) contiene el progreso nuevo y los commits de #15/#14: Mi Pedido, carta original de 44 productos, calendario mensual/servicios, pagos configurables y gestión ADMIN. Publicado no significa desplegado. `main` sigue fuera de esta integración. Repetimos 216 pruebas API con PostgreSQL aislado y 91 móviles; compilamos las dos variantes ARM64.
+
+Por calendario estamos en Sprint 5 (23/10–05/11); Jira todavía no inicia Sprint 3/4/5 y funcionalmente recuperamos aceptación de Sprint 2/3. El dominio previsto para producción del restaurante sigue mostrando la práctica; Alex debe coordinar su separación y los entornos antes de publicar. El dominio de Breakit vuelve a mostrar Breakit al consultar el 26/10; no repetimos el conflicto histórico como estado actual.
+
+## Corte histórico al 9 de octubre de 2026
 
 Revisamos `dev` en `0e27cb4`. No confundimos una maqueta, una rama publicada o una landing con una funcionalidad terminada.
 

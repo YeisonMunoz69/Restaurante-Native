@@ -1,5 +1,7 @@
 # Plan de sprints — 28 de agosto al 13 de noviembre de 2026
 
+**Corte vigente del 26 de octubre:** por fecha estamos en Sprint 5 (23/10–05/11), pero Jira conserva Sprint 3/4/5 sin iniciar y recuperamos aceptación de Sprint 2/3. No alteramos fechas ni declaramos sprints completos. Alex asume continuidad por ausencia de Yeison/Fabián; prioridad: EC-74/VPS y entornos del repositorio original, revisar/integrar PR #16 en `dev` con migraciones/configuración preparadas y aceptar pendientes. EC-22/27/73 están reasignadas directamente a Alex, En curso/backlog. Repetimos 216 pruebas API aisladas y 91 móviles, dos builds ARM64 y smoke Docker. Detalle/límites en [el encargo vigente](Continuidad_Alex_2026-10-26.md) y [S21](evidencias/continuidad-s21-2026-10-26/README.md). Los responsables de las tablas históricas describen el reparto previo; no cambian los aportes ni los puntos por este traspaso. No integramos `main`.
+
 **Ampliación del 22 de octubre, todavía en PR #16:** continuamos desde PR #15 sin merge. Entregamos Mi Pedido, carta original sin fotos, calendario por actividades y dos APK de ensayo; EC-33/29/22 tienen actualización directa en Jira. Añadimos EC-73 (Yeison, En curso, backlog) para gestión de administradores con mínimo de tres activos. No reabrimos el sprint cerrado ni movemos puntos a Listo por código local. Google necesita configuración manual e implementación; EC-22/27 conservan su aceptación pendiente. [Acta y evidencia](Pedido_y_Calendario_2026-10-22.md).
 
 ### App móvil — El Encanto Campestre

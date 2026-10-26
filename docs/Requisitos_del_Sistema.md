@@ -7,7 +7,7 @@
 **Versión:** 1.2 · **Fecha:** 16 de octubre de 2026
 **Documentos base:** `Sprint0_Analisis_y_Diseno.md` v0.2 · `Decisiones_Pendientes_y_Riesgos.md` v0.7 · `Plan_de_Sprints.md` · `Backlog_Jira.md` v0.1
 
-**Cambio solicitado el 16 de octubre:** Google como único proveedor y bloqueo global antes de iniciar sesión; Ajustes se dividirá en subpantallas. El cambio queda documentado localmente para Sprint 5, pendiente de registrar en Jira y copiar manualmente a Drive y `Requisitos_del_Sistema.docx`. El inicio de sesión correo/contraseña que se construyó en Sprint 1 describe la versión anterior, no el objetivo nuevo.
+**Cambio solicitado el 16 de octubre:** Google como único proveedor y bloqueo global antes de iniciar sesión; Ajustes se dividirá en subpantallas. El 26/10 registramos los criterios en EC-75, Por hacer/backlog, responsable Alex, después de estabilizar dev; falta implementación y reconciliar EC-58. El inicio de sesión correo/contraseña construido en Sprint 1 sigue siendo el implementado hasta validar su sustitución. Pendiente actualizar requisitos en Drive y Word local: RF-AUT01/02/03/05/08 y Ajustes; sección 8/responsables, continuidad de Alex. No modificamos las copias manuales por editar este archivo.
 
 ---
 

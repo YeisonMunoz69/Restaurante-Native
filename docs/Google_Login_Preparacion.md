@@ -1,5 +1,7 @@
 # Google desde cero y dos apps de ensayo
 
+**Continuidad del 26/10:** registramos [EC-75](https://yjmunoz.atlassian.net/browse/EC-75), Por hacer/backlog y asignada a Alex, para completar API+móvil y Ajustes durante la ausencia de Yeison/Fabián, después de estabilizar EC-74/PR #16. Los criterios ya están en Jira; esto no acredita clientes OAuth creados ni login implementado. EC-58 requiere reconciliación explícita antes de retirar contraseña/verificación propias. Pendiente actualizar requisitos en Drive y Word local: RF-AUT01/02/03/05/08, organización de Ajustes y sección 8.
+
 Actualizado el 22/10/2026. **Crear clientes y variables no implementa el login.** Hoy conservamos la autenticación existente hasta conectar Google, verificar ID tokens en NestJS y probar el acceso obligatorio. No activamos un botón incompleto ni cambiamos a Supabase Auth o Expo Go.
 
 ## 1. Las dos instalaciones

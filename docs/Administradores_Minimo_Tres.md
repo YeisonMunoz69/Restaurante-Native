@@ -1,6 +1,6 @@
 # Administración compartida: mínimo de tres
 
-Seguimiento: [EC-73](https://yjmunoz.atlassian.net/browse/EC-73), En curso, responsable Yeison; [PR #16](https://github.com/YeisonMunoz69/Restaurante-Native/pull/16), pendiente de revisión e integración.
+Seguimiento: [EC-73](https://yjmunoz.atlassian.net/browse/EC-73), En curso/backlog, responsable de continuidad y aceptación **Alex** desde el 26/10; conservamos la implementación de Yeison. [PR #16](https://github.com/YeisonMunoz69/Restaurante-Native/pull/16), pendiente de revisión e integración. [Encargo vigente](Continuidad_Alex_2026-10-26.md).
 
 Yeison fijó esta regla inamovible el 22/10/2026: ningún retiro, eliminación o desactivación puede dejar menos de **tres administradores activos**. Si necesitamos retirar a alguien cuando quedan tres, primero designamos un reemplazo. No consideramos una cuenta inactiva como reemplazo.
 

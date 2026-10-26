@@ -1,0 +1,51 @@
+[
+  {
+    "url": "https://encanto-campestre-dev.apolobyte.online/api/v1/health",
+    "utc": "2026-10-26T21:28:50.8686338Z",
+    "http": 200,
+    "respuesta": {
+      "status": "ok",
+      "database": "connected"
+    }
+  },
+  {
+    "url": "https://encanto-campestre-dev.apolobyte.online/api/v1/menu/platos?restauranteId=6933b63c-24cf-495b-b396-f88c4956624c&fecha=2026-10-31&tamanoPagina=100",
+    "utc": "2026-10-26T21:28:52.6237399Z",
+    "http": 200,
+    "total": 16,
+    "primero": "Sancocho de gallina criolla a la leña"
+  },
+  {
+    "url": "https://encanto-campestre-dev.apolobyte.online/api/v1/calendario/rango?restauranteId=6933b63c-24cf-495b-b396-f88c4956624c&desde=2026-10-26&hasta=2026-11-01",
+    "utc": "2026-10-26T21:28:52.8109886Z",
+    "http": 404
+  },
+  {
+    "url": "https://encanto-campestre-dev.apolobyte.online/api/v1/reservas/datos-pago",
+    "utc": "2026-10-26T21:28:52.9931647Z",
+    "http": 404
+  },
+  {
+    "url": "https://encanto-campestre-dev.apolobyte.online/api/v1/admin/administradores",
+    "utc": "2026-10-26T21:28:53.2328804Z",
+    "http": 404
+  },
+  {
+    "url": "https://encanto-campestre.apolobyte.online/",
+    "utc": "2026-10-26T21:28:53.8721164Z",
+    "http": 200,
+    "titulo": "Apolobyte"
+  },
+  {
+    "url": "https://equipo-7-elev-d-dev.apolobyte.online/",
+    "utc": "2026-10-26T21:28:54.9482341Z",
+    "http": 200,
+    "titulo": "Apolobyte"
+  },
+  {
+    "url": "https://breakit-dev.apolobyte.online/",
+    "utc": "2026-10-26T21:28:56.0741019Z",
+    "http": 200,
+    "titulo": "BreakIt - Autenticación"
+  }
+]

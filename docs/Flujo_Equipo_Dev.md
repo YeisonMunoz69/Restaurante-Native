@@ -1,5 +1,7 @@
 # Trabajo del equipo sobre dev
 
+**Continuidad del 26 de octubre:** Alex asume revisión, preparación del despliegue y aceptación durante la ausencia de Yeison/Fabián, según [el encargo vigente](Continuidad_Alex_2026-10-26.md). PR #16 contiene #15/#14; el código nuevo está publicado pero `dev` conserva `f28c21e`. Antes de integrar, Alex verifica el entorno privado y migraciones en la VPS. La consigna `.env` mediante secrets aún requiere un cambio acotado del workflow original: hoy consume un `.env.vps` ya presente. No copiamos valores/workflows del ejemplo ni integramos `main`. Conservamos los cortes siguientes como historia, no como instrucciones para esperar un revisor ausente.
+
 **Reparto vigente del 15 de octubre:** sustituimos la concentración en Alex por los bloques y dependencias de [Encargos_Equipo.md](Encargos_Equipo.md). Sprint 2 tiene tres historias por persona; Sprint 3, tres por persona y EC-40 de integración coordinada por Yeison. Conservamos criterios, puntos, fechas y entregas existentes; las referencias posteriores al reparto anterior no son el encargo actual.
 
 ## 1. Qué compartimos y qué verificamos
