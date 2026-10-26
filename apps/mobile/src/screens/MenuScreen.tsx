@@ -5,12 +5,14 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { RootTabParamList } from '../navigation/BottomTabNavigator';
+import { OrderDraftPanel } from '../components/menu/OrderDraftPanel';
+import { MenuCarousels } from '../components/menu/MenuCarousels';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
-  RefreshControl,
-  SectionList,
   StyleSheet,
   Text,
   View,
@@ -26,46 +28,14 @@ import type { MenuCategory, MenuDish } from '@encanto/shared';
 import { useConnection } from '../context/ConnectionContext';
 import { MenuDishDetailModal } from '../components/menu/MenuDishDetailModal';
 import { menuApi } from '../services/menu.service';
-import { publicMenuPhotoUrl } from '../components/menu/menu-photo';
 import { useTheme } from '../theme/ThemeContext';
-
-function todayInBogota() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Bogota',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const value = (type: string) =>
-    parts.find(part => part.type === type)?.value ?? '01';
-  return `${value('year')}-${value('month')}-${value('day')}`;
-}
+import { formatCivilDate, todayInBogota } from '../utils/formatters';
 
 // Avanzo fechas civiles en UTC para que el celular no cambie de día por zona horaria.
 function shiftCivilDate(fecha: string, amount: number) {
   const [year, month, day] = fecha.split('-').map(Number);
   const next = new Date(Date.UTC(year, month - 1, day + amount));
   return next.toISOString().slice(0, 10);
-}
-
-function formatCivilDate(fecha: string) {
-  const [year, month, day] = fecha.split('-').map(Number);
-  return new Intl.DateTimeFormat('es-CO', {
-    timeZone: 'UTC',
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(Date.UTC(year, month - 1, day, 12)));
-}
-
-function formatPrice(value: number) {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 function errorStatus(error: unknown) {
@@ -75,6 +45,7 @@ function errorStatus(error: unknown) {
 type MenuSection = { id: string; title: string; data: MenuDish[] };
 
 export const MenuScreen: React.FC = () => {
+  const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
   const insets = useSafeAreaInsets();
@@ -249,7 +220,6 @@ export const MenuScreen: React.FC = () => {
     [categories, dishes],
   );
 
-  const unavailableText = t('menu.badgeUnavailable');
 
   return (
     <View
@@ -466,164 +436,7 @@ export const MenuScreen: React.FC = () => {
               </Pressable>
             </View>
           ) : (
-            <SectionList
-              sections={sections}
-              keyExtractor={dish => dish.id}
-              renderSectionHeader={({ section }) => (
-                <Text
-                  style={[
-                    typography.tituloM,
-                    styles.sectionTitle,
-                    {
-                      color: colors.texto.primario,
-                      backgroundColor: colors.superficie.fondo,
-                      paddingHorizontal: spacing.margenLateral,
-                      paddingTop: spacing.l,
-                    },
-                  ]}
-                >
-                  {section.title}
-                </Text>
-              )}
-              renderItem={({ item }) => {
-                const photoUri = publicMenuPhotoUrl(item.fotos[0]?.path);
-                return (
-                  <Pressable
-                    testID={`menu-open-detail-${item.id}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('menu.openDish', {
-                      name: item.nombre,
-                    })}
-                    onPress={() => setSelectedDishId(item.id)}
-                    style={({ pressed }) => [
-                      styles.dishCard,
-                      {
-                        backgroundColor: colors.superficie.elevada,
-                        borderColor: colors.superficie.borde,
-                        borderRadius: radii.m,
-                        marginHorizontal: spacing.margenLateral,
-                        marginTop: spacing.s,
-                        padding: spacing.m,
-                        opacity: pressed ? 0.75 : item.disponible ? 1 : 0.6,
-                      },
-                    ]}
-                  >
-                    {photoUri ? (
-                      <Image
-                        accessibilityLabel={t('menu.photoLabel', { number: 1 })}
-                        source={{ uri: photoUri }}
-                        resizeMode="cover"
-                        style={styles.dishPhoto}
-                      />
-                    ) : (
-                      <View
-                        accessibilityLabel={t('menu.photoUnavailable')}
-                        style={[
-                          styles.dishPhoto,
-                          styles.dishPhotoFallback,
-                          { backgroundColor: colors.superficie.fondo },
-                        ]}
-                      >
-                        <UtensilsCrossed
-                          size={26}
-                          color={colors.texto.secundario}
-                        />
-                      </View>
-                    )}
-                    <View style={styles.dishHeading}>
-                      <Text
-                        style={[
-                          typography.tituloM,
-                          styles.dishName,
-                          { color: colors.texto.primario },
-                        ]}
-                      >
-                        {item.nombre}
-                      </Text>
-                      <ChevronRight size={20} color={colors.texto.secundario} />
-                    </View>
-                    {!!item.descripcionBreve && (
-                      <Text
-                        numberOfLines={2}
-                        style={[
-                          typography.cuerpoM,
-                          {
-                            color: colors.texto.secundario,
-                            marginTop: spacing.xs,
-                          },
-                        ]}
-                      >
-                        {item.descripcionBreve}
-                      </Text>
-                    )}
-                    <View style={[styles.dishFooter, { marginTop: spacing.m }]}>
-                      <Text
-                        style={[
-                          typography.precio,
-                          { color: colors.marca.acento },
-                        ]}
-                      >
-                        {formatPrice(item.precio)}
-                      </Text>
-                      <Text
-                        style={[
-                          typography.pie,
-                          {
-                            color: item.disponible
-                              ? colors.marca.primario
-                              : colors.texto.secundario,
-                          },
-                        ]}
-                      >
-                        {item.disponible
-                          ? t('menu.badgeAvailable')
-                          : unavailableText}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              }}
-              ListEmptyComponent={
-                <View style={[styles.centered, { padding: spacing.xl }]}>
-                  <Text
-                    testID="menu-empty"
-                    style={[
-                      typography.cuerpoM,
-                      styles.centerText,
-                      { color: colors.texto.secundario },
-                    ]}
-                  >
-                    {t('menu.emptyState')}
-                  </Text>
-                </View>
-              }
-              ListFooterComponent={
-                loadingMore ? (
-                  <ActivityIndicator
-                    testID="menu-loading-more"
-                    style={{ margin: spacing.l }}
-                    color={colors.marca.primario}
-                  />
-                ) : undefined
-              }
-              onEndReached={() => {
-                loadMore();
-              }}
-              onEndReachedThreshold={0.4}
-              refreshControl={
-                <RefreshControl
-                  refreshing={loading && dishes.length > 0}
-                  onRefresh={refresh}
-                  tintColor={colors.marca.primario}
-                />
-              }
-              contentContainerStyle={[
-                styles.listContent,
-                { paddingBottom: spacing.xl },
-              ]}
-              stickySectionHeadersEnabled={false}
-              keyboardShouldPersistTaps="handled"
-            />
+            <MenuCarousels sections={sections} fecha={fecha ?? todayInBogota()} open={dayOpen === true} loadingMore={loadingMore} hasMore={nextPage <= totalPages} onMore={() => void loadMore()} onRefresh={refresh} onDetail={setSelectedDishId} />
           )}
 
           <MenuDishDetailModal
@@ -635,11 +448,13 @@ export const MenuScreen: React.FC = () => {
           />
         </>
       )}
+      {!!restauranteId && <OrderDraftPanel onReserve={() => navigation.navigate('Reservations')} />}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  addOrder: { marginHorizontal: 16, marginBottom: 8 },
   container: { flex: 1 },
   header: { paddingBottom: 12 },
   dateCard: { borderWidth: 1 },

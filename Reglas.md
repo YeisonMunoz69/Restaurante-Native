@@ -124,3 +124,15 @@ Antes de afirmar que una regla o decisión de negocio no existe, revisamos expl�
 El documento de requisitos de Drive y su copia `docs/Requisitos_del_Sistema.docx` se actualizan manualmente. Cuando una corrección afecte esos requisitos, incluimos siempre este recordatorio en Jira y en la entrega: **«Pendiente actualizar requisitos en Drive y Word local: [RF/RNF o sección], [cambio concreto]»**. Mantenemos el pendiente hasta que el responsable confirme ambos documentos. Editar el Markdown no significa que Drive o Word hayan cambiado.
 
 Marcamos una actividad como terminada con evidencia de sus criterios vigentes. Una implementación parcial o un PR abierto queda en curso; una tarea aplazada conserva su motivo y destino. El procedimiento y la revisión actual están en `docs/Flujo_Equipo_Dev.md`.
+
+## 8. Confirmaciones y retroalimentación propias
+
+Usamos `Feedback`/`FeedbackHost` para nuevos diálogos generales y `FeedbackMessage` para avisos de formulario. No añadimos `Alert.alert` nativos para resolver mensajes de la app. Conservamos componentes especializados cuando su interacción lo requiere y los diálogos del sistema para permisos, compartir y otras acciones de Android.
+
+Confirmamos acciones destructivas, publicación de cambios relevantes y descarte de formularios modificados; no interrumpimos cada toque con una confirmación. Mostramos éxito después de que la API confirme, no solo después de pulsar el botón. Diferenciamos información, éxito, advertencia y error sin depender únicamente del color, con textos en recursos, tema claro/oscuro, contenido desplazable y áreas seguras. Probamos atrás físico, doble toque y cambio de cuenta para que nunca ejecuten una operación pendiente por accidente.
+
+Los estados de carga, vacío, error y reintento también forman parte de cada entrega. Tener estos componentes no certifica por sí solo RNF-09/10 ni sustituye las pruebas de contraste, lector de pantalla, tamaños de fuente y pantallas pequeñas.
+
+## 9. Mínimo inamovible de administradores
+
+Conservamos al menos tres cuentas ADMIN activas. Ninguna función, importador, seed, baja, desactivación o cambio de rol puede reducirlas por debajo de tres; primero designamos reemplazos con cuentas reales. Una instalación anterior con menos de tres solo puede aumentar el número, nunca reducirlo. No creamos administradores ficticios para cuadrar el conteo. Protegemos la regla en la API y en PostgreSQL, incluida la concurrencia, no solo con botones deshabilitados. Retirar administración conserva la cuenta y el historial. Registramos el actor y el cambio de permisos; los JWT anteriores no deben conservar privilegios retirados.

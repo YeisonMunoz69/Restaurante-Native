@@ -3,6 +3,7 @@ import { CalendarRestaurantSchema } from '@encanto/shared';
 import { API_CONFIG } from './api.config';
 import { apiClient } from '../services/api/api-client';
 import { clearTokens } from '../services/auth/token-storage';
+import { BUILD_ENVIRONMENT } from './build-variant';
 
 export interface ConnectionSettings {
   environment: 'local' | 'dev';
@@ -12,9 +13,9 @@ export interface ConnectionSettings {
 export const DEV_API_URL =
   'https://encanto-campestre-dev.apolobyte.online/api/v1';
 export const DEFAULT_CONNECTION: ConnectionSettings = {
-  environment: 'local',
-  localUrl: API_CONFIG.baseUrl,
-  restauranteId: '',
+  environment: BUILD_ENVIRONMENT ?? 'local',
+  localUrl: BUILD_ENVIRONMENT === 'local' ? 'http://localhost:3000/api/v1' : API_CONFIG.baseUrl,
+  restauranteId: BUILD_ENVIRONMENT === 'dev' ? '6933b63c-24cf-495b-b396-f88c4956624c' : '',
 };
 const SERVICE = 'encanto.connection.v1';
 
@@ -24,6 +25,8 @@ export function validateConnection(
 ): ConnectionSettings {
   if (!['local', 'dev'].includes(value.environment))
     throw new Error('Entorno inválido');
+  if (BUILD_ENVIRONMENT && value.environment !== BUILD_ENVIRONMENT)
+    throw new Error('Esta instalación tiene un backend fijo. Use la otra app para cambiar de entorno');
   const localUrl = value.localUrl.trim().replace(/\/+$/, '');
   const url = new URL(localUrl);
   if (
@@ -51,8 +54,13 @@ function activate(settings: ConnectionSettings) {
 }
 export async function loadConnection(): Promise<ConnectionSettings> {
   const stored = await Keychain.getGenericPassword({ service: SERVICE });
-  const settings = stored
-    ? validateConnection(JSON.parse(stored.password))
+  const previous = stored ? JSON.parse(stored.password) : null;
+  const wrongVariant = Boolean(previous && BUILD_ENVIRONMENT && previous.environment !== BUILD_ENVIRONMENT);
+  // Al convertir el APK anterior en VPS no envío su refresh token local al servidor compartido.
+  if (wrongVariant) await clearTokens();
+  // Una actualización del APK original a VPS no debe heredar la conexión local antigua.
+  const settings = previous && !wrongVariant
+    ? validateConnection(previous)
     : DEFAULT_CONNECTION;
   activate(settings);
   return settings;

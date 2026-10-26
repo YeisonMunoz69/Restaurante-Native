@@ -10,6 +10,11 @@ import {
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { SettingsScreen } from '../../screens/SettingsScreen';
 
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn(), setParams: jest.fn() }),
+  useRoute: () => ({ params: undefined }),
+}));
+
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));

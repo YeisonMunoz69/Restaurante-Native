@@ -22,6 +22,16 @@ export const CalendarDayQuerySchema = CalendarRestaurantSchema.extend({
 export const CalendarNextQuerySchema = CalendarRestaurantSchema.extend({
   desde: CalendarDateSchema.optional(),
 });
+export const CalendarServicesSchema = z.array(z.enum(['RESTAURANTE', 'PESCA', 'MOTOS']))
+  .min(1).max(3).refine(values => new Set(values).size === values.length, 'No repetimos servicios');
+export type CalendarServiceKind = z.infer<typeof CalendarServicesSchema>[number];
+export const CalendarRangeQuerySchema = CalendarRestaurantSchema.extend({
+  desde: CalendarDateSchema,
+  hasta: CalendarDateSchema,
+}).refine(({ desde, hasta }) => {
+  const days = (Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86400000;
+  return days >= 0 && days <= 41;
+}, 'Consultamos entre uno y 42 días por calendario');
 export const CalendarWeekdaySchema = z
   .string()
   .regex(/^[0-6]$/)
@@ -35,6 +45,7 @@ export const CalendarRuleSchema = z
     horaCierre: CalendarTimeSchema,
     abierto: z.boolean().default(true),
     activo: z.boolean().default(true),
+    servicios: CalendarServicesSchema.optional(),
   })
   .strict()
   .refine((rule) => rule.horaApertura < rule.horaCierre, {
@@ -58,6 +69,7 @@ export const CalendarExceptionInputSchema = CalendarConfirmationSchema.extend({
   horaCierre: CalendarTimeSchema.nullable().optional(),
   soloPorReserva: z.boolean().default(false),
   motivo: z.string().trim().max(500).nullable().optional(),
+  servicios: CalendarServicesSchema.optional(),
 }).superRefine((day, ctx) => {
   if (day.abierto && (!day.horaApertura || !day.horaCierre || day.horaApertura >= day.horaCierre)) {
     ctx.addIssue({
@@ -84,7 +96,8 @@ export interface CalendarDayResult {
   zonaHoraria: typeof CALENDAR_TIME_ZONE;
   abierto: boolean;
   soloPorReserva: boolean;
-  origen: 'EXCEPCION' | 'SEMANAL' | 'SIN_REGLA';
+  origen: 'EXCEPCION' | 'SEMANAL' | 'SIN_REGLA' | 'BASE_DOMINGO' | 'BASE_FESTIVO';
+  servicios?: CalendarServiceKind[];
   horarios: { horaApertura: string; horaCierre: string }[];
   motivo: string | null;
 }

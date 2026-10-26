@@ -1,0 +1,16 @@
+{
+  "title": "Administradores",
+  "help": "Conservamos al menos tres administradores activos. Primero designa a otra persona registrada si necesitas retirar permisos. Retirar permisos no elimina su cuenta ni su historial.",
+  "count": "Administradores activos: {{count}}. Mínimo: {{minimo}}.",
+  "email": "Correo de una cuenta registrada",
+  "grantTitle": "Designar administrador",
+  "removeTitle": "Retirar permisos de administrador",
+  "confirmBody": "Cambiarás los permisos de {{correo}}. Esta acción afecta su acceso al panel y quedará registrada.",
+  "confirm": "Confirmar cambio",
+  "active": "Cuenta activa",
+  "inactive": "Cuenta inactiva; no cuenta para el mínimo",
+  "saved": "Permisos actualizados.",
+  "loadError": "No pudimos consultar los administradores. Reintenta.",
+  "saveError": "No pudimos cambiar los permisos. Revisa la conexión y vuelve a consultar.",
+  "relogin": "Retiraste tus permisos. Cierra sesión e ingresa nuevamente para continuar como comensal."
+}

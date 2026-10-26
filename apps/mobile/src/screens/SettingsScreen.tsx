@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -19,6 +20,8 @@ import { Action } from '../components/attention/Controls';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
+import { PaymentSettingsScreen } from './PaymentSettingsScreen';
+import { AdminsScreen } from './AdminsScreen';
 import { useConnection } from '../context/ConnectionContext';
 import {
   Moon,
@@ -34,6 +37,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // pantalla de ajustes con gestion de tema, idioma y estado de autenticacion segura
 export const SettingsScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { t } = useTranslation();
   const { isDark, toggleTheme, colors, typography, spacing, radii } =
     useTheme();
@@ -48,7 +53,15 @@ export const SettingsScreen: React.FC = () => {
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
-  const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | null>(null);
+  const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | 'payments' | 'admins' | null>(null);
+
+  // Regreso al formulario que quedó montado en Reservas después de autenticar.
+  useEffect(() => {
+    if (isAuthenticated && route.params?.returnTo === 'Reservations') {
+      navigation.setParams({ returnTo: undefined });
+      navigation.navigate('Reservations');
+    }
+  }, [isAuthenticated, navigation, route.params?.returnTo]);
 
   // Valido los campos con el mismo esquema compartido por la API.
   const handleSubmit = async () => {
@@ -80,6 +93,10 @@ export const SettingsScreen: React.FC = () => {
 
   if (adminView === 'attention' && user?.rol === 'ADMIN')
     return <AttentionScreen onBack={() => setAdminView(null)} />;
+  if (adminView === 'admins' && user?.rol === 'ADMIN')
+    return <AdminsScreen onBack={() => setAdminView(null)} />;
+  if (adminView === 'payments' && user?.rol === 'ADMIN')
+    return <PaymentSettingsScreen onBack={() => setAdminView(null)} />;
   if (adminView === 'menu' && user?.rol === 'ADMIN')
     return <MenuAdminScreen onBack={() => setAdminView(null)} />;
   if (adminView === 'reservations' && (user?.rol === 'ADMIN' || user?.rol === 'STAFF'))
@@ -112,6 +129,8 @@ export const SettingsScreen: React.FC = () => {
       {user?.rol === 'ADMIN' && (
         <View>
           <Action label={t('menuAdmin.title')} onPress={() => setAdminView('menu')} />
+          <Action label={t('payments.title')} onPress={() => setAdminView('payments')} />
+          <Action label={t('admins.title')} onPress={() => setAdminView('admins')} />
           <Action label={t('reservations.adminTitle')} onPress={() => setAdminView('reservations')} />
           <Action
             label={t('attention.title')}

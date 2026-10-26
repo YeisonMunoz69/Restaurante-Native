@@ -40,6 +40,7 @@ describe('Disponibilidad HTTP con JWT real y Prisma simulado', () => {
   let admin: string;
   let comensal: string;
   const db = {
+    user: { findUnique: vi.fn().mockResolvedValue({ rol: 'ADMIN', activo: true }) },
     restaurant: { findUnique: vi.fn() },
     dish: { count: vi.fn(), findMany: vi.fn() },
     dishSchedule: {

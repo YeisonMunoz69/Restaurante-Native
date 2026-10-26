@@ -1,5 +1,7 @@
 # Contratos de carta y reservas y encargos históricos
 
+**Continuidad vigente del 26 de octubre:** Alex queda encargado de la operación, integración y aceptación restante durante la ausencia de Yeison/Fabián. El encargo ejecutable está en [Continuidad_Alex_2026-10-26.md](Continuidad_Alex_2026-10-26.md), con EC-74/VPS, variables, PR #16 y EC-14/33/35/38/22/27/73. Conservamos estas fichas como contratos históricos; ya existe implementación y no debe reescribirse. Las asignaciones antiguas y el prompt de reparto ya no prevalecen sobre la continuidad autorizada.
+
 **Corte de cierre del 16 de octubre:** integramos PR #11 en `dev`, merge `0245146`, conservando el subconjunto de PR #10 y todos los commits posteriores. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles. Registramos en Jira que Yeison asume EC-22/23/24/26/27/28/29/30; EC-25 conserva a Fabián. EC-22 mantiene pendiente la prueba física con 100 platos y EC-27 la validación real de Storage, ambas sin Listo. Los resultados de VPS, estados finales y registro del sprint están en [el acta de cierre](Cierre_Sprint2_2026-10-16.md). Este corte prevalece sobre las notas históricas siguientes.
 
 **Reparto vigente del cierre:** Yeison lleva EC-22/23/24/26/27/28/29/30; Fabián conserva EC-25. Sprint 3 mantiene su reparto anterior y su aceptación independiente. Alex revisa diferencias propias sin duplicar lo integrado. Las fichas siguientes conservan contratos y encargos históricos; sus asignaciones anteriores de Sprint 2 no prevalecen sobre este corte.

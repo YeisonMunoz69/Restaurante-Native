@@ -22,7 +22,7 @@ export type RootTabParamList = {
   Reservations: undefined;
   News: undefined;
   Upcoming: undefined;
-  Settings: undefined;
+  Settings: { returnTo?: 'Reservations' } | undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();

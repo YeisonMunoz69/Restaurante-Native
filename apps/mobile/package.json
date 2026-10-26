@@ -3,11 +3,13 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
+    "android": "react-native run-android --mode localDebug --appId co.encantocampestre.app.local",
+    "android:vps": "react-native run-android --mode vpsDebug --appId co.encantocampestre.app --no-packager",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest --forceExit"
+    "test": "jest --forceExit",
+    "check:i18n": "node scripts/check-i18n-literals.mjs"
   },
   "dependencies": {
     "@encanto/shared": "*",

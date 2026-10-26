@@ -7,7 +7,7 @@
 **Versión:** 1.2 · **Fecha:** 16 de octubre de 2026
 **Documentos base:** `Sprint0_Analisis_y_Diseno.md` v0.2 · `Decisiones_Pendientes_y_Riesgos.md` v0.7 · `Plan_de_Sprints.md` · `Backlog_Jira.md` v0.1
 
-**Cambio solicitado el 16 de octubre:** Google como único proveedor y bloqueo global antes de iniciar sesión; Ajustes se dividirá en subpantallas. El cambio queda documentado localmente para Sprint 5, pendiente de registrar en Jira y copiar manualmente a Drive y `Requisitos_del_Sistema.docx`. El inicio de sesión correo/contraseña que se construyó en Sprint 1 describe la versión anterior, no el objetivo nuevo.
+**Cambio solicitado el 16 de octubre:** Google como único proveedor y bloqueo global antes de iniciar sesión; Ajustes se dividirá en subpantallas. El 26/10 registramos los criterios en EC-75, Por hacer/backlog, responsable Alex, después de estabilizar dev; falta implementación y reconciliar EC-58. El inicio de sesión correo/contraseña construido en Sprint 1 sigue siendo el implementado hasta validar su sustitución. Pendiente actualizar requisitos en Drive y Word local: RF-AUT01/02/03/05/08 y Ajustes; sección 8/responsables, continuidad de Alex. No modificamos las copias manuales por editar este archivo.
 
 ---
 
@@ -43,7 +43,7 @@
 
 #### Fuera del Alcance (Exclusiones Explícitas)
 
-- **Procesamiento de pagos en la app:** No se integran pasarelas de pago (Wompi, PayU, Stripe) ni validación bancaria automática. El pago se realiza por fuera (efectivo, Nequi, Daviplata o PSE) y el comprobante se transmite por WhatsApp.
+- **Procesamiento de pagos en la app:** No integramos pasarelas ni validación bancaria automática. El dueño configura manualmente los medios externos (efectivo, Nequi, llave de transferencia u otros), sus datos e instrucciones y el WhatsApp de contacto desde el panel; no guardamos PIN ni contraseñas bancarias. Publicar esos datos no confirma reservas.
 - **Plataforma iOS:** Se utiliza código portable en React Native, pero el soporte, compilación y pruebas en iOS quedan excluidos.
 - **Reserva en app de la zona VIP "Mirador":** Por tener capacidad reducida (máximo 10 personas + 2 niños) y requerir tarifa de servicio adicional, su reserva se canaliza exclusivamente por WhatsApp.
 - **Asignación automatizada de mesas individuales:** El sistema reserva aforo por franja horaria. La asignación física y combinación de mesas (hasta 40 personas) es responsabilidad operativa del personal en sala.
@@ -79,9 +79,10 @@ Las siguientes reglas, acordadas en el proceso de toma de decisiones, son de cum
 - **RN-09 (Ciclo de Aprobación Manual):** Toda reserva inicia en estado `SOLICITADA`. Pasa a `CONFIRMADA` únicamente cuando un dueño valida el comprobante de pago externo y la aprueba en su panel.
 - **RN-10 (Canal Operativo WhatsApp):** WhatsApp actúa como canal de soporte para recepción de comprobantes de pago, coordinación de la zona VIP Mirador y envío de tickets formateados al grupo de cocina.
 - **RN-11 (Alerta de Inasistencias):** El panel del dueño muestra de forma visible el historial de cancelaciones e inasistencias previas asociadas a la cuenta del comensal solicitante.
-- **RN-12 (Calendario de Apertura Discontinuo):** El restaurante opera sábados, domingos y días festivos oficiales de Colombia. Entre semana (lunes a viernes no festivos) solo abre si la reserva cuenta con **15 o más personas**.
+- **RN-12 (Calendario de Apertura Discontinuo, acuerdo 22/10):** domingos y festivos nacionales colombianos abren por defecto y ADMIN puede deshabilitarlos. Sábados y otros días requieren apertura explícita. Cada día combina Restaurante, Pesca y/o Motos, horario general y nota pública. Solo Restaurante permite reservar mesas. Retiramos el mínimo de quince personas entre semana: en fechas sin Restaurante se ofrece contacto por WhatsApp para coordinar, sin confirmar apertura ni reserva.
 - **RN-13 (Zona VIP Mirador):** Capacidad máxima de 10 adultos más 2 niños con tarifa de servicio adicional. Se gestiona fuera de la app mediante enlace directo a WhatsApp.
 - **RN-14 (Moneda e Impuestos):** Todos los valores monetarios se expresan en Pesos Colombianos (COP) sin decimales, con separador de miles. No se desglosa ni cobra IVA/impoconsumo en la aplicación.
+- **RN-15 (Administradores, inamovible):** mantenemos al menos tres administradores activos. Retirar permisos, desactivar o eliminar no puede reducir ese mínimo, tampoco con operaciones concurrentes. Primero designamos reemplazos con cuentas reales. Una instalación anterior con menos de tres solo puede aumentar su número. Retirar permisos conserva cuenta e historial; no se inventan administradores para cumplir el conteo.
 
 ---
 
@@ -107,7 +108,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 
 | ID           | Nombre del Requisito          | Descripción y Regla Operativa                                                                                                           | Prioridad |  Sprint  | Ref. Jira |
 | ------------ | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | :-------: | :------: | --------- |
-| **RF-MEN01** | Visualización de carta        | Presentación de platos organizados por categorías jerárquicas con fotografía 4:3, nombre, descripción concisa y precio en COP.          |   **M**   | Sprint 2 | EP-03     |
+| **RF-MEN01** | Visualización de carta        | Platos por categorías en bloques de tres carruseles horizontales, con cambio manual y acceso a todas las categorías. Foto 4:3, nombre, descripción, COP y acción para añadir al borrador Mi Pedido. | **M** | Sprint 2 | EP-03 |
 | **RF-MEN02** | Platos del próximo día hábil  | La pantalla principal de inicio presenta automáticamente los platos disponibles para la fecha de atención más próxima en el calendario. |   **M**   | Sprint 2 | EP-03     |
 | **RF-MEN03** | Ficha de detalle de plato     | Pantalla extendida con carrusel de hasta 10 fotos optimizadas, descripción completa, tabla de alérgenos y sellos dietarios.             |   **M**   | Sprint 2 | EP-03     |
 | **RF-MEN04** | Búsqueda por ingredientes     | Motor de búsqueda de texto predictivo por nombre de plato e ingredientes declarados en su ficha.                                        |   **M**   | Sprint 5 | EP-03     |
@@ -120,13 +121,13 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 
 | ID           | Nombre del Requisito            | Descripción y Regla Operativa                                                                                                                | Prioridad |  Sprint  | Ref. Jira |
 | ------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | :-------: | :------: | --------- |
-| **RF-RES01** | Selección de fecha hábil        | Calendario selector que habilita únicamente días marcados como abiertos en el calendario de atención del restaurante.                        |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES01** | Selección de fecha hábil        | Calendario mensual con días, actividades combinables, horario y notas publicados. Solo fechas abiertas con Restaurante permiten consultar franjas para mesas; Pesca/Motos son informativas. | **M** | Sprint 3 | EP-05 |
 | **RF-RES02** | Cálculo y validación de franjas | Generación dinámica de franjas disponibles y control de aforo por franja mediante transacción con aislamiento `SERIALIZABLE`.                |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES03** | Selección de comensales         | Selector numérico de personas validando que no exceda el aforo libre en la franja y que cumpla el mínimo de 15 personas si es entre semana.  |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES04** | Pedido anticipado de platos     | Paso de selección de platos y cantidades filtrando solo los disponibles para la fecha elegida. Obligatorio si personas ≥ 8; opcional si < 8. |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES03** | Selección de comensales         | Número de personas validado por aforo libre; sin mínimo especial entre semana. Se conserva pedido obligatorio desde ocho personas. | **M** | Sprint 3 | EP-05 |
+| **RF-RES04** | Pedido anticipado de platos     | Mi Pedido editable desde carta y reserva, con cantidades, eliminación y total estimado. Revalidamos precios/disponibilidad para la fecha elegida y al enviar. Obligatorio desde ocho; hasta siete se permite solo mesa. | **M** | Sprint 3 | EP-05 |
 | **RF-RES05** | Cálculo del total del pedido    | Sumatoria automática de subtotales (`cantidad × precio_unitario_congelado`) expresada en COP sin recargos tributarios.                       |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES06** | Registro de solicitud inicial   | Inserción de la reserva en estado `SOLICITADA` generando un código alfanumérico corto y legible de 6 caracteres (ej. `ENC-482`).             |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES07** | Pantalla de pago y WhatsApp     | Resumen con instrucciones bancarias (Nequi/PSE) y botón de acción que abre WhatsApp con mensaje predeterminado y código de reserva.          |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES07** | Pantalla de pago y WhatsApp     | Resumen con monto y contacto/medios/instrucciones vigentes publicados por ADMIN, consultados también antes de abrir WhatsApp con código y ticket. Ante falta de configuración o de red, informa sin inventar cuentas ni usar datos antiguos. La solicitud sigue pendiente hasta revisión humana. | **M** | Sprint 3 | EP-05 |
 | **RF-RES08** | Alerta al dueño por solicitud   | Notificación push y correo al teléfono de los dueños cuando entra una nueva solicitud, incluso si la app está cerrada en segundo plano.      |   **M**   | Sprint 5 | EP-09     |
 | **RF-RES09** | Aprobación y rechazo manual     | Interfaz para que el dueño acepte la reserva (pasa a `CONFIRMADA`) o la rechace (pasa a `RECHAZADA`), exigiendo motivo. El rechazo es terminal; para intentarlo otra vez, el comensal crea una solicitud nueva. |   **M**   | Sprint 3 | EP-06     |
 | **RF-RES10** | Notificación al comensal        | Notificación push y por correo al comensal informando la confirmación o el rechazo (con su motivo) de su solicitud.                          |   **M**   | Sprint 5 | EP-09     |
@@ -136,7 +137,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-RES14** | Inasistencia por tolerancia     | Tarea programada que marca `NO_ASISTIO` a las reservas confirmadas tras 30 minutos del inicio de su franja sin registro de llegada.          |   **S**   | Sprint 5 | EP-06     |
 | **RF-RES15** | Adición posterior de platos     | Opción para que el comensal agregue platos a una reserva ya confirmada, generando un saldo excedente a transferir y comprobante.             |   **S**   | Sprint 5 | EP-05     |
 | **RF-RES16** | Reemplazo de platos             | Permuta de platos confirmados por otros de igual o mayor valor sin devolución de dinero.                                                     |   **C**   | Backlog  | —         |
-| **RF-RES17** | Restricción entre semana        | Bloqueo automático de solicitudes de lunes a viernes no festivos si el número de comensales ingresado es inferior a 15 personas.             |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES17** | Coordinación de otras fechas    | Sin apertura de Restaurante no se genera reserva desde la app; mostramos horarios/notas informativas y contacto WhatsApp vigente para coordinar. Sustituye la restricción de quince personas, retirada el 22/10. | **M** | Sprint 3 | EP-05 |
 | **RF-RES18** | Generación de ticket copiable   | Conversión de la reserva y su pedido en un ticket de texto plano estructurado, listo para copiar con un toque y enviar a cocina.             |   **M**   | Sprint 3 | EP-05     |
 
 ### 4.4 Módulo de Muro de Noticias (NOT)
@@ -159,8 +160,8 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-ADM03** | Disponibilidad por fecha       | Matriz de configuración para habilitar o inhabilitar platos en días específicos del calendario (override de disponibilidad general). |   **M**   | Sprint 2  | EP-04     |
 | **RF-ADM04** | Interruptor inmediato de plato | Alternancia inmediata de disponibilidad general para retirar platos agotados durante el servicio en un solo toque.                   |   **M**   | Sprint 2  | EP-04     |
 | **RF-ADM05** | Zonas y mesas                  | Registro de zonas físicas del restaurante y mesas con sus capacidades para el cálculo del aforo total del establecimiento.           |   **M**   | Sprint 1  | EP-01     |
-| **RF-ADM06** | Calendario anual de servicio   | Configuración de días de apertura mediante reglas base (fines de semana y festivos) y excepciones por fecha específica.              |   **M**   | Sprint 2  | EP-04     |
-| **RF-ADM07** | Configuración operativa        | Panel para ajustar duración de reservas, granularidad de franjas, ventanas de anticipación y tolerancia sin tocar código.            |   **M**   | Sprint 3  | EP-05     |
+| **RF-ADM06** | Calendario anual de servicio   | ADMIN configura aperturas/cierres sobre domingos y festivos colombianos base, servicios combinables Restaurante/Pesca/Motos, horarios y notas públicas por fecha. No convierte Pesca/Motos en reservas. | **M** | Sprint 2 | EP-04 |
+| **RF-ADM07** | Configuración operativa        | Panel para ajustar parámetros de operación sin tocar código. Incluye contacto y pago externo: WhatsApp con indicativo, medios/datos en texto libre e instrucciones, editables solo por ADMIN, persistidos sin reinicio, confirmación previa y conflicto ante una versión desactualizada. No implica que todos los demás parámetros ya tengan formulario. | **M** | Sprint 3 | EP-05 |
 | **RF-ADM08** | Bandeja de solicitudes         | Tablero de solicitudes entrantes con conteo de comensales, total del pedido, estado del comprobante y acciones rápidas.              |   **M**   | Sprint 3  | EP-06     |
 | **RF-ADM09** | Agenda del día                 | Vista operativa cronológica para el personal en salón con lista de reservas confirmadas, comensales y platos solicitados.            |   **M**   | Sprint 3  | EP-06     |
 | **RF-ADM10** | Check-in en salón              | Marcación rápida de llegada de clientes (`EN_CURSO` o `COMPLETADA`) o registro manual de no asistencia desde la agenda.              |   **M**   | Sprint 3  | EP-06     |
@@ -168,6 +169,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-ADM12** | Copia de ticket para cocina    | Botón de acción que copia el ticket estructurado al portapapeles del móvil para pegarlo en el chat de WhatsApp de cocina.            |   **M**   | Sprint 3  | EP-06     |
 | **RF-ADM13** | Indicadores agregados          | Gráficas consolidadas de reservas atendidas, volumen de comensales y platos más solicitados.                                         |   **C**   |  Backlog  | —         |
 | **RF-ADM14** | Bitácora de auditoría          | Registro inmutable de acciones administrativas sensibles (usuario, acción, fecha, valores antes y después).                          |   **S**   | Sprint 5* | EP-10     |
+| **RF-ADM15** | Gestión compartida de administradores | Un ADMIN designa cuentas existentes o retira su rol con confirmación; conservamos mínimo de tres activos, protección concurrente en API/BD, auditoría y rechazo de JWT ADMIN con permisos retirados. No equivale a borrar la cuenta ni a implementar TOTP. | **M** | Backlog, ajuste 22/10 | Pendiente historia propia |
 
 _\*Sujeto a capacidad disponible de Sprint 5._
 
@@ -193,7 +195,7 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 | ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | :-----------------: |
 | **RNF-01** | Rendimiento Móvil        | La carta carga en menos de 2.0 s en red 4G estándar. El desplazamiento vertical de la lista de platos mantiene 60 fps constantes mediante virtualización.                          | Prueba en dispositivo físico de gama media (Android 10+, 3GB RAM) | Sprint 2 / Sprint 6 |
 | **RNF-02** | Rendimiento Backend      | Latencia en el percentil 95 (p95) inferior a 400 ms en todas las consultas de lectura de la API bajo carga concurrente de 30 solicitudes/s.                                        | Medición con k6 o autocannon                                      | Sprint 3 / Sprint 6 |
-| **RNF-03** | Mantenibilidad (Textos)  | **Cero cadenas de texto quemadas en el código fuente.** Todos los títulos, etiquetas, mensajes de error y textos provienen de archivos de recursos gestionados con `i18next`.      | Análisis estático con scripts de detección en CI                  |      Sprint 1       |
+| **RNF-03** | Mantenibilidad (Textos)  | **Cero cadenas de texto quemadas en la interfaz móvil.** Los títulos, etiquetas, mensajes de error y textos visibles provienen de recursos gestionados con `i18next`; fechas civiles y valores COP usan formateadores compartidos. | `npm run check:i18n --workspace=@encanto/mobile` y revisión de formato | Sprint 1 |
 | **RNF-04** | Parametrización          | Las reglas de negocio (duración de franja, tolerancia, anticipación) residen en tablas de configuración del sistema, editables desde el panel sin desplegar código.                | Inspección de base de datos y endpoints                           |      Sprint 1       |
 | **RNF-05** | Seguridad de Contraseñas | Las contraseñas se almacenan mediante hash criptográfico **Argon2id** (configuración recomendada OWASP: memoria 64MB, 3 iteraciones).                                              | Revisión de código y pruebas de autenticación                     |      Sprint 1       |
 | **RNF-06** | Seguridad de Tokens      | Los tokens de refresco en el cliente móvil se almacenan exclusivamente en el enclave seguro del sistema operativo (Android Keystore vía `react-native-keychain`).                  | Inspección de almacenamiento del dispositivo                      |      Sprint 1       |
@@ -206,6 +208,12 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 | **RNF-13** | Cumplimiento Legal       | Cumplimiento estricto de la Ley Estatutaria 1581 de 2012 (Habeas Data de Colombia). Consentimiento explícito en el registro, recolección mínima y opción de eliminación de cuenta. | Revisión de términos y política de datos                          |      Sprint 6       |
 | **RNF-14** | Observabilidad           | Registro estructurado de logs en backend (formato JSON con Pino) y captura desatendida de fallos y excepciones en el cliente móvil mediante Sentry.                                | Verificación de consola Sentry y logs de servidor                 |      Sprint 1       |
 | **RNF-15** | Respaldo y Resiliencia   | Estrategia de respaldo periódico mensual de la base de datos PostgreSQL alojada en Supabase hacia almacenamiento seguro externo.                                                   | Prueba de restauración desde copia de seguridad                   |      Sprint 6       |
+
+Para RNF-03, los textos fijos se guardan en `apps/mobile/src/i18n/locales/` y se consultan con `t('seccion.clave')`. El verificador detecta texto JSX literal, cadenas visibles en atributos y expresiones JSX directas, además de claves de traducción inexistentes. Los nombres y descripciones recibidos de la API son contenido del restaurante y no se traducen en el cliente. La convención de trabajo está en `apps/mobile/src/i18n/README.md`.
+
+**Avance RNF-09/10, 22 de octubre:** usamos `FeedbackHost` y `FeedbackMessage` como componentes compartidos de confirmación y avisos, con temas claro/oscuro, iconos, acciones diferenciadas, contenido desplazable y respeto de reducción de movimiento. No añadimos nuevos diálogos nativos `Alert.alert`: el adaptador `Feedback` muestra nuestra interfaz. Las confirmaciones no ejecutan la acción al abrir ni al pulsar Atrás. Sigue pendiente la auditoría completa de contraste/TalkBack y la matriz de tamaños; este avance no certifica los esqueletos o todos los estados de la app.
+
+**Pendiente actualizar requisitos en Drive y Word local:** B-10, RF-RES07, RF-ADM07 y avance RNF-09/10: pago/contacto editable por dueño, consulta vigente y componentes propios de confirmación/retroalimentación. Registramos la decisión de pago en EC-35; esta nota no modifica las copias manuales.
 
 ---
 
@@ -302,7 +310,7 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 | **RF-RES14**   | Inasistencia tras 30 min          |         B-3         |   EP-06    |  **Sprint 5**   | Marcación manual por personal            |
 | **RF-RES15**   | Adición posterior de platos       |         B-7         |   EP-05    |  **Sprint 5**   | Se coordina por WhatsApp si se recorta   |
 | **RF-RES16**   | Reemplazo de platos igual/mayor   |         B-7         |     —      |   **Backlog**   | Fuera de sprints semestrales             |
-| **RF-RES17**   | Restricción entre semana (≥15)    |        B-12         |   EP-05    |  **Sprint 3**   | Validación obligatoria en cliente y API  |
+| **RF-RES17**   | Coordinación de fechas sin Restaurante | B-12 | EP-05 | **Sprint 3** | Sustituye mínimo de quince; solo mesas en fechas habilitadas |
 | **RF-RES18**   | Ticket formateado copiable        |      B-7, P-3       |   EP-05    |  **Sprint 3**   | Núcleo operativo para cocina             |
 | **RF-NOT01**   | Feed cronológico de noticias      |    A-7, Sec. I-5    |   EP-07    |  **Sprint 4**   | Núcleo del canal de comunicación         |
 | **RF-NOT02**   | Detalle de publicación            |         A-7         |   EP-07    |  **Sprint 4**   | Vista informativa estándar               |

@@ -14,6 +14,7 @@ export const rule = (changes: Partial<TimeSlot> = {}): TimeSlot => ({
   abierto: true,
   activo: true,
   aforoMaximo: 30,
+  servicios: ['RESTAURANTE'],
   ...changes,
 });
 export const exception = (changes: Partial<CalendarDay> = {}): CalendarDay => ({
@@ -25,12 +26,14 @@ export const exception = (changes: Partial<CalendarDay> = {}): CalendarDay => ({
   horaCierre: '11:00',
   soloPorReserva: true,
   motivo: 'Evento',
+  servicios: ['RESTAURANTE'],
   ...changes,
 });
 
 // Simulo Prisma, incluidas las transacciones, sin construir un cliente ni conectarnos.
 export function prismaMock() {
   const db = {
+    user: { findUnique: vi.fn().mockResolvedValue({ rol: 'ADMIN', activo: true }) },
     restaurant: {
       findUnique: vi.fn().mockResolvedValue({ id: restaurantId }),
       count: vi.fn().mockResolvedValue(1),

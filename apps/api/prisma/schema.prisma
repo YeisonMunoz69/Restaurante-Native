@@ -135,6 +135,9 @@ model Restaurant {
   longitud                 Decimal  @db.Decimal(10, 7)
   telefono                 String
   whatsapp                 String
+  mediosPago               String   @default("") @map("medios_pago")
+  instruccionesPago        String   @default("") @map("instrucciones_pago")
+  pagoVersion              Int      @default(0) @map("pago_version")
   aforoTotal               Int      @map("aforo_total")
   duracionReservaHasta4Min Int      @default(90) @map("duracion_reserva_hasta_4_min")
   duracionReservaDesde5Min Int      @default(120) @map("duracion_reserva_desde_5_min")
@@ -337,6 +340,7 @@ model CalendarDay {
   horaCierre     String?  @map("hora_cierre")
   soloPorReserva Boolean  @default(false) @map("solo_por_reserva")
   motivo         String?
+  servicios      String[] @default(["RESTAURANTE"])
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
@@ -359,6 +363,7 @@ model TimeSlot {
   abierto      Boolean @default(true)
   aforoMaximo  Int?    @map("aforo_maximo")
   activo       Boolean @default(true)
+  servicios    String[] @default(["RESTAURANTE"])
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 

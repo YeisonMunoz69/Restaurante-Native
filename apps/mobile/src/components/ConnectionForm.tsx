@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useConnection } from '../context/ConnectionContext';
 import { Action, Field, Note, Panel } from './attention/Controls';
+import { BUILD_ENVIRONMENT } from '../config/build-variant';
 
 // Comparto sede y conexión; el usuario cambia de servidor únicamente antes del login.
 export function ConnectionForm({
@@ -22,7 +23,7 @@ export function ConnectionForm({
           <Action
             label={t('attention.local')}
             selected={value.environment === 'local'}
-            disabled={busy}
+            disabled={busy || BUILD_ENVIRONMENT === 'dev'}
             onPress={() => {
               setValue({ ...value, environment: 'local' });
               setMessage('');
@@ -31,7 +32,7 @@ export function ConnectionForm({
           <Action
             label={t('attention.dev')}
             selected={value.environment === 'dev'}
-            disabled={busy}
+            disabled={busy || BUILD_ENVIRONMENT === 'local'}
             onPress={() => {
               setValue({ ...value, environment: 'dev' });
               setMessage('');

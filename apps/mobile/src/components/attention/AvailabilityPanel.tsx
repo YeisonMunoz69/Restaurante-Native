@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
+import { Feedback as Alert } from '../feedback/Feedback';
 import { useTranslation } from 'react-i18next';
 import {
   CalendarDateSchema,
@@ -42,7 +43,7 @@ export function AvailabilityPanel({
       setPreview(null);
       const text = t(`attention.${attentionError(error)}`);
       setMessage(text);
-      Alert.alert(t('attention.errorTitle'), text);
+      Alert.alert(t('attention.errorTitle'), text, [], { kind: 'error' });
     } finally {
       setBusy(false);
     }
