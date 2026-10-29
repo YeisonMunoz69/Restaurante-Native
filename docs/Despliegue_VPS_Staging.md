@@ -1,5 +1,19 @@
 # Despliegue del equipo 7 y CI/CD de dev
 
+## Actualización EC-74 · variables privadas de desarrollo
+
+El workflow del repositorio original usa el entorno de GitHub **`dev`** y el secreto **`VPS_API_ENV_FILE_B64`** para reconstruir `apps/api/.env.vps`. El secreto contiene una sola línea con el archivo completo de desarrollo codificado en base64. Su contenido debe corresponder a la configuración aprobada de la VPS; no lo generamos desde `.env` de la raíz ni desde los valores locales de `apps/api/.env`. Los secretos SSH existentes siguen siendo independientes y solo permiten la conexión Actions → VPS.
+
+No se imprime el valor, ni siquiera durante validación. El instalador comprueba que estén presentes y no vacías `DATABASE_URL`, `DIRECT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_STORAGE_BUCKET`. Si falta el secreto, la codificación es inválida, falta una variable o no existe un archivo actual que respaldar, el paso falla antes de reemplazar la configuración.
+
+Antes de reemplazar, el instalador guarda una copia privada en `/root/backups/elev-d-e-7-dev/env/` con permisos `600`; el directorio queda en `700`. El temporal se escribe junto al destino, también en `600`, y se cambia de forma atómica. Para recuperar una copia concreta:
+
+```bash
+install -m 600 /root/backups/elev-d-e-7-dev/env/<copia> /root/projects/equipo-7/apps/api/.env.vps
+```
+
+La conexión Actions → VPS verifica la huella ED25519 fijada en `.github/workflows/ci.yml`. La preparación de este archivo no confirma que el secret exista: antes de integrar el cambio en `dev`, configuramos el entorno `dev` con el contenido vigente de `.env.vps` usando un canal administrativo autorizado. No copiamos valores entre desarrollo y producción.
+
 ## 1. Donde quedamos y que seguimos del docente
 
 **Corte del 19 de noviembre:** publicamos `dev` en `1d2351e`. GitHub bloqueó el job por facturación antes de asignar un runner. Yeison ejecutó el despliegue manual de la sección 10; la salida confirma siete migraciones aplicadas, la imagen validada y el runtime en `1d2351e`. Tras ese despliegue comprobamos `/api/v1/noticias` con HTTP 200 sin sesión. El APK `vpsDebug` incluye el bundle Android y apunta al dominio dev. Comprueba Google con un token de diagnóstico inválido. HTTP 503 indica que la API aún necesita el identificador Web público `GOOGLE_WEB_CLIENT_ID` en `apps/api/.env.vps`; HTTP 401 indica que la API ya intentó validarlo. [Ejecución de GitHub Actions](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/44604377375).
