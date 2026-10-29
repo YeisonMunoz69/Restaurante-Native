@@ -76,6 +76,9 @@ jobs:
         run: |
           bash -n scripts/deploy-vps.sh
           bash scripts/test-deploy-vps.sh
+          bash -n scripts/install-vps-env.sh
+          bash -n scripts/test-install-vps-env.sh
+          bash scripts/test-install-vps-env.sh
 
       - name: Build and smoke-test VPS containers
         env:
@@ -148,6 +151,7 @@ jobs:
     if: github.ref == 'refs/heads/dev' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    environment: dev
     concurrency:
       group: vps-equipo-7-dev
       cancel-in-progress: false
@@ -158,21 +162,25 @@ jobs:
         env:
           DEPLOY_BRANCH: ${{ secrets.MAIN_BRANCH }}
           DEPLOY_SHA: ${{ github.sha }}
+          VPS_API_ENV_FILE_B64: ${{ secrets.VPS_API_ENV_FILE_B64 }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          envs: DEPLOY_BRANCH,DEPLOY_SHA
+          fingerprint: SHA256:Of1G/c+6RNMVdoPFj2bwBl8lWQ9MJmhlgaPSn6JQ+Fs
+          envs: DEPLOY_BRANCH,DEPLOY_SHA,VPS_API_ENV_FILE_B64
           command_timeout: 30m
           script_stop: true
           script: |
             set -eu
             test "$DEPLOY_BRANCH" = dev
+            test -n "${VPS_API_ENV_FILE_B64:-}" || { printf '%s\n' 'Falta VPS_API_ENV_FILE_B64 en el entorno dev de GitHub.' >&2; exit 1; }
             cd /root/projects/equipo-7
             test -z "$(git status --porcelain)"
             git fetch origin "$DEPLOY_BRANCH"
             git checkout "$DEPLOY_BRANCH"
             git pull --ff-only origin "$DEPLOY_BRANCH"
+            bash scripts/install-vps-env.sh "$PWD"
             bash scripts/deploy-vps.sh "$DEPLOY_SHA"
