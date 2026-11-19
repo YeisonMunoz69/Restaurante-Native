@@ -25,6 +25,8 @@
     "requestError": "No pudimos cargar la carta. Revisa tu conexión e inténtalo de nuevo.",
     "openDish": "Ver detalles de {{name}}",
     "loadingDetail": "Cargando los detalles del plato…",
+    "shareDish": "Compartir plato",
+    "shareMessage": "{{name}} en El Encanto Campestre\n{{url}}",
     "detailError": "No pudimos cargar los detalles. Comprueba la conexión e inténtalo de nuevo.",
     "photos": "Fotos del plato",
     "photoLabel": "Foto {{number}} del plato",

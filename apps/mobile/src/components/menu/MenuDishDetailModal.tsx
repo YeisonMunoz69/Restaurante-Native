@@ -4,6 +4,7 @@ import {
   Image,
   Modal,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -16,6 +17,9 @@ import { useTheme } from '../../theme/ThemeContext';
 import { menuApi } from '../../services/menu.service';
 import { publicMenuPhotoUrl } from './menu-photo';
 import { formatCop } from '../../utils/formatters';
+import { dishLink } from '../../config/web-links';
+import { Action } from '../attention/Controls';
+import { Feedback } from '../feedback/Feedback';
 
 export function MenuDishDetailModal({
   visible,
@@ -37,6 +41,7 @@ export function MenuDishDetailModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const shareUrl = dish?.disponible ? dishLink(dish.slug, fecha) : null;
 
   useEffect(() => {
     if (!visible || !dishId || !restauranteId) return;
@@ -212,6 +217,13 @@ export function MenuDishDetailModal({
                 )}
               </Text>
             </View>
+
+            {shareUrl && (
+              <Action label={t('menu.shareDish')} onPress={() => {
+                void Share.share({ message: t('menu.shareMessage', { name: dish.nombre, url: shareUrl }) })
+                  .catch(() => Feedback.alert(t('news.actionError'), undefined, [], { kind: 'error' }));
+              }} />
+            )}
 
             <Text
               style={[

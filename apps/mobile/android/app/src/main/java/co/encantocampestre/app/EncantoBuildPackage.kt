@@ -11,7 +11,8 @@ class EncantoBuildModule(context: ReactApplicationContext) : ReactContextBaseJav
     override fun getName() = "EncantoBuild"
     override fun getConstants(): Map<String, Any> = mapOf(
         "environment" to BuildConfig.BACKEND_ENV,
-        "googleWebClientId" to BuildConfig.GOOGLE_WEB_CLIENT_ID
+        "googleWebClientId" to BuildConfig.GOOGLE_WEB_CLIENT_ID,
+        "webOrigin" to BuildConfig.WEB_ORIGIN
     )
 }
 

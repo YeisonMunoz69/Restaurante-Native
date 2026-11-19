@@ -11,6 +11,7 @@ import { useConnection } from '../context/ConnectionContext';
 import { connectionUrl } from '../config/connection';
 import { useTheme } from '../theme/ThemeContext';
 import { newsImageUrl, readNews } from '../services/news.service';
+import { newsLink } from '../config/web-links';
 
 // Reinicio la vista cuando cambia el destino para no mezclar publicaciones entre entornos.
 export function NewsScreen() {
@@ -106,7 +107,7 @@ function NewsFeed({ base, restaurant }: { base: string; restaurant: string }) {
                 <Action key={url + index} label={url} onPress={() => act(Linking.openURL(url))} />
               ))}
               <Action label={t('news.share')} onPress={() => act(Share.share({
-                message: [selected.titulo, selected.cuerpo, ...selected.enlaces].join('\n\n'),
+                message: [selected.titulo, newsLink(selected.id) ?? selected.cuerpo, ...selected.enlaces].join('\n\n'),
               }))} />
             </ScrollView>
           </SafeAreaView>

@@ -109,6 +109,7 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField "String", "GOOGLE_WEB_CLIENT_ID", '"' + (System.getenv("ENCANTO_GOOGLE_WEB_CLIENT_ID") ?: "") + '"'
+        buildConfigField "String", "WEB_ORIGIN", groovy.json.JsonOutput.toJson(System.getenv("ENCANTO_WEB_URL") ?: "")
     }
     // Dos instalaciones separadas, con almacenamiento y sesiones independientes.
     flavorDimensions "environment"
