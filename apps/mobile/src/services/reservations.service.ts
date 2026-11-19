@@ -2,6 +2,7 @@ import type {
   ReservationCreate,
   ReservationListQuery,
   ReservationReject,
+  ReservationReceiptImage,
   ReservationResult,
   ReservationSlot,
   ReservationSlotsQuery,
@@ -34,6 +35,9 @@ export interface CreateReservationResult {
   instruccionesPago: string;
 }
 
+type ReceiptAsset = { uri: string; fileName?: string; type?: string };
+export type ReceiptPreview = ReservationReceiptImage & { id: string };
+
 // Mantengo juntos los endpoints autenticados del comensal y del panel operativo.
 export const reservationsApi = {
   slots: async (query: ReservationSlotsQuery) =>
@@ -48,14 +52,30 @@ export const reservationsApi = {
   detail: async (id: string) =>
     (await apiClient.get<ReservationResult>(`/reservas/mias/${id}`)).data,
 
+  uploadReceipt: async (id: string, asset: ReceiptAsset) => {
+    const data = new FormData();
+    data.append('foto', {
+      uri: asset.uri, name: asset.fileName ?? 'comprobante.png', type: asset.type ?? 'image/png',
+    } as unknown as Blob);
+    return (await apiClient.put<ReservationResult>(`/reservas/mias/${id}/comprobante`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60_000,
+    })).data;
+  },
+
+  receiptTicket: async (id: string) =>
+    (await apiClient.get<ReservationReceiptImage>(`/reservas/mias/${id}/imagen`, { timeout: 60_000 })).data,
+
+  reviewReceipt: async (id: string) =>
+    (await apiClient.get<ReceiptPreview>(`/admin/reservas/${id}/comprobante`, { timeout: 60_000 })).data,
+
   cancel: async (id: string) =>
     (await apiClient.patch<ReservationResult>(`/reservas/mias/${id}/cancelar`)).data,
 
   requests: async (query: ReservationListQuery = {}) =>
     (await apiClient.get<ReservationWithCustomer[]>('/admin/reservas/solicitudes', { params: query })).data,
 
-  approve: async (id: string) =>
-    (await apiClient.patch<ReservationResult>(`/admin/reservas/${id}/aprobar`)).data,
+  approve: async (id: string, comprobanteId: string) =>
+    (await apiClient.patch<ReservationResult>(`/admin/reservas/${id}/aprobar`, { comprobanteId })).data,
 
   reject: async (id: string, body: ReservationReject) =>
     (await apiClient.patch<ReservationResult>(`/admin/reservas/${id}/rechazar`, body)).data,

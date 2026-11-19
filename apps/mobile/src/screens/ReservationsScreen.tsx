@@ -20,7 +20,7 @@ import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { reservationsApi } from '../services/reservations.service';
 import { Feedback as Alert } from '../components/feedback/Feedback';
 import { ReservationCreateScreen } from './ReservationCreateScreen';
-import { PaymentInstructions } from '../components/PaymentInstructions';
+import { ReservationReceiptCard } from '../components/reservations/ReservationReceipt';
 import { formatCop, formatDateDdMmYyyy } from '../utils/formatters';
 import { useOrderDraft } from '../context/OrderDraftContext';
 
@@ -227,6 +227,9 @@ export const ReservationsScreen: React.FC = () => {
                 <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{formatDateDdMmYyyy(reservation.fecha)} · {reservation.horaInicio}–{reservation.horaFin}</Text>
                 <Note>{t('reservations.people', { count: reservation.numComensales })} · {t(`reservations.status.${reservation.estado}`)}</Note>
                 <Note>{t('reservations.total')}: {formatCop(reservation.total)}</Note>
+                {reservation.estado === 'SOLICITADA' && <Note>
+                  {t(reservation.comprobante ? 'reservations.receiptUnderReview' : 'reservations.receiptMissing')}
+                </Note>}
                 {reservation.motivoRechazo && <Note>{t('reservations.rejectionReason')}: {reservation.motivoRechazo}</Note>}
                 {detailOpenId === reservation.id && (
                   <>
@@ -240,13 +243,19 @@ export const ReservationsScreen: React.FC = () => {
                           <Note key={line.platoId}>{t('reservations.orderLine', { quantity: line.cantidad, name: line.nombre })} · {formatCop(line.subtotal)}</Note>
                         )) : <Note>{t('reservations.noOrder')}</Note>}
                         {detail.nota && <Note>{t('reservations.note')}: {detail.nota}</Note>}
-                        {(detail.estado === 'SOLICITADA' || detail.estado === 'CONFIRMADA') && <PaymentInstructions codigo={detail.codigo} ticket={detail.ticket} />}
+                        <ReservationReceiptCard reservation={detail} active={isFocused} onUpdate={updated => {
+                          setDetails(current => ({ ...current, [updated.id]: updated }));
+                          setItems(current => current.map(item => item.id === updated.id ? updated : item));
+                        }} />
                       </>
                     )}
                   </>
                 )}
                 <Action
-                  label={detailErrorId === reservation.id ? t('reservations.retryDetails') : detailOpenId === reservation.id ? t('reservations.hideDetails') : t('reservations.viewDetails')}
+                  label={detailErrorId === reservation.id ? t('reservations.retryDetails')
+                    : detailOpenId === reservation.id ? t('reservations.hideDetails')
+                      : reservation.estado === 'SOLICITADA' && !reservation.comprobante
+                        ? t('reservations.receiptAttach') : t('reservations.viewDetails')}
                   disabled={detailLoadingId === reservation.id}
                   onPress={() => void toggleDetails(reservation.id)}
                 />

@@ -6,6 +6,7 @@ import { Feedback } from '../../components/feedback/Feedback';
 import { useAuth } from '../../context/AuthContext';
 import { reservationsApi } from '../../services/reservations.service';
 import { AdminReservationsScreen } from '../AdminReservationsScreen';
+import { ReservationImagePreview } from '../../components/reservations/ReservationReceipt';
 
 const mockTranslate = (key: string) => key;
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: mockTranslate }) }));
@@ -15,6 +16,7 @@ jest.mock('../../services/reservations.service', () => ({
     requests: jest.fn(),
     agenda: jest.fn(),
     approve: jest.fn(),
+    reviewReceipt: jest.fn(),
     reject: jest.fn(),
     markArrival: jest.fn(),
     markNoShow: jest.fn(),
@@ -61,7 +63,11 @@ describe('AdminReservationsScreen', () => {
     api.approve.mockResolvedValue({ ...baseReservation, estado: 'CONFIRMADA' } as never);
   });
 
-  it('permite a ADMIN aprobar una solicitud usando la API y refresca la lista', async () => {
+  it('habilita la decisión de ADMIN después de abrir la captura vigente', async () => {
+    api.requests.mockResolvedValue([{ ...baseReservation,
+      comprobante: { id: 'version-revisada', ancho: 240, alto: 520, subidoEn: '2031-02-20T12:00:00Z' },
+    }]);
+    api.reviewReceipt.mockResolvedValue({ id: 'version-revisada', imagen: 'cG5n', ancho: 240, alto: 520 });
     const dialog = jest.spyOn(Feedback, 'alert');
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => {
@@ -69,13 +75,21 @@ describe('AdminReservationsScreen', () => {
         <ThemeProvider><AdminReservationsScreen onBack={jest.fn()} /></ThemeProvider>,
       );
     });
-    await ReactTestRenderer.act(async () => {
-      await tree!.root.findAllByType(Action).find(action => action.props.label === 'reservations.approve')!.props.onPress();
+    const action = (label: string) => tree!.root.findAllByType(Action).find(row => row.props.label === label)!;
+    ReactTestRenderer.act(() => action('reservations.requestDetail').props.onPress());
+    expect(action('reservations.approve').props.disabled).toBe(true);
+    await ReactTestRenderer.act(async () => action('reservations.receiptReview').props.onPress());
+    ReactTestRenderer.act(() => {
+      const preview = tree!.root.findByType(ReservationImagePreview);
+      preview.props.onViewed();
+      preview.props.onClose();
     });
+    expect(action('reservations.approve').props.disabled).toBe(false);
+    ReactTestRenderer.act(() => action('reservations.approve').props.onPress());
 
     expect(api.approve).not.toHaveBeenCalled();
     await ReactTestRenderer.act(async () => { await dialog.mock.calls[0][2]![1].onPress!(); });
-    expect(api.approve).toHaveBeenCalledWith('reservation-id');
+    expect(api.approve).toHaveBeenCalledWith('reservation-id', 'version-revisada');
     expect(api.requests).toHaveBeenCalledWith();
     expect(api.agenda).not.toHaveBeenCalled();
     ReactTestRenderer.act(() => tree!.unmount());

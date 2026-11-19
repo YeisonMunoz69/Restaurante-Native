@@ -14,6 +14,8 @@ jest.mock('@react-native-clipboard/clipboard', () => ({
   getString: jest.fn(() => Promise.resolve('')),
 }));
 
+jest.mock('react-native-share', () => ({ open: jest.fn() }));
+
 // simulacion basica de react-native-keychain para el entorno de pruebas unitarias
 jest.mock(
   'react-native-keychain',
