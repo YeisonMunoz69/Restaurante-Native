@@ -218,9 +218,14 @@
     "title": "Muro del Encanto",
     "subtitle": "Noticias, eventos y novedades de la vereda Las Huacas",
     "pinned": "Fijada",
-    "emptyState": "No hay publicaciones recientes",
-    "sampleTitle": "¡Gran apertura de temporada este fin de semana festivo!",
-    "sampleBody": "Los esperamos en la vereda Las Huacas para disfrutar de nuestros mejores platos campestres, aire puro y música tradicional."
+    "empty": "Todavía no hay noticias publicadas.",
+    "noRestaurant": "Configura el identificador del restaurante en Ajustes.",
+    "loadError": "No pudimos cargar las noticias.",
+    "offline": "Mostramos la última copia guardada. Las fotos y los enlaces pueden requerir conexión.",
+    "read": "Leer noticia",
+    "readTitle": "Leer {{title}}",
+    "share": "Compartir noticia",
+    "actionError": "No pudimos abrir esa opción."
   },
   "upcoming": {
     "title": "Próximamente en El Encanto",

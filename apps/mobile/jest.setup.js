@@ -1,5 +1,9 @@
 /* eslint-disable no-undef */
 
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
 // Evito cargar el módulo nativo del portapapeles cuando pruebo componentes en Node.
 jest.mock('@react-native-clipboard/clipboard', () => ({
   setString: jest.fn(),

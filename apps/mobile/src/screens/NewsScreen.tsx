@@ -1,103 +1,123 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, Linking, Modal, ScrollView, Share, StyleSheet, Text } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { type NewsPost } from '@encanto/shared';
+import { Action, Note, Panel } from '../components/attention/Controls';
+import { BackButton } from '../components/navigation/BackButton';
+import { Feedback } from '../components/feedback/Feedback';
+import { useConnection } from '../context/ConnectionContext';
+import { connectionUrl } from '../config/connection';
 import { useTheme } from '../theme/ThemeContext';
-import { Pin } from 'lucide-react-native';
+import { newsImageUrl, readNews } from '../services/news.service';
 
-// pantalla de noticias correspondiente al boton central de la navegacion
-export const NewsScreen: React.FC = () => {
+// Reinicio la vista cuando cambia el destino para no mezclar publicaciones entre entornos.
+export function NewsScreen() {
+  const { settings } = useConnection();
+  const base = connectionUrl(settings);
+  return <NewsFeed key={base + '/' + settings.restauranteId} base={base} restaurant={settings.restauranteId} />;
+}
+
+function NewsFeed({ base, restaurant }: { base: string; restaurant: string }) {
   const { t } = useTranslation();
-  const { colors, typography, spacing, radii } = useTheme();
-  const insets = useSafeAreaInsets();
+  const { colors, typography } = useTheme();
+  const [posts, setPosts] = useState<NewsPost[]>([]);
+  const [cached, setCached] = useState(false);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = posts.find(post => post.id === selectedId);
+
+  // Actualizo al abrir la pestaña y cancelo la lectura si cambia la conexión.
+  useFocusEffect(useCallback(() => {
+    if (!restaurant) return;
+    const controller = new AbortController();
+    setStatus('loading');
+    readNews(base, restaurant, controller.signal).then(result => {
+      if (controller.signal.aborted) return;
+      setPosts(result.posts);
+      setCached(result.cached);
+      setStatus('ready');
+    }).catch(() => {
+      if (controller.signal.aborted) return;
+      setPosts([]);
+      setCached(false);
+      setStatus('error');
+    });
+    return () => controller.abort();
+  }, [base, restaurant, attempt]));
+
+  const renderImage = (post: NewsPost) => {
+    const uri = newsImageUrl(post, base, restaurant);
+    return uri && <Image source={{ uri }} style={styles.image} accessibilityLabel={post.titulo} />;
+  };
+
+  const act = (operation: Promise<unknown>) => {
+    void operation.catch(() => Feedback.alert(t('news.actionError'), undefined, [], { kind: 'error' }));
+  };
 
   return (
-    <ScrollView
-      style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
-      contentContainerStyle={[
-        styles.scrollContent,
-        {
-          paddingHorizontal: spacing.margenLateral,
-          paddingTop: insets.top + spacing.l,
-        },
-      ]}
-    >
-      <View style={styles.header}>
-        <Text style={[typography.display, { color: colors.texto.primario }]}>
-          {t('news.title')}
-        </Text>
-        <Text
-          style={[
-            typography.cuerpoM,
-            { color: colors.texto.secundario, marginTop: 4 },
-          ]}
-        >
-          {t('news.subtitle')}
-        </Text>
-      </View>
-
-      {/* publicacion fijada de ejemplo */}
-      <View
-        style={[
-          styles.tarjetaNoticia,
-          {
-            backgroundColor: colors.superficie.elevada,
-            borderColor: colors.marca.primario,
-            borderRadius: radii.l,
-            padding: spacing.l,
-            marginTop: spacing.l,
-          },
-        ]}
-      >
-        <View style={styles.badgeFijada}>
-          <Pin size={14} color={colors.marca.primario} />
-          <Text
-            style={[
-              typography.etiqueta,
-              { color: colors.marca.primario, marginLeft: spacing.xs },
-            ]}
-          >
-            {t('news.pinned')}
-          </Text>
-        </View>
-
-        <Text
-          style={[
-            typography.tituloM,
-            { color: colors.texto.primario, marginTop: spacing.s },
-          ]}
-        >
-          {t('news.sampleTitle')}
-        </Text>
-
-        <Text
-          style={[
-            typography.cuerpoM,
-            { color: colors.texto.secundario, marginTop: spacing.s },
-          ]}
-        >
-          {t('news.sampleBody')}
-        </Text>
-      </View>
-    </ScrollView>
+    <SafeAreaView edges={['top']} style={[styles.screen, { backgroundColor: colors.superficie.fondo }]}>
+      <FlatList
+        data={posts}
+        keyExtractor={post => post.id}
+        onRefresh={restaurant ? () => setAttempt(count => count + 1) : undefined}
+        refreshing={!!restaurant && status === 'loading' && posts.length > 0}
+        contentContainerStyle={styles.content}
+        ListHeaderComponent={
+          <>
+            <Text accessibilityRole="header" style={[typography.display, { color: colors.texto.primario }]}>{t('news.title')}</Text>
+            <Note>{t('news.subtitle')}</Note>
+            {cached && <Note live tone="warning">{t('news.offline')}</Note>}
+            {status === 'error' && (
+              <>
+                <Note live tone="error">{t('news.loadError')}</Note>
+                <Action label={t('common.retry')} onPress={() => setAttempt(count => count + 1)} />
+              </>
+            )}
+          </>
+        }
+        ListEmptyComponent={
+          !restaurant ? <Note>{t('news.noRestaurant')}</Note> :
+          status === 'ready' ? <Note>{t('news.empty')}</Note> :
+          status === 'loading' ? <ActivityIndicator accessibilityLabel={t('common.loading')} /> : undefined
+        }
+        renderItem={({ item }) => (
+          <Panel>
+            {renderImage(item)}
+            {item.fijada && <Note>{t('news.pinned')}</Note>}
+            <Text accessibilityRole="header" style={[typography.tituloM, { color: colors.texto.primario }]}>{item.titulo}</Text>
+            <Note>{new Date(item.publicadaEn).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' })}</Note>
+            <Text numberOfLines={3} style={[typography.cuerpoM, { color: colors.texto.secundario }]}>{item.cuerpo}</Text>
+            <Action label={t('news.read')} accessibilityLabel={t('news.readTitle', { title: item.titulo })} onPress={() => setSelectedId(item.id)} />
+          </Panel>
+        )}
+      />
+      {selected && (
+        <Modal visible animationType="slide" onRequestClose={() => setSelectedId(null)}>
+          <SafeAreaView style={[styles.screen, { backgroundColor: colors.superficie.fondo }]}>
+            <ScrollView contentContainerStyle={styles.content}>
+              <BackButton onPress={() => setSelectedId(null)} />
+              <Text accessibilityRole="header" style={[typography.tituloL, { color: colors.texto.primario }]}>{selected.titulo}</Text>
+              {renderImage(selected)}
+              <Note>{selected.cuerpo}</Note>
+              {selected.enlaces.map((url, index) => (
+                <Action key={url + index} label={url} onPress={() => act(Linking.openURL(url))} />
+              ))}
+              <Action label={t('news.share')} onPress={() => act(Share.share({
+                message: [selected.titulo, selected.cuerpo, ...selected.enlaces].join('\n\n'),
+              }))} />
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
+      )}
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  contenedor: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  header: {
-    marginTop: 0,
-  },
-  tarjetaNoticia: {
-    borderWidth: 1.5,
-  },
-  badgeFijada: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  screen: { flex: 1 },
+  content: { padding: 16, paddingBottom: 36, maxWidth: 760, width: '100%', alignSelf: 'center' },
+  image: { width: '100%', aspectRatio: 1200 / 630, borderRadius: 8, marginVertical: 8 },
 });
