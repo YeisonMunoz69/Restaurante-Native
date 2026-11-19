@@ -36,7 +36,7 @@ beforeEach(async () => {
   await Renderer.act(async () => {
     tree = Renderer.create(
       <ThemeProvider>
-        <OrderDraftProvider scope="local/r1">
+        <OrderDraftProvider scope="local/r1" ownerId="u1">
           <Observe />
           <OrderDraftPanel restauranteId="r1" onReserve={reserve} />
         </OrderDraftProvider>

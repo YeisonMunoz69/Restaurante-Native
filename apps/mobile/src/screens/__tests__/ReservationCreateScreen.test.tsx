@@ -337,7 +337,7 @@ describe('ReservationCreateScreen', () => {
     let draft!: ReturnType<typeof useOrderDraft>;
     function Observe() { draft = useOrderDraft(); return null; }
     let tree!: ReactTestRenderer.ReactTestRenderer;
-    const shell = (form: boolean) => <ThemeProvider><OrderDraftProvider scope="qa">
+    const shell = (form: boolean) => <ThemeProvider><OrderDraftProvider scope="qa" ownerId="u1">
       <Observe />{form && <ReservationCreateScreen onBack={onBack} onCreated={onCreated} />}
     </OrderDraftProvider></ThemeProvider>;
     await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(shell(false)); });

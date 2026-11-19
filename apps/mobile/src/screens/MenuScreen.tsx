@@ -30,6 +30,8 @@ import {
 } from 'lucide-react-native';
 import type { MenuCategory, MenuDish } from '@encanto/shared';
 import { useConnection } from '../context/ConnectionContext';
+import { useAuth } from '../context/AuthContext';
+import { useGuestAccess } from '../context/GuestAccessContext';
 import { MenuDishDetailModal } from '../components/menu/MenuDishDetailModal';
 import { menuApi } from '../services/menu.service';
 import { useTheme } from '../theme/ThemeContext';
@@ -49,6 +51,8 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   const { colors, typography, spacing, radii } = useTheme();
   const insets = useSafeAreaInsets();
   const { settings } = useConnection();
+  const { user } = useAuth();
+  const requestSignIn = useGuestAccess();
   const restauranteId = settings.restauranteId;
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [dishes, setDishes] = useState<MenuDish[]>([]);
@@ -351,7 +355,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
             <MenuCarousels
               header={header}
               onHeaderLayout={event => { headerHeight.current = event.nativeEvent.layout.height; }}
-              bottomInset={ORDER_BUTTON_CLEARANCE}
+              bottomInset={user ? ORDER_BUTTON_CLEARANCE : 12}
               onScroll={event => {
                 // Solo fijo una línea cuando ya salió toda la cabecera de la lista.
                 setShowCompactDate(event.nativeEvent.contentOffset.y >= headerHeight.current);
@@ -365,6 +369,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
               onMore={loadMore}
               onRefresh={refresh}
               onDetail={setSelectedDishId}
+              onRequireSignIn={user ? undefined : () => requestSignIn('cart')}
             />
           )}
 
@@ -401,7 +406,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
           />
         </>
       )}
-      {!!restauranteId && <OrderDraftPanel restauranteId={restauranteId} onReserve={() => navigation.navigate('Reservations')} />}
+      {!!user && !!restauranteId && <OrderDraftPanel restauranteId={restauranteId} onReserve={() => navigation.navigate('Reservations')} />}
       {showCalendar && !!restauranteId && !!fecha && isFocused && (
         <MenuCalendarModal restauranteId={restauranteId} value={fecha} onClose={closeCalendar}
           onSelect={date => { closeCalendar(); void loadDate(date); }} />

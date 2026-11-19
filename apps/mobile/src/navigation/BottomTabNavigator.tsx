@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { MenuScreen } from '../screens/MenuScreen';
 import { ReservationsScreen } from '../screens/ReservationsScreen';
 import { NewsScreen } from '../screens/NewsScreen';
@@ -31,6 +32,7 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 export const BottomTabNavigator: React.FC = () => {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
 
   return (
@@ -68,7 +70,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
 
       {/* 2. Reservas */}
-      <Tab.Screen
+      {user && <Tab.Screen
         name="Reservations"
         component={ReservationsScreen}
         options={{
@@ -77,7 +79,7 @@ export const BottomTabNavigator: React.FC = () => {
             <CalendarDays color={color} size={size} />
           ),
         }}
-      />
+      />}
 
       {/* 3. Noticias - boton central destacado del diseno C-10 */}
       <Tab.Screen
@@ -112,7 +114,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
 
       {/* 4. Proximamente */}
-      <Tab.Screen
+      {user && <Tab.Screen
         name="Upcoming"
         component={UpcomingScreen}
         options={{
@@ -121,7 +123,7 @@ export const BottomTabNavigator: React.FC = () => {
             <Sparkles color={color} size={size} />
           ),
         }}
-      />
+      />}
 
       {/* 5. Ajustes */}
       <Tab.Screen

@@ -8,7 +8,7 @@ let current: ReturnType<typeof useOrderDraft>;
 function Observe() { current = useOrderDraft(); return null; }
 const content = (scope: string, ownerId?: string) => <OrderDraftProvider scope={scope} ownerId={ownerId}><Observe /></OrderDraftProvider>;
 let tree: Renderer.ReactTestRenderer;
-beforeEach(() => { Renderer.act(() => { tree = Renderer.create(content('dev/r1')); }); });
+beforeEach(() => { Renderer.act(() => { tree = Renderer.create(content('dev/r1', 'u1')); }); });
 afterEach(() => Renderer.act(() => tree.unmount()));
 
 it('agrega, cambia cantidades y elimina sin aceptar cantidades inválidas', () => {
@@ -19,14 +19,23 @@ it('agrega, cambia cantidades y elimina sin aceptar cantidades inválidas', () =
   Renderer.act(() => current.setQuantity(dish, 0, '2026-10-25'));
   expect(current.lines).toEqual([]);
 });
-it('conserva al primer login y descarta al cambiar cuenta o sede', () => {
+it('mantiene el invitado sin borrador y descarta al salir, cambiar cuenta o sede', () => {
+  Renderer.act(() => tree.update(content('dev/r1')));
   Renderer.act(() => current.setQuantity(dish, 1, '2026-10-25'));
+  Renderer.act(() => current.request());
+  expect(current.lines).toHaveLength(0);
+  expect(current.pending).toBe(false);
   Renderer.act(() => tree.update(content('dev/r1', 'u1')));
+  expect(current.lines).toHaveLength(0);
+  Renderer.act(() => current.setQuantity(dish, 1, '2026-10-25'));
   expect(current.lines).toHaveLength(1);
   Renderer.act(() => tree.update(content('dev/r1', 'u2')));
   expect(current.lines).toEqual([]);
   Renderer.act(() => current.setQuantity(dish, 1, '2026-10-25'));
   Renderer.act(() => tree.update(content('local/r2', 'u2')));
+  expect(current.lines).toEqual([]);
+  Renderer.act(() => current.setQuantity(dish, 1, '2026-10-25'));
+  Renderer.act(() => tree.update(content('local/r2')));
   expect(current.lines).toEqual([]);
 });
 it('solicita abrir un nuevo flujo y no pierde platos al consumir la navegación', () => {

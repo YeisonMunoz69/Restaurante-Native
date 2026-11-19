@@ -10,7 +10,7 @@ type Draft = {
 const empty: Draft = { fecha: null, lines: [], pending: false, requestId: 0, setQuantity: () => {}, clear: () => {}, request: () => {}, consume: () => {} };
 const Context = createContext<Draft>(empty);
 
-// Conservo el borrador entre pestañas y primer login; no mezclo sedes ni cuentas anteriores.
+// Conservo el borrador entre pestañas de la misma cuenta; el invitado recibe un pedido vacío.
 export function OrderDraftProvider({ children, scope, ownerId }: { children: React.ReactNode; scope: string; ownerId?: string }) {
   const [state, setState] = useState<{ fecha: string | null; lines: DraftLine[] }>({ fecha: null, lines: [] });
   const [pending, setPending] = useState(false);
@@ -18,7 +18,7 @@ export function OrderDraftProvider({ children, scope, ownerId }: { children: Rea
   const previous = useRef({ scope, ownerId });
   const clear = useCallback(() => { setState({ fecha: null, lines: [] }); setPending(false); }, []);
   useEffect(() => {
-    if (previous.current.scope !== scope || (previous.current.ownerId && previous.current.ownerId !== ownerId)) clear();
+    if (previous.current.scope !== scope || previous.current.ownerId !== ownerId) clear();
     previous.current = { scope, ownerId };
   }, [scope, ownerId, clear]);
   const setQuantity = useCallback((dish: MenuDish, cantidad: number, fecha: string) => {
@@ -31,6 +31,6 @@ export function OrderDraftProvider({ children, scope, ownerId }: { children: Rea
   const request = useCallback(() => { setPending(true); setRequestId(id => id + 1); }, []);
   const consume = useCallback(() => setPending(false), []);
   const value = useMemo(() => ({ ...state, pending, requestId, setQuantity, clear, request, consume }), [state, pending, requestId, setQuantity, clear, request, consume]);
-  return <Context.Provider value={value}>{children}</Context.Provider>;
+  return <Context.Provider value={ownerId ? value : empty}>{children}</Context.Provider>;
 }
 export const useOrderDraft = () => useContext(Context);

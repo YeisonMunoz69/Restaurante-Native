@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useGuestAccess } from '../context/GuestAccessContext';
 import { GoogleAccess } from '../components/GoogleAccess';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { BackButton } from '../components/navigation/BackButton';
@@ -43,6 +44,7 @@ export const SettingsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors, isDark, spacing } = useTheme();
   const { user, isAuthenticated } = useAuth();
+  const requestSignIn = useGuestAccess();
   const photo = useLocalProfilePhoto(user?.id);
   const insets = useSafeAreaInsets();
   const [history, setHistory] = useState<Section[]>([]);
@@ -69,6 +71,17 @@ export const SettingsScreen: React.FC = () => {
     });
     return () => listener.remove();
   }, [isFocused, section]);
+
+  if (!user) {
+    return (
+      <KeyboardAwareScrollView style={{ backgroundColor: colors.superficie.elevada }}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.margenLateral, paddingTop: insets.top + spacing.s }]}>
+        <TabPageHeader title={t('settings.title')} />
+        <Button testID="guest-settings-sign-in" label={t('settings.guestSignIn')}
+          variant="primary" onPress={() => requestSignIn('settings')} />
+      </KeyboardAwareScrollView>
+    );
+  }
 
   if (adminView === 'attention' && user?.rol === 'ADMIN')
     return <AttentionScreen onBack={closeAdminView} />;

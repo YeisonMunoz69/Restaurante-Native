@@ -41,6 +41,7 @@ export function MenuCarousels({
   onMore,
   onRefresh,
   onDetail,
+  onRequireSignIn,
 }: {
   header?: React.ReactElement;
   onHeaderLayout?: (event: LayoutChangeEvent) => void;
@@ -55,6 +56,7 @@ export function MenuCarousels({
   onMore: () => void;
   onRefresh: () => void;
   onDetail: (id: string) => void;
+  onRequireSignIn?: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
@@ -272,7 +274,7 @@ export function MenuCarousels({
                       label={t('discovery.addShort') + (count ? ` · ${count}` : '')}
                       icon={Plus}
                       disabled={!canAdd}
-                      onPress={() => draft.setQuantity(dish, count + 1, fecha)}
+                      onPress={onRequireSignIn ?? (() => draft.setQuantity(dish, count + 1, fecha))}
                       style={styles.add}
                     />
                   </View>

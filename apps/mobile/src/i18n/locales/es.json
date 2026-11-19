@@ -273,6 +273,7 @@
   },
   "settings": {
     "title": "Ajustes",
+    "guestSignIn": "Acceder con correo electrónico",
     "profile": "Perfil",
     "preferences": "Preferencias",
     "information": "Información y ayuda",
@@ -334,6 +335,9 @@
     "version": "Versión 1.0.0"
   },
   "auth": {
+    "guestSignInTitle": "Accede con Google",
+    "guestCartSignIn": "Inicia sesión para añadir platos a tu pedido.",
+    "guestSettingsSignIn": "Usa tu correo de Google para entrar a tu cuenta.",
     "googleWelcome": "El Encanto Campestre",
     "googleHeading": "Nos vemos\nen el campo",
     "googleIntro": "Entra con Google para explorar la carta y reservar tu mesa.",

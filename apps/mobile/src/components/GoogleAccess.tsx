@@ -20,12 +20,16 @@ const googleBrand = require('../assets/google-access-light.png');
 const sello = require('../../android/app/src/main/res/drawable-xxxhdpi/ic_launcher_art.png');
 
 // Mantengo el ID token solo mientras se completa el alta y lo limpio al cancelar o terminar.
-export function GoogleAccess({ link = false }: { link?: boolean }) {
+export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
+  link?: boolean;
+  entry?: 'cart' | 'settings';
+  onClose?: () => void;
+}) {
   const supported = Platform.OS === 'android' &&
     Boolean(GOOGLE_WEB_CLIENT_ID && typeof NativeModules.EncantoBuild?.googleIdToken === 'function');
   const { t } = useTranslation();
   const { loginWithGoogle } = useAuth();
-  const { colors, isDark, typography } = useTheme();
+  const { colors, typography } = useTheme();
   const { isSaving } = useConnection();
   const running = useRef(false);
   const [pendingToken, setPendingToken] = useState<string | null>(null);
@@ -120,46 +124,43 @@ export function GoogleAccess({ link = false }: { link?: boolean }) {
     </View>
   );
 
-  if (link) return actions;
-  return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: isDark ? colors.superficie.fondo : colors.superficie.elevada }]}>
-      <KeyboardAwareScrollView contentContainerStyle={styles.content}>
-        <View style={styles.top}>
-          <Text style={[styles.brandName, { color: colors.marca.primario }]}>{t('auth.googleWelcome')}</Text>
-          {BUILD_ENVIRONMENT === 'local' && !pendingToken && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('auth.googleTestSettings')}
-              disabled={busy}
-              onPress={() => setShowConnection(true)}
-              style={styles.iconButton}
-            >
-              <SlidersHorizontal size={19} color={colors.texto.secundario} />
-            </Pressable>
-          )}
-        </View>
+  if (link || !onClose) return actions;
 
-        <View style={styles.main}>
-          {!pendingToken && (
-            <View style={styles.hero} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <View style={[styles.orbit, { borderColor: colors.marca.primario + '34' }]} />
-              <View style={[styles.halo, { backgroundColor: colors.marca.primarioSuave }]} />
-              <View style={styles.medallion}>
-                <Image source={sello} resizeMode="contain" style={styles.sello} />
+  // Cierro sin dejar pendiente un alta; mientras hay una solicitud espero su respuesta.
+  const closeAccess = () => { if (!running.current) onClose(); };
+  return (
+    <OverlayModal onRequestClose={closeAccess}>
+      <SafeAreaView style={styles.modalFrame}>
+        <Pressable accessible={false} onPress={closeAccess} style={StyleSheet.absoluteFill} />
+        <View testID="guest-access-modal" accessibilityViewIsModal
+          style={[styles.accessCard, { height: pendingToken ? 390 : 285, backgroundColor: colors.superficie.fondo }]}>
+          <KeyboardAwareScrollView contentContainerStyle={styles.modalContent}>
+            <View style={styles.top}>
+              <View style={[styles.brand, { backgroundColor: colors.marca.primarioSuave }]} accessibilityElementsHidden>
+                <Image source={sello} style={styles.sello} resizeMode="contain" />
               </View>
+              <View style={styles.filler} />
+              {BUILD_ENVIRONMENT === 'local' && !pendingToken && (
+                <Pressable accessibilityRole="button" accessibilityLabel={t('auth.googleTestSettings')}
+                  disabled={busy} onPress={() => setShowConnection(true)} style={styles.iconButton}>
+                  <SlidersHorizontal size={19} color={colors.texto.secundario} />
+                </Pressable>
+              )}
+              <Pressable accessibilityRole="button" accessibilityLabel={t('common.close')}
+                disabled={busy} onPress={closeAccess} style={styles.iconButton}>
+                <X size={22} color={colors.texto.primario} />
+              </Pressable>
             </View>
-          )}
-          <View style={styles.intro}>
-            <Text accessibilityRole="header" style={[styles.heading, { color: colors.texto.primario }]}>
-              {t(pendingToken ? 'auth.googlePhoneHeading' : 'auth.googleHeading')}
+            <Text accessibilityRole="header" style={[typography.tituloL, { color: colors.texto.primario }]}>
+              {t(pendingToken ? 'auth.googlePhoneHeading' : 'auth.guestSignInTitle')}
             </Text>
-            <Text style={[typography.cuerpoL, styles.introText, { color: colors.texto.secundario }]}>
-              {t(pendingToken ? 'auth.googlePhonePrompt' : 'auth.googleIntro')}
+            <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
+              {t(pendingToken ? 'auth.googlePhonePrompt' : entry === 'cart' ? 'auth.guestCartSignIn' : 'auth.guestSettingsSignIn')}
             </Text>
-          </View>
-          {actions}
+            {actions}
+          </KeyboardAwareScrollView>
         </View>
-      </KeyboardAwareScrollView>
+      </SafeAreaView>
 
       {showConnection && (
         <OverlayModal onRequestClose={closeConnection}>
@@ -182,33 +183,17 @@ export function GoogleAccess({ link = false }: { link?: boolean }) {
           </SafeAreaView>
         </OverlayModal>
       )}
-    </SafeAreaView>
+    </OverlayModal>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  content: {
-    width: '100%', maxWidth: 460, alignSelf: 'center', flexGrow: 1,
-    paddingHorizontal: 26, paddingTop: 14, paddingBottom: 32,
-  },
   top: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
   brandName: { flex: 1, fontSize: 18, fontWeight: '700', letterSpacing: -0.35 },
   iconButton: { width: 48, height: 48, justifyContent: 'center', alignItems: 'center' },
-  main: { flexGrow: 1, justifyContent: 'center', gap: 20, paddingVertical: 16 },
-  hero: { height: 228, justifyContent: 'center', alignItems: 'center' },
-  orbit: { position: 'absolute', width: 226, height: 172, borderRadius: 120, borderWidth: 1, transform: [{ rotate: '-24deg' }] },
-  halo: { position: 'absolute', width: 198, height: 198, borderRadius: 99 },
-  medallion: {
-    width: 150, height: 150, borderRadius: 75, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#FFFCF4', elevation: 4, shadowColor: '#3C422D',
-    shadowOpacity: 0.16, shadowRadius: 18, shadowOffset: { width: 0, height: 8 },
-  },
-  // El archivo del sello tiene un margen transparente: el dibujo ocupa el centro del medallón.
-  sello: { width: 208, height: 208 },
-  intro: { gap: 12, alignItems: 'center' },
-  heading: { fontFamily: 'serif', fontSize: 38, lineHeight: 43, fontWeight: '700', letterSpacing: -1.4, textAlign: 'center' },
-  introText: { maxWidth: 310, textAlign: 'center' },
+  filler: { flex: 1 },
+  brand: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  sello: { width: 64, height: 64 },
   actions: { gap: 12, marginTop: 6 },
   button: { minHeight: 54, flexDirection: 'row', gap: 12, alignItems: 'center', justifyContent: 'center', padding: 12 },
   buttonText: { flexShrink: 1, fontSize: 15, lineHeight: 21, fontWeight: '600', textAlign: 'center' },
@@ -216,6 +201,7 @@ const styles = StyleSheet.create({
   googleMark: { width: 20, height: 20, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   googleArtwork: { width: 40, height: 40 },
   modalFrame: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  accessCard: { width: '100%', maxWidth: 420, maxHeight: '90%', borderRadius: 24, overflow: 'hidden' },
   modalCard: { width: '100%', maxWidth: 460, height: '78%', maxHeight: 555, borderRadius: 24, overflow: 'hidden' },
   modalContent: { padding: 16, gap: 8 },
 });
