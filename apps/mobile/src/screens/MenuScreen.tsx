@@ -246,7 +246,6 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   const header = (
     <View
       testID="menu-scroll-header"
-      onLayout={event => { headerHeight.current = event.nativeEvent.layout.height; }}
       style={[styles.header, { paddingHorizontal: spacing.margenLateral }]}
     >
       <Text accessibilityRole="header" style={[typography.display, { color: colors.texto.primario }]}>
@@ -377,6 +376,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
           ) : (
             <MenuCarousels
               header={header}
+              onHeaderLayout={event => { headerHeight.current = event.nativeEvent.layout.height; }}
               bottomInset={ORDER_BUTTON_CLEARANCE}
               onScroll={event => {
                 // Solo fijo una línea cuando ya salió toda la cabecera de la lista.
@@ -388,7 +388,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
               loadingMore={loadingMore}
               loadMoreFailed={loadMoreFailed}
               hasMore={nextPage <= totalPages}
-              onMore={() => void loadMore()}
+              onMore={loadMore}
               onRefresh={refresh}
               onDetail={setSelectedDishId}
             />

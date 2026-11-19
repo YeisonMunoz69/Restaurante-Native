@@ -169,7 +169,7 @@ describe('MenuScreen', () => {
       carousel().props.onScroll({ nativeEvent: { contentOffset: { y } } });
     });
     ReactTestRenderer.act(() => {
-      carousel().props.header.props.onLayout({ nativeEvent: { layout: { height: 160 } } });
+      carousel().props.onHeaderLayout({ nativeEvent: { layout: { height: 160 } } });
     });
     scroll(100);
     expect(tree.root.findAllByProps({ testID: 'menu-compact-date' })).toHaveLength(0);

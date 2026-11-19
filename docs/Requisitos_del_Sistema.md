@@ -108,7 +108,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 
 | ID           | Nombre del Requisito          | Descripción y Regla Operativa                                                                                                           | Prioridad |  Sprint  | Ref. Jira |
 | ------------ | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | :-------: | :------: | --------- |
-| **RF-MEN01** | Visualización de carta        | Platos por categorías en bloques de tres carruseles horizontales, con cambio manual y acceso a todas las categorías. Foto 4:3, nombre, descripción, COP y acción para añadir al borrador Mi Pedido. | **M** | Sprint 2 | EP-03 |
+| **RF-MEN01** | Visualización de carta        | Carrusel horizontal de platos por categoría. Selector al inicio para mostrar todas las categorías o abrir una directamente, con carga paginada. Foto 4:3, nombre, descripción, COP y acción para añadir al borrador Mi Pedido. | **M** | Sprint 2 | EP-03 |
 | **RF-MEN02** | Platos del próximo día hábil  | La pantalla principal de inicio presenta automáticamente los platos disponibles para la fecha de atención más próxima en el calendario. |   **M**   | Sprint 2 | EP-03     |
 | **RF-MEN03** | Ficha de detalle de plato     | Pantalla extendida con carrusel de hasta 10 fotos optimizadas, descripción completa, tabla de alérgenos y sellos dietarios.             |   **M**   | Sprint 2 | EP-03     |
 | **RF-MEN04** | Búsqueda por ingredientes     | Motor de búsqueda de texto predictivo por nombre de plato e ingredientes declarados en su ficha.                                        |   **M**   | Sprint 5 | EP-03     |

@@ -5,12 +5,14 @@ import {
   Image,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  type LayoutChangeEvent,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Plus, UtensilsCrossed } from 'lucide-react-native';
@@ -22,9 +24,10 @@ import { menuGallery } from './menu-photo';
 import { Action, Note } from '../attention/Controls';
 
 type Section = { id: string; title: string; data: MenuDish[] };
-// Muestro tres categorías por bloque; el usuario cambia el bloque, sin rotación automática.
+// Permito elegir cualquier categoría desde arriba y conservo los carruseles horizontales.
 export function MenuCarousels({
   header,
+  onHeaderLayout,
   onScroll,
   bottomInset = 0,
   sections,
@@ -38,6 +41,7 @@ export function MenuCarousels({
   onDetail,
 }: {
   header?: React.ReactElement;
+  onHeaderLayout?: (event: LayoutChangeEvent) => void;
   onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
   bottomInset?: number;
   sections: Section[];
@@ -52,22 +56,60 @@ export function MenuCarousels({
 }) {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
-  const [group, setGroup] = useState(0);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const { width } = useWindowDimensions();
   const draft = useOrderDraft();
+  const selectedIndex = sections.findIndex(section => section.id === categoryId);
+  const selectedCategory = sections[selectedIndex];
+  const lastLoadedIndex = sections.reduce((last, section, index) => section.data.length ? index : last, -1);
+  const awaitingCategory = selectedIndex > lastLoadedIndex && hasMore;
+  const canLoadMore = hasMore && (selectedIndex < 0 || selectedIndex >= lastLoadedIndex);
+  const visibleSections = selectedCategory
+    ? (awaitingCategory ? [] : [selectedCategory])
+    : sections.filter(section => section.data.length > 0);
+
   useEffect(() => {
-    setGroup(0);
-  }, [sections.length, fecha]);
-  const max = Math.max(0, Math.ceil(sections.length / 3) - 1);
+    // Las páginas llegan agrupadas por categoría. Busco hasta alcanzar la elegida.
+    if (awaitingCategory && !loadingMore && !loadMoreFailed) onMore();
+  }, [awaitingCategory, loadingMore, loadMoreFailed, onMore]);
   const cardWidth = Math.min(300, Math.max(210, width - 64));
   // Mantengo el encuadre 4:3 aunque las fotos incluidas traigan dimensiones propias.
   const photoHeight = (cardWidth * 3) / 4;
   return (
     <FlatList
       testID="menu-carousels"
-      data={sections.slice(group * 3, group * 3 + 3)}
+      data={visibleSections}
       keyExtractor={section => section.id}
-      ListHeaderComponent={header}
+      ListHeaderComponent={
+        <View onLayout={onHeaderLayout}>
+          {header}
+          {sections.length > 1 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
+              {[{ id: null, title: t('menu.allCategories') }, ...sections].map(category => {
+                const selected = category.id === (selectedCategory?.id ?? null);
+                return (
+                  <Pressable
+                    key={category.id ?? 'all'}
+                    testID={`menu-category-${category.id ?? 'all'}`}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => setCategoryId(category.id)}
+                    style={[styles.categoryChip, {
+                      backgroundColor: selected ? colors.marca.primarioSuave : colors.superficie.elevada,
+                    }]}
+                  >
+                    <Text style={[typography.etiqueta, {
+                      color: selected ? colors.marca.primario : colors.texto.secundario,
+                    }]}>
+                      {category.title}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
+      }
       onScroll={onScroll}
       scrollEventThrottle={16}
       refreshControl={
@@ -101,7 +143,7 @@ export function MenuCarousels({
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.row}
               onEndReached={() => {
-                if (hasMore && !loadingMore && !loadMoreFailed) onMore();
+                if (section.id === sections[lastLoadedIndex]?.id && canLoadMore && !loadingMore && !loadMoreFailed) onMore();
               }}
               onEndReachedThreshold={0.4}
               initialNumToRender={3}
@@ -221,9 +263,11 @@ export function MenuCarousels({
         );
       }}
       ListEmptyComponent={
-        <Note>
-          <Text testID="menu-empty">{t('menu.emptyState')}</Text>
-        </Note>
+        awaitingCategory ? null : (
+          <Note>
+            <Text testID="menu-empty">{t('menu.emptyState')}</Text>
+          </Note>
+        )
       }
       ListFooterComponent={
         <View style={styles.footer}>
@@ -234,7 +278,7 @@ export function MenuCarousels({
               color={colors.marca.primario}
             />
           )}
-          {hasMore && (
+          {canLoadMore && (!awaitingCategory || loadMoreFailed) && (
             <Action
               label={t(loadMoreFailed ? 'common.retry' : 'discovery.loadMore')}
               disabled={loadingMore}
@@ -242,25 +286,6 @@ export function MenuCarousels({
             />
           )}
           {loadMoreFailed && <Note live>{t('discovery.loadMoreFailed')}</Note>}
-          {max > 0 && (
-            <View style={styles.pager}>
-              <View style={styles.pagerAction}>
-                <Action
-                  label={t('discovery.previousCategories')}
-                  disabled={group === 0}
-                  onPress={() => setGroup(value => value - 1)}
-                />
-              </View>
-              <View style={styles.pagerAction}>
-                <Action
-                  testID="menu-next-categories"
-                  label={t('discovery.moreCategories')}
-                  disabled={group >= max}
-                  onPress={() => setGroup(value => value + 1)}
-                />
-              </View>
-            </View>
-          )}
         </View>
       }
     />
@@ -271,6 +296,8 @@ const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   heading: { marginHorizontal: 16, marginBottom: 12 },
   row: { paddingHorizontal: 16, gap: 12 },
+  categories: { paddingHorizontal: 16, paddingBottom: 14, gap: 8 },
+  categoryChip: { borderRadius: 24, minHeight: 44, justifyContent: 'center', paddingHorizontal: 15, paddingVertical: 6 },
   card: { borderRadius: 20, overflow: 'hidden' },
   fallback: { justifyContent: 'center', alignItems: 'center' },
   body: { padding: 14, gap: 6 },
@@ -280,6 +307,4 @@ const styles = StyleSheet.create({
     minHeight: 44, borderRadius: 24, paddingHorizontal: 18, paddingVertical: 6,
   },
   footer: { padding: 16 },
-  pager: { flexDirection: 'row', gap: 12 },
-  pagerAction: { flex: 1 },
 });
