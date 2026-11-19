@@ -375,6 +375,7 @@ export function ReservationCreateScreen({
                 <Text style={[typography.precio, { color: colors.marca.acento }]}>{formatCop(total)}</Text>
               </View>
               <Note>{t('reservations.paymentNotice')}</Note>
+              <Text style={[typography.pie, { color: colors.texto.secundario }]}>{t('reservations.cancellationPolicy')}</Text>
               <Button variant="primary" testID="reservation-submit" label={t('reservations.submit')} icon={Check}
                 disabled={busy || (people >= 8 && !orderLines.length) || (!!orderLines.length && !catalogLoaded)}
                 onPress={() => void create()} />

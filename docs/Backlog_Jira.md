@@ -407,7 +407,7 @@ Reunimos fecha, personas y horario en «Tu visita». Luego «Revisa y envía» r
 - Sin sesion, el flujo desvia al inicio de sesion y regresa conservando lo seleccionado
 - El resumen conserva el borrador y ofrece solo mesa para grupos de menos de ocho personas.
 - El editor lista solo los platos habilitados para la fecha elegida.
-- El resumen muestra el total sin impuestos.
+- El resumen muestra el total sin impuestos y la política de cancelación.
 - El boton final dice Enviar solicitud, no Confirmar reserva
 - El boton fisico de retroceso de Android retrocede paso a paso, sin salir del flujo
 - La interfaz no usa lenguaje ni patrones de comercio electronico: sin carrito ni checkout
