@@ -139,10 +139,12 @@ describe('SettingsScreen authentication form', () => {
       tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>);
     });
     expect(shows('Lucía Campos')).toBe(true);
+    expect(shows('auth.logout')).toBe(true);
     expect(shows('settings.googleConnected')).toBe(true);
     expect(shows('settings.themeLight')).toBe(true);
     ReactTestRenderer.act(() => entry('settings-application')!.props.onPress());
     expect(entry('appearance-light')!.props.accessibilityState.checked).toBe(true);
+    expect(shows('auth.logout')).toBe(false);
     await ReactTestRenderer.act(async () => entry('appearance-dark')!.props.onPress());
     expect(entry('appearance-dark')!.props.accessibilityState.checked).toBe(true);
     ReactTestRenderer.act(() => tree.root.findByType(BackButton).props.onPress());

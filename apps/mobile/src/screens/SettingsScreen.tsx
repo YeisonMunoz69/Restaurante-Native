@@ -169,6 +169,7 @@ function SettingsIndex({ openSection, openAdminView, localPhoto }: {
           adminEntry('reservations', 'reservations.agenda', ClipboardList),
         ]} />
       )}
+      {!!user && <SettingsLogout />}
     </View>
   );
 }
@@ -210,10 +211,37 @@ function SettingsGroup({ title, entries }: { title: string; entries: SettingsEnt
   );
 }
 
+// Dejo la salida al final del índice, después de las opciones disponibles para la cuenta.
+function SettingsLogout() {
+  const { t } = useTranslation();
+  const { isLoading, logout } = useAuth();
+  const { colors, typography, radii } = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('auth.logout')}
+      accessibilityState={{ disabled: isLoading, busy: isLoading }}
+      disabled={isLoading}
+      onPress={logout}
+      style={({ pressed }) => [styles.detailRow, styles.logout, {
+        backgroundColor: colors.estado.error + (pressed ? '20' : '12'),
+        borderRadius: radii.l,
+      }]}
+    >
+      {isLoading
+        ? <ActivityIndicator color={colors.estado.error} />
+        : <LogOut size={19} color={colors.estado.error} accessible={false} />}
+      <Text style={[typography.cuerpoM, styles.rowTitle, { color: colors.estado.error }]}>
+        {t('auth.logout')}
+      </Text>
+    </Pressable>
+  );
+}
+
 // Muestro los datos y acciones de la sección abierta, sin montar los formularios de las demás.
 function SettingsDetails({ section }: { section: Exclude<Section, 'profile'> }) {
   const { t } = useTranslation();
-  const { user, isLoading, logout } = useAuth();
+  const { user } = useAuth();
   const { colors, typography, radii, isDark } = useTheme();
   const primary = { color: colors.texto.primario };
   const secondary = { color: colors.texto.secundario };
@@ -242,22 +270,6 @@ function SettingsDetails({ section }: { section: Exclude<Section, 'profile'> }) 
             <Text style={[typography.cuerpoM, styles.label, secondary]}>{t('auth.secureStorage')}</Text>
           </View>
           {user.provider !== 'google' && <GoogleAccess link />}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('auth.logout')}
-            accessibilityState={{ disabled: isLoading, busy: isLoading }}
-            disabled={isLoading}
-            onPress={logout}
-            style={({ pressed }) => [styles.detailRow, styles.logout, {
-              backgroundColor: colors.estado.error + (pressed ? '20' : '12'),
-              borderRadius: radii.l,
-            }]}
-          >
-            {isLoading
-              ? <ActivityIndicator color={colors.estado.error} />
-              : <LogOut size={19} color={colors.estado.error} />}
-            <Text style={[typography.etiqueta, { color: colors.estado.error }]}>{t('auth.logout')}</Text>
-          </Pressable>
         </View>
       );
     case 'information':
@@ -296,5 +308,5 @@ const styles = StyleSheet.create({
   rowTitle: { fontWeight: '600' },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 12 },
   label: { flex: 1 },
-  logout: { marginTop: 16, justifyContent: 'center' },
+  logout: { marginTop: 4, minHeight: 52, justifyContent: 'center' },
 });
