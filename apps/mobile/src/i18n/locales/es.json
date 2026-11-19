@@ -7,8 +7,7 @@
     "settings": "Ajustes"
   },
   "menu": {
-    "title": "Carta Campestre",
-    "subtitle": "Platos preparados con sazón tradicional caucana",
+    "title": "Carta",
     "allCategories": "Todas",
     "reloadMenu": "Actualizar carta",
     "doubleTapReload": "Dos pulsaciones rápidas recargan la carta completa.",
@@ -68,8 +67,7 @@
     "confirmChange": "¿Aplicar este cambio a la reserva?",
     "applyChange": "Sí, aplicar cambio",
     "confirmOperation": "Revisa la reserva {{code}} y la acción que elegiste. Confirma solo si corresponde; para aprobar debes haber verificado el pago. Los estados finales no se pueden deshacer.",
-    "title": "Mis Reservas",
-    "subtitle": "Consulta el estado de tus solicitudes o programa tu visita",
+    "title": "Mis reservas",
     "btnNewReservation": "Solicitar nueva reserva",
     "tabUpcoming": "Próximas",
     "tabHistory": "Historial",
@@ -220,8 +218,7 @@
     "forbidden": "Esta pantalla requiere rol de administrador."
   },
   "news": {
-    "title": "Muro del Encanto",
-    "subtitle": "Noticias, eventos y novedades de la vereda Las Huacas",
+    "title": "Noticias",
     "pinned": "Fijada",
     "empty": "Todavía no hay noticias publicadas.",
     "noRestaurant": "Configura el identificador del restaurante en Ajustes.",
@@ -260,8 +257,7 @@
     "saveError": "No pudimos guardar el cambio. Intenta de nuevo."
   },
   "upcoming": {
-    "title": "Próximamente en El Encanto",
-    "subtitle": "Nuevas experiencias campestres que estamos preparando",
+    "title": "Próximamente",
     "motocrossTitle": "Pista de Motocross y Enduro",
     "motocrossDesc": "Circuito campestre para entrenamiento y eventos de velocidad.",
     "fishingTitle": "Zona de Pesca Deportiva",

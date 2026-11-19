@@ -11,6 +11,7 @@ import type { RootTabParamList } from '../navigation/BottomTabNavigator';
 import { ORDER_BUTTON_CLEARANCE, OrderDraftPanel } from '../components/menu/OrderDraftPanel';
 import { MenuCarousels } from '../components/menu/MenuCarousels';
 import { MenuDateTicker } from '../components/menu/MenuDateTicker';
+import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import {
   ActivityIndicator,
   ScrollView,
@@ -250,13 +251,8 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
       testID="menu-scroll-header"
       style={[styles.header, { paddingHorizontal: spacing.margenLateral }]}
     >
-      <Text accessibilityRole="header" style={[typography.display, { color: colors.texto.primario }]}>
-        {t('menu.title')}
-      </Text>
-      <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
-        {t('menu.subtitle')}
-      </Text>
-      {fecha && (
+      <TabPageHeader title={t('menu.title')} />
+      {fecha && restauranteId && (
         <View style={[styles.date, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
           <View style={styles.dateRow}>
             <CalendarDays size={20} color={colors.marca.primario} />
@@ -325,22 +321,20 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
       style={[styles.container, { backgroundColor: colors.superficie.fondo, paddingTop: insets.top }]}
     >
       {!restauranteId ? (
-        <View style={styles.centered}>
-          <UtensilsCrossed size={40} color={colors.marca.primario} />
-          <Text
-            testID="menu-missing-restaurant"
-            style={[
-              typography.cuerpoM,
-              styles.centerText,
-              {
-                color: colors.texto.secundario,
-                marginTop: spacing.m,
-              },
-            ]}
-          >
-            {t('menu.configureRestaurant')}
-          </Text>
-        </View>
+        <>
+          {header}
+          <View style={styles.centered}>
+            <UtensilsCrossed size={40} color={colors.marca.primario} />
+            <Text
+              testID="menu-missing-restaurant"
+              style={[typography.cuerpoM, styles.centerText, {
+                color: colors.texto.secundario, marginTop: spacing.m,
+              }]}
+            >
+              {t('menu.configureRestaurant')}
+            </Text>
+          </View>
+        </>
       ) : (
         <>
           {loading && dishes.length === 0 ? (
@@ -434,8 +428,8 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingTop: 10, paddingBottom: 16, gap: 4 },
-  date: { marginTop: 12, paddingVertical: 10, paddingHorizontal: 12, gap: 6 },
+  header: { paddingTop: 8, paddingBottom: 14 },
+  date: { paddingVertical: 10, paddingHorizontal: 12, gap: 6 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dateInfo: { flex: 1 },
   dateControls: { flexDirection: 'row' },

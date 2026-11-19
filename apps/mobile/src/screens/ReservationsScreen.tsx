@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import type { ReservationResult } from '@encanto/shared';
@@ -17,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { Action, Note, Panel } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
+import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { reservationsApi } from '../services/reservations.service';
 import { Feedback as Alert } from '../components/feedback/Feedback';
 import { ReservationCreateScreen } from './ReservationCreateScreen';
@@ -40,7 +40,6 @@ export const ReservationsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const { colors, typography, spacing } = useTheme();
-  const { width } = useWindowDimensions();
   const [items, setItems] = useState<ReservationResult[]>([]);
   const [details, setDetails] = useState<Record<string, ReservationResult>>({});
   const [detailOpenId, setDetailOpenId] = useState<string | null>(null);
@@ -183,15 +182,10 @@ export const ReservationsScreen: React.FC = () => {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView
-        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.margenLateral, paddingTop: spacing.l }]}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.margenLateral, paddingTop: spacing.s }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={[typography.display, width < 360 ? styles.compactTitle : null, width >= 600 ? styles.wideTitle : null, { color: colors.texto.primario }]}>
-          {t('reservations.title')}
-        </Text>
-        <Text style={[typography.cuerpoM, { color: colors.texto.secundario, marginTop: spacing.xs }]}>
-          {t('reservations.subtitle')}
-        </Text>
+        <TabPageHeader title={t('reservations.title')} />
 
         {authLoading ? (
           <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />
@@ -280,9 +274,7 @@ export const ReservationsScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingTop: 24, paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' },
-  compactTitle: { fontSize: 26, lineHeight: 32 },
-  wideTitle: { fontSize: 32, lineHeight: 40 },
+  content: { paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' },
   row: { flexDirection: 'row', gap: 8, marginTop: 8 },
   flex: { flex: 1 },
 });

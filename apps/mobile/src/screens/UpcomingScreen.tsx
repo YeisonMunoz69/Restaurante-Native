@@ -4,18 +4,17 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme/ThemeContext';
+import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { Sparkles, Bike, Fish, MessageCircle } from 'lucide-react-native';
 
 // pantalla de proximamente con las tarjetas informativas de la pista y la pesca
 export const UpcomingScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
-  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   return (
@@ -25,30 +24,11 @@ export const UpcomingScreen: React.FC = () => {
         styles.scrollContent,
         {
           padding: spacing.margenLateral,
-          paddingTop: insets.top + spacing.l,
+          paddingTop: insets.top + spacing.s,
         },
       ]}
     >
-      <View style={styles.header}>
-        <Text
-          style={[
-            typography.display,
-            width < 360 ? styles.tituloCompacto : undefined,
-            width >= 600 ? styles.tituloAmplio : undefined,
-            { color: colors.texto.primario },
-          ]}
-        >
-          {t('upcoming.title')}
-        </Text>
-        <Text
-          style={[
-            typography.cuerpoM,
-            { color: colors.texto.secundario, marginTop: 4 },
-          ]}
-        >
-          {t('upcoming.subtitle')}
-        </Text>
-      </View>
+      <TabPageHeader title={t('upcoming.title')} />
 
       {/* tarjeta 1: pista de motocross */}
       <View
@@ -59,7 +39,6 @@ export const UpcomingScreen: React.FC = () => {
             borderColor: colors.superficie.borde,
             borderRadius: radii.l,
             padding: spacing.l,
-            marginTop: spacing.l,
           },
         ]}
       >
@@ -191,17 +170,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 760,
     alignSelf: 'center',
-  },
-  header: {
-    marginTop: 0,
-  },
-  tituloCompacto: {
-    fontSize: 26,
-    lineHeight: 32,
-  },
-  tituloAmplio: {
-    fontSize: 32,
-    lineHeight: 40,
   },
   tarjeta: {
     borderWidth: 1,

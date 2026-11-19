@@ -8,7 +8,6 @@ import {
   Switch,
   ActivityIndicator,
   TextInput,
-  useWindowDimensions,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { LoginSchema, RegisterSchema } from '@encanto/shared';
@@ -16,6 +15,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { ConnectionForm } from '../components/ConnectionForm';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
+import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { Action } from '../components/attention/Controls';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
@@ -46,7 +46,6 @@ export const SettingsScreen: React.FC = () => {
   const { user, isAuthenticated, isLoading, login, register, logout } =
     useAuth();
   const { isSaving } = useConnection();
-  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<'login' | 'register'>('login');
@@ -111,22 +110,11 @@ export const SettingsScreen: React.FC = () => {
         styles.scrollContent,
         {
           padding: spacing.margenLateral,
-          paddingTop: insets.top + spacing.l,
+          paddingTop: insets.top + spacing.s,
         },
       ]}
     >
-      <View style={styles.header}>
-        <Text
-          style={[
-            typography.display,
-            width < 360 ? styles.tituloCompacto : undefined,
-            width >= 600 ? styles.tituloAmplio : undefined,
-            { color: colors.texto.primario },
-          ]}
-        >
-          {t('settings.title')}
-        </Text>
-      </View>
+      <TabPageHeader title={t('settings.title')} />
 
       {!isAuthenticated && !isLoading && <ConnectionForm />}
       {user?.rol === 'ADMIN' && (
@@ -605,17 +593,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 760,
     alignSelf: 'center',
-  },
-  header: {
-    marginTop: 0,
-  },
-  tituloCompacto: {
-    fontSize: 26,
-    lineHeight: 32,
-  },
-  tituloAmplio: {
-    fontSize: 32,
-    lineHeight: 40,
   },
   seccion: {
     borderWidth: 1,

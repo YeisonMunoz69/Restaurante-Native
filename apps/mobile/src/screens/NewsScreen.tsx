@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { type NewsPost } from '@encanto/shared';
 import { Action, Note, Panel } from '../components/attention/Controls';
 import { BackButton } from '../components/navigation/BackButton';
+import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { Feedback } from '../components/feedback/Feedback';
 import { useConnection } from '../context/ConnectionContext';
 import { connectionUrl } from '../config/connection';
@@ -77,11 +78,10 @@ function NewsFeed({ base, restaurant, linkedId, clearLink }: {
         keyExtractor={post => post.id}
         onRefresh={restaurant ? () => setAttempt(count => count + 1) : undefined}
         refreshing={!!restaurant && status === 'loading' && posts.length > 0}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, styles.feed]}
         ListHeaderComponent={
           <>
-            <Text accessibilityRole="header" style={[typography.display, { color: colors.texto.primario }]}>{t('news.title')}</Text>
-            <Note>{t('news.subtitle')}</Note>
+            <TabPageHeader title={t('news.title')} />
             {cached && <Note live tone="warning">{t('news.offline')}</Note>}
             {linkedId && status === 'ready' && !selected && (
               <>
@@ -141,5 +141,6 @@ function NewsFeed({ base, restaurant, linkedId, clearLink }: {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { padding: 16, paddingBottom: 36, maxWidth: 760, width: '100%', alignSelf: 'center' },
+  feed: { paddingTop: 8 },
   image: { width: '100%', aspectRatio: 1200 / 630, borderRadius: 8, marginVertical: 8 },
 });
