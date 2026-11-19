@@ -1,5 +1,6 @@
 import React from 'react';
 import Renderer from 'react-test-renderer';
+import { NativeModules, Platform } from 'react-native';
 import { ConnectionProvider, useConnection } from '../ConnectionContext';
 import {
   DEFAULT_CONNECTION,
@@ -8,7 +9,7 @@ import {
   type ConnectionSettings,
 } from '../../config/connection';
 import { ThemeProvider } from '../../theme/ThemeContext';
-import { SettingsScreen } from '../../screens/SettingsScreen';
+import { GoogleAccess } from '../../components/GoogleAccess';
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn(), setParams: jest.fn() }),
@@ -23,13 +24,14 @@ jest.mock('../../config/connection', () => ({
   loadConnection: jest.fn(),
   saveConnection: jest.fn(),
 }));
+jest.mock('../../config/build-variant', () => ({ GOOGLE_WEB_CLIENT_ID: 'web.example' }));
 const mockLogin = jest.fn();
 jest.mock('../AuthContext', () => ({
   useAuth: () => ({
     user: null,
     isAuthenticated: false,
     isLoading: false,
-    login: mockLogin,
+    loginWithGoogle: mockLogin,
     register: jest.fn(),
     logout: jest.fn(),
   }),
@@ -37,6 +39,10 @@ jest.mock('../AuthContext', () => ({
 
 // Intercalo las promesas de almacenamiento para reproducir la carrera con el login.
 it('espera restauración, bloquea login mientras guarda y no acepta dos guardados simultáneos', async () => {
+  const platform = jest.replaceProperty(Platform, 'OS', 'android');
+  const previousBuild = NativeModules.EncantoBuild;
+  const picker = jest.fn();
+  NativeModules.EncantoBuild = { googleIdToken: picker };
   let finishLoad!: (value: ConnectionSettings) => void;
   let finishSave!: (value: ConnectionSettings) => void;
   jest.mocked(loadConnection).mockImplementationOnce(
@@ -54,7 +60,7 @@ it('espera restauración, bloquea login mientras guarda y no acepta dos guardado
   let connection!: ReturnType<typeof useConnection>;
   const Probe = () => {
     connection = useConnection();
-    return <SettingsScreen />;
+    return <GoogleAccess />;
   };
   let tree!: Renderer.ReactTestRenderer;
   await Renderer.act(async () => {
@@ -76,7 +82,7 @@ it('espera restauración, bloquea login mientras guarda y no acepta dos guardado
     );
   });
   expect(connection.isSaving).toBe(true);
-  const submit = tree.root.findByProps({ testID: 'auth-submit' });
+  const submit = tree.root.findAllByProps({ testID: 'google-submit' }).find(node => node.props.onPress)!;
   expect(submit.props.disabled).toBe(true);
   await Renderer.act(async () => {
     await submit.props.onPress();
@@ -92,5 +98,9 @@ it('espera restauración, bloquea login mientras guarda y no acepta dos guardado
   });
   expect(connection.isSaving).toBe(false);
   expect(connection.settings.environment).toBe('dev');
+  expect(picker).not.toHaveBeenCalled();
+  expect(tree.root.findAllByProps({ testID: 'google-submit' }).find(node => node.props.onPress)?.props.disabled).toBe(false);
   Renderer.act(() => tree.unmount());
+  NativeModules.EncantoBuild = previousBuild;
+  platform.restore();
 });

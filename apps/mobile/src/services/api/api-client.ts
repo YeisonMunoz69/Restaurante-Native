@@ -97,6 +97,7 @@ apiClient.interceptors.response.use(
     const requestUrl = originalRequest.url || '';
     if (
       requestUrl.includes(API_CONFIG.endpoints.login) ||
+      requestUrl === API_CONFIG.endpoints.google ||
       requestUrl.includes(API_CONFIG.endpoints.refresh)
     ) {
       return Promise.reject(error);

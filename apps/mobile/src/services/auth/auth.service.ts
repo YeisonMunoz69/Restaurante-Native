@@ -7,7 +7,8 @@ import {
   getRefreshToken,
   clearTokens,
 } from './token-storage';
-import type { LoginDto, RegisterDto } from '@encanto/shared';
+import type { GoogleLoginDto, LoginDto, RegisterDto } from '@encanto/shared';
+import { BUILD_ENVIRONMENT } from '../../config/build-variant';
 
 // estructura del usuario autenticado en la aplicacion movil
 export interface AuthUser {
@@ -15,6 +16,7 @@ export interface AuthUser {
   correo: string;
   nombre?: string;
   rol?: string;
+  provider?: 'google' | 'password';
 }
 
 export interface AuthSession {
@@ -61,10 +63,9 @@ const decodeJwtPayload = (token: string): any => {
 };
 
 // inicio de sesion con correo y contrasena
-export const login = async (credentials: LoginDto): Promise<AuthSession> => {
-  const response = await apiClient.post(API_CONFIG.endpoints.login, credentials);
-  const { accessToken, refreshToken } = response.data;
-
+async function acceptSession({ accessToken, refreshToken }: { accessToken: string; refreshToken?: string }, correo = ''): Promise<AuthSession> {
+  const payload = decodeJwtPayload(accessToken);
+  if (!payload?.sub) throw new Error('INVALID_SESSION');
   // guardo el access token estrictamente en memoria (RAM)
   setInMemoryAccessToken(accessToken);
 
@@ -74,15 +75,30 @@ export const login = async (credentials: LoginDto): Promise<AuthSession> => {
   }
 
   // decodifico los datos del usuario incluidos en el token
-  const payload = decodeJwtPayload(accessToken);
   const user: AuthUser = {
-    id: payload?.sub || '',
-    correo: payload?.correo || credentials.correo,
+    id: payload.sub,
+    correo: payload.correo || correo,
     rol: payload?.rol || 'COMENSAL',
+    provider: payload?.provider === 'google' ? 'google' : 'password',
   };
 
   return { user, accessToken };
+}
+
+export const login = async (credentials: LoginDto): Promise<AuthSession> => {
+  const { data } = await apiClient.post(API_CONFIG.endpoints.login, credentials);
+  return acceptSession(data, credentials.correo);
 };
+
+// Solo transmito credenciales sobre HTTPS o por la conexión USB/emulador de la variante local.
+export async function googleSession(input: GoogleLoginDto, link = false) {
+  const destination = new URL(API_CONFIG.baseUrl);
+  const viaLocalTransport = BUILD_ENVIRONMENT === 'local' && destination.protocol === 'http:' &&
+    ['localhost', '127.0.0.1', '10.0.2.2'].includes(destination.hostname);
+  if (destination.protocol !== 'https:' && !viaLocalTransport) throw new Error('GOOGLE_INSECURE_CONNECTION');
+  const { data } = await apiClient.post(link ? API_CONFIG.endpoints.googleLink : API_CONFIG.endpoints.google, input);
+  return acceptSession(data);
+}
 
 // registro de nuevo usuario
 export const register = async (data: RegisterDto): Promise<any> => {
@@ -121,29 +137,14 @@ export const restoreSession = async (): Promise<AuthSession | null> => {
       }
     );
 
-    const { accessToken, refreshToken: newRefreshToken } = response.data;
+    const { accessToken } = response.data;
 
     if (!accessToken) {
       await clearTokens();
       return null;
     }
 
-    // actualizo la memoria con el token renovado
-    setInMemoryAccessToken(accessToken);
-
-    // guardo el nuevo refresh token rotativo
-    if (newRefreshToken) {
-      await saveRefreshToken(newRefreshToken);
-    }
-
-    const payload = decodeJwtPayload(accessToken);
-    const user: AuthUser = {
-      id: payload?.sub || '',
-      correo: payload?.correo || '',
-      rol: payload?.rol || 'COMENSAL',
-    };
-
-    return { user, accessToken };
+    return await acceptSession(response.data);
   } catch {
     console.log('No se pudo restaurar la sesion previa, se iniciara como invitado.');
     await clearTokens();

@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { TextInput } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { SettingsScreen } from '../SettingsScreen';
@@ -38,7 +37,7 @@ describe('SettingsScreen authentication form', () => {
       login,
       register,
       logout,
-      checkSession: jest.fn(),
+      checkSession: jest.fn(), loginWithGoogle: jest.fn(),
     });
   });
 
@@ -46,7 +45,7 @@ describe('SettingsScreen authentication form', () => {
     mockParams = { returnTo: 'Reservations' };
     jest.mocked(useAuth).mockReturnValue({
       user: { id: 'test', correo: 'prueba@example.test', rol: 'COMENSAL' },
-      isAuthenticated: true, isLoading: false, login, register, logout, checkSession: jest.fn(),
+      isAuthenticated: true, isLoading: false, login, register, logout, checkSession: jest.fn(), loginWithGoogle: jest.fn(),
     });
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => { tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>); });
@@ -66,7 +65,7 @@ describe('SettingsScreen authentication form', () => {
         login,
         register,
         logout,
-        checkSession: jest.fn(),
+        checkSession: jest.fn(), loginWithGoogle: jest.fn(),
       });
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {
@@ -92,7 +91,7 @@ describe('SettingsScreen authentication form', () => {
           login,
           register,
           logout,
-          checkSession: jest.fn(),
+          checkSession: jest.fn(), loginWithGoogle: jest.fn(),
         });
       let tree: ReactTestRenderer.ReactTestRenderer;
       ReactTestRenderer.act(() => {
@@ -111,82 +110,15 @@ describe('SettingsScreen authentication form', () => {
     },
   );
 
-  // Compruebo que el inicio de sesión envíe credenciales válidas al contexto.
-  it('submits validated login credentials', async () => {
+  it('permite vincular Google desde una sesión ya existente', () => {
+    jest.mocked(useAuth).mockReturnValue({
+      user: { id: 'test', correo: 'prueba@example.test', rol: 'ADMIN', provider: 'password' },
+      isAuthenticated: true, isLoading: false, login, register, logout,
+      loginWithGoogle: jest.fn(), checkSession: jest.fn(),
+    });
     let tree: ReactTestRenderer.ReactTestRenderer;
-    ReactTestRenderer.act(() => {
-      tree = ReactTestRenderer.create(
-        <ThemeProvider>
-          <SettingsScreen />
-        </ThemeProvider>,
-      );
-    });
-
-    const fields = tree!.root.findAllByType(TextInput);
-    ReactTestRenderer.act(() => {
-      fields
-        .find(field => field.props.accessibilityLabel === 'auth.email')!
-        .props.onChangeText('persona@ejemplo.com');
-      fields
-        .find(field => field.props.accessibilityLabel === 'auth.password')!
-        .props.onChangeText('Clave-segura-123');
-    });
-    const submit = tree!.root.findByProps({
-      testID: 'auth-submit',
-    }) as ReactTestRenderer.ReactTestInstance;
-    await ReactTestRenderer.act(async () => {
-      await submit.props.onPress();
-    });
-
-    expect(login).toHaveBeenCalledWith({
-      correo: 'persona@ejemplo.com',
-      password: 'Clave-segura-123',
-    });
-    ReactTestRenderer.act(() => tree!.unmount());
-  });
-
-  // Compruebo que el modo registro solicite y valide los cuatro datos requeridos.
-  it('switches to registration and submits the shared schema fields', async () => {
-    let tree: ReactTestRenderer.ReactTestRenderer;
-    ReactTestRenderer.act(() => {
-      tree = ReactTestRenderer.create(
-        <ThemeProvider>
-          <SettingsScreen />
-        </ThemeProvider>,
-      );
-    });
-
-    const toggle = tree!.root.findByProps({
-      testID: 'auth-toggle-mode',
-    }) as ReactTestRenderer.ReactTestInstance;
-    ReactTestRenderer.act(() => toggle.props.onPress());
-    const fields = tree!.root.findAllByType(TextInput);
-    const values = {
-      'auth.name': 'María Ejemplo',
-      'auth.email': 'persona@ejemplo.com',
-      'auth.phone': '3001234567',
-      'auth.password': 'Clave-segura-123',
-    };
-    ReactTestRenderer.act(() => {
-      for (const [label, value] of Object.entries(values)) {
-        fields
-          .find(field => field.props.accessibilityLabel === label)!
-          .props.onChangeText(value);
-      }
-    });
-    const submit = tree!.root.findByProps({
-      testID: 'auth-submit',
-    }) as ReactTestRenderer.ReactTestInstance;
-    await ReactTestRenderer.act(async () => {
-      await submit.props.onPress();
-    });
-
-    expect(register).toHaveBeenCalledWith({
-      nombre: 'María Ejemplo',
-      correo: 'persona@ejemplo.com',
-      telefono: '3001234567',
-      password: 'Clave-segura-123',
-    });
+    ReactTestRenderer.act(() => { tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>); });
+    expect(tree!.root.findAllByProps({ testID: 'google-link' }).length).toBeGreaterThan(0);
     ReactTestRenderer.act(() => tree!.unmount());
   });
 });

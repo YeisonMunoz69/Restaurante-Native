@@ -1,5 +1,5 @@
-import React from 'react';
-import { StatusBar } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { ActivityIndicator, Linking, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   NavigationContainer,
@@ -11,7 +11,9 @@ import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FeedbackHost } from './src/components/feedback/Feedback';
 import { BottomTabNavigator } from './src/navigation/BottomTabNavigator';
-import { WEB_LINKING } from './src/navigation/app-links';
+import { isAppLink, WEB_LINKING } from './src/navigation/app-links';
+import { WEB_ORIGIN } from './src/config/web-links';
+import { GoogleAccess } from './src/components/GoogleAccess';
 import { ConnectionProvider } from './src/context/ConnectionContext';
 import { useConnection } from './src/context/ConnectionContext';
 import { OrderDraftProvider } from './src/context/OrderDraftContext';
@@ -19,8 +21,20 @@ import { OrderDraftProvider } from './src/context/OrderDraftContext';
 // componente interno que conecta el tema de React Navigation con nuestro ThemeContext
 const AppContent: React.FC = () => {
   const { isDark, colors } = useTheme();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { settings } = useConnection();
+  const pendingLink = useRef<string | null>(null);
+  const readInitialLink = useRef(false);
+
+  // Guardo el enlace válido recibido mientras la puerta de acceso está abierta.
+  useEffect(() => {
+    if (user || !WEB_ORIGIN) return;
+    const origin = WEB_ORIGIN;
+    const listener = Linking.addEventListener('url', ({ url }) => {
+      if (isAppLink(url, origin)) pendingLink.current = url;
+    });
+    return () => listener.remove();
+  }, [user]);
 
   // adaptamos el tema de navegacion para que coincida con nuestros tokens
   const navTheme = isDark
@@ -47,14 +61,31 @@ const AppContent: React.FC = () => {
         },
       };
 
+  const linking = WEB_LINKING && {
+    ...WEB_LINKING,
+    getInitialURL: async () => {
+      const waiting = pendingLink.current;
+      pendingLink.current = null;
+      const url = waiting ?? (readInitialLink.current ? null : await Linking.getInitialURL());
+      readInitialLink.current = true;
+      return url && WEB_ORIGIN && isAppLink(url, WEB_ORIGIN) ? url : null;
+    },
+  };
+
   return (
-    <NavigationContainer theme={navTheme} linking={WEB_LINKING}>
+    <>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
-        <BottomTabNavigator />
-      </OrderDraftProvider>
+      {user ? (
+        <NavigationContainer theme={navTheme} linking={linking}>
+          <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user.id}>
+            <BottomTabNavigator />
+          </OrderDraftProvider>
+        </NavigationContainer>
+      ) : isLoading ? (
+        <ActivityIndicator color={colors.marca.primario} style={{ flex: 1, backgroundColor: colors.superficie.fondo }} />
+      ) : <GoogleAccess />}
       <FeedbackHost scope={user?.id} />
-    </NavigationContainer>
+    </>
   );
 };
 

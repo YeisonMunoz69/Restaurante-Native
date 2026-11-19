@@ -1,5 +1,17 @@
 # Google desde cero y dos apps de ensayo
 
+## Integración local del 19 de noviembre
+
+Creamos el proyecto `el-encanto-campestre`, los clientes Web, Android Local y Android VPS dev, y guardamos el sello oficial en la marca de OAuth. Google Auth Platform continúa en **Prueba**. En el `.env` local anotamos la cuenta de Google Cloud y guardamos los identificadores públicos.
+
+La app abre el acceso de Google y monta las pestañas al recibir una sesión de Encanto. En Android usamos Credential Manager. NestJS valida el ID token contra `GOOGLE_WEB_CLIENT_ID`, identifica la cuenta por el `sub` de Google y emite los JWT internos. Para el alta nueva pedimos el teléfono de contacto que usa la agenda. El rol inicial es `COMENSAL`. Conservamos las rutas públicas que usa la web.
+
+En el despliegue de transición dejamos `AUTH_GOOGLE_ONLY=false` mientras los usuarios existentes vinculan el mismo correo desde una sesión vigente en Ajustes. El vínculo conserva el UUID, el historial y el rol. Confirmamos primero el acceso de las tres cuentas ADMIN reales. Al activar `AUTH_GOOGLE_ONLY=true`, la API bloquea registro, inicio y renovación con contraseña y rechaza sus JWT anteriores en las rutas protegidas. La prueba local de Google usa ese modo y PostgreSQL aislado.
+
+La aceptación de [EC-75](https://yjmunoz.atlassian.net/browse/EC-75) en `dev`, la firma definitiva para publicación y la reconciliación con EC-58 requieren seguimiento. Pendiente actualizar requisitos en Drive y Word local: RF-AUT01/02/03/05/08, alta con Google, vínculo de usuarios existentes y acceso obligatorio a las pestañas.
+
+## Preparación anterior
+
 **Continuidad del 26/10:** registramos [EC-75](https://yjmunoz.atlassian.net/browse/EC-75), Por hacer/backlog y asignada a Alex, para completar API+móvil y Ajustes durante la ausencia de Yeison/Fabián, después de estabilizar EC-74/PR #16. Los criterios ya están en Jira; esto no acredita clientes OAuth creados ni login implementado. EC-58 requiere reconciliación explícita antes de retirar contraseña/verificación propias. Pendiente actualizar requisitos en Drive y Word local: RF-AUT01/02/03/05/08, organización de Ajustes y sección 8.
 
 Actualizado el 22/10/2026. **Crear clientes y variables no implementa el login.** Hoy conservamos la autenticación existente hasta conectar Google, verificar ID tokens en NestJS y probar el acceso obligatorio. No activamos un botón incompleto ni cambiamos a Supabase Auth o Expo Go.

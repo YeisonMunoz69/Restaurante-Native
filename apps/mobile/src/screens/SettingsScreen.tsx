@@ -7,13 +7,11 @@ import {
   TouchableOpacity,
   Switch,
   ActivityIndicator,
-  TextInput,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { LoginSchema, RegisterSchema } from '@encanto/shared';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { ConnectionForm } from '../components/ConnectionForm';
+import { GoogleAccess } from '../components/GoogleAccess';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { Action } from '../components/attention/Controls';
@@ -23,7 +21,6 @@ import { AdminReservationsScreen } from './AdminReservationsScreen';
 import { PaymentSettingsScreen } from './PaymentSettingsScreen';
 import { AdminsScreen } from './AdminsScreen';
 import { AdminNewsScreen } from './AdminNewsScreen';
-import { useConnection } from '../context/ConnectionContext';
 import {
   Moon,
   Sun,
@@ -43,16 +40,9 @@ export const SettingsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { isDark, toggleTheme, colors, typography, spacing, radii } =
     useTheme();
-  const { user, isAuthenticated, isLoading, login, register, logout } =
+  const { user, isAuthenticated, isLoading, logout } =
     useAuth();
-  const { isSaving } = useConnection();
   const insets = useSafeAreaInsets();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [formMode, setFormMode] = useState<'login' | 'register'>('login');
-  const [nombre, setNombre] = useState('');
-  const [correo, setCorreo] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [password, setPassword] = useState('');
   const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | 'payments' | 'admins' | 'news' | null>(null);
 
   // Regreso al formulario que quedó montado en Reservas después de autenticar.
@@ -62,34 +52,6 @@ export const SettingsScreen: React.FC = () => {
       navigation.navigate('Reservations');
     }
   }, [isAuthenticated, navigation, route.params?.returnTo]);
-
-  // Valido los campos con el mismo esquema compartido por la API.
-  const handleSubmit = async () => {
-    if (isSaving || isLoading) return;
-    try {
-      setErrorMessage(null);
-      if (formMode === 'register') {
-        const data = RegisterSchema.parse({
-          nombre,
-          correo,
-          telefono,
-          password,
-        });
-        await register(data);
-      } else {
-        const credentials = LoginSchema.parse({ correo, password });
-        await login(credentials);
-      }
-    } catch (error: any) {
-      const validationMessage = error?.issues?.[0]?.message;
-      const serverMessage = error?.response?.data?.message;
-      setErrorMessage(
-        validationMessage ||
-          (typeof serverMessage === 'string' ? serverMessage : null) ||
-          t('auth.requestError'),
-      );
-    }
-  };
 
   if (adminView === 'attention' && user?.rol === 'ADMIN')
     return <AttentionScreen onBack={() => setAdminView(null)} />;
@@ -116,7 +78,6 @@ export const SettingsScreen: React.FC = () => {
     >
       <TabPageHeader title={t('settings.title')} />
 
-      {!isAuthenticated && !isLoading && <ConnectionForm />}
       {user?.rol === 'ADMIN' && (
         <View>
           <Action label={t('menuAdmin.title')} onPress={() => setAdminView('menu')} />
@@ -232,6 +193,8 @@ export const SettingsScreen: React.FC = () => {
               </Text>
             </View>
 
+            {user.provider !== 'google' && <GoogleAccess link />}
+
             {/* boton de cerrar sesion */}
             <TouchableOpacity
               onPress={logout}
@@ -267,164 +230,7 @@ export const SettingsScreen: React.FC = () => {
               )}
             </TouchableOpacity>
           </View>
-        ) : (
-          <View>
-            <Text
-              style={[
-                typography.cuerpoM,
-                { color: colors.texto.secundario, marginBottom: spacing.m },
-              ]}
-            >
-              {t('auth.guestDesc')}
-            </Text>
-
-            {errorMessage && (
-              <View
-                style={[
-                  styles.errorContenedor,
-                  {
-                    backgroundColor: colors.estado.error + '20',
-                    borderColor: colors.estado.error,
-                    borderRadius: radii.m,
-                    padding: spacing.m,
-                    marginBottom: spacing.m,
-                  },
-                ]}
-              >
-                <Text style={[typography.pie, { color: colors.estado.error }]}>
-                  {errorMessage}
-                </Text>
-              </View>
-            )}
-
-            {formMode === 'register' && (
-              <TextInput
-                accessibilityLabel={t('auth.name')}
-                value={nombre}
-                onChangeText={setNombre}
-                placeholder={t('auth.name')}
-                placeholderTextColor={colors.texto.secundario}
-                autoCapitalize="words"
-                style={[
-                  styles.campo,
-                  typography.cuerpoM,
-                  {
-                    color: colors.texto.primario,
-                    borderColor: colors.superficie.borde,
-                    borderRadius: radii.m,
-                    marginBottom: spacing.s,
-                  },
-                ]}
-              />
-            )}
-            <TextInput
-              accessibilityLabel={t('auth.email')}
-              value={correo}
-              onChangeText={setCorreo}
-              placeholder={t('auth.email')}
-              placeholderTextColor={colors.texto.secundario}
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              textContentType="emailAddress"
-              style={[
-                styles.campo,
-                typography.cuerpoM,
-                {
-                  color: colors.texto.primario,
-                  borderColor: colors.superficie.borde,
-                  borderRadius: radii.m,
-                  marginBottom: spacing.s,
-                },
-              ]}
-            />
-            {formMode === 'register' && (
-              <TextInput
-                accessibilityLabel={t('auth.phone')}
-                value={telefono}
-                onChangeText={setTelefono}
-                placeholder={t('auth.phone')}
-                placeholderTextColor={colors.texto.secundario}
-                keyboardType="phone-pad"
-                textContentType="telephoneNumber"
-                style={[
-                  styles.campo,
-                  typography.cuerpoM,
-                  {
-                    color: colors.texto.primario,
-                    borderColor: colors.superficie.borde,
-                    borderRadius: radii.m,
-                    marginBottom: spacing.s,
-                  },
-                ]}
-              />
-            )}
-            <TextInput
-              accessibilityLabel={t('auth.password')}
-              value={password}
-              onChangeText={setPassword}
-              placeholder={t('auth.password')}
-              placeholderTextColor={colors.texto.secundario}
-              autoCapitalize="none"
-              secureTextEntry
-              textContentType={
-                formMode === 'register' ? 'newPassword' : 'password'
-              }
-              style={[
-                styles.campo,
-                typography.cuerpoM,
-                {
-                  color: colors.texto.primario,
-                  borderColor: colors.superficie.borde,
-                  borderRadius: radii.m,
-                  marginBottom: spacing.m,
-                },
-              ]}
-            />
-
-            <TouchableOpacity
-              testID="auth-submit"
-              onPress={handleSubmit}
-              disabled={isLoading || isSaving}
-              style={[
-                styles.botonAccion,
-                {
-                  backgroundColor: colors.marca.primario,
-                  borderRadius: radii.m,
-                  padding: spacing.m,
-                },
-              ]}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color={colors.texto.inverso} />
-              ) : (
-                <Text
-                  style={[typography.etiqueta, { color: colors.texto.inverso }]}
-                >
-                  {t(formMode === 'login' ? 'auth.login' : 'auth.register')}
-                </Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              testID="auth-toggle-mode"
-              accessibilityRole="button"
-              onPress={() => {
-                setErrorMessage(null);
-                setFormMode(formMode === 'login' ? 'register' : 'login');
-              }}
-              disabled={isLoading}
-              style={{ alignItems: 'center', paddingTop: spacing.m }}
-            >
-              <Text style={[typography.pie, { color: colors.marca.primario }]}>
-                {t(
-                  formMode === 'login'
-                    ? 'auth.needAccount'
-                    : 'auth.haveAccount',
-                )}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        ) : null}
       </View>
 
       {/* seccion de apariencia */}
@@ -628,14 +434,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  errorContenedor: {
-    borderWidth: 1,
-  },
-  campo: {
-    borderWidth: 1,
-    minHeight: 48,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
   },
 });

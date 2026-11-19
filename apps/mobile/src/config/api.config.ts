@@ -15,6 +15,8 @@ export const API_CONFIG = {
   timeoutMs: 15000,
   endpoints: {
     login: '/auth/login',
+    google: '/auth/google',
+    googleLink: '/auth/google/vincular',
     register: '/auth/register',
     refresh: '/auth/refresh',
     logout: '/auth/logout',

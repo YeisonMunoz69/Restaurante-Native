@@ -4,10 +4,11 @@ import {
   register as apiRegister,
   logout as apiLogout,
   restoreSession as apiRestoreSession,
+  googleSession,
   AuthUser,
 } from '../services/auth/auth.service';
 import { onSessionExpired } from '../services/api/api-client';
-import type { LoginDto, RegisterDto } from '@encanto/shared';
+import type { LoginDto, RegisterDto, GoogleLoginDto } from '@encanto/shared';
 
 interface AuthContextData {
   user: AuthUser | null;
@@ -15,6 +16,7 @@ interface AuthContextData {
   isLoading: boolean;
   login: (credentials: LoginDto) => Promise<void>;
   register: (data: RegisterDto) => Promise<void>;
+  loginWithGoogle: (data: GoogleLoginDto, link?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   checkSession: () => Promise<void>;
 }
@@ -101,6 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login: handleLogin,
         register: handleRegister,
+        loginWithGoogle: async (data, link) => setUser((await googleSession(data, link)).user),
         logout: handleLogout,
         checkSession,
       }}
