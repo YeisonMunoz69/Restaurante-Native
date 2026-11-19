@@ -20,7 +20,7 @@ import { OrderDraftProvider } from './src/context/OrderDraftContext';
 
 // componente interno que conecta el tema de React Navigation con nuestro ThemeContext
 const AppContent: React.FC = () => {
-  const { isDark, colors } = useTheme();
+  const { isDark, isThemeReady, colors } = useTheme();
   const { user, isLoading } = useAuth();
   const { settings } = useConnection();
   const pendingLink = useRef<string | null>(null);
@@ -75,14 +75,14 @@ const AppContent: React.FC = () => {
   return (
     <>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      {user ? (
+      {!isThemeReady || (!user && isLoading) ? (
+        <ActivityIndicator color={colors.marca.primario} style={{ flex: 1, backgroundColor: colors.superficie.fondo }} />
+      ) : user ? (
         <NavigationContainer theme={navTheme} linking={linking}>
           <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user.id}>
             <BottomTabNavigator />
           </OrderDraftProvider>
         </NavigationContainer>
-      ) : isLoading ? (
-        <ActivityIndicator color={colors.marca.primario} style={{ flex: 1, backgroundColor: colors.superficie.fondo }} />
       ) : <GoogleAccess />}
       <FeedbackHost scope={user?.id} />
     </>

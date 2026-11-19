@@ -38,7 +38,7 @@ export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { t } = useTranslation();
-  const { isDark, toggleTheme, colors, typography, spacing, radii } =
+  const { isDark, setThemeMode, colors, typography, spacing, radii } =
     useTheme();
   const { user, isAuthenticated, isLoading, logout } =
     useAuth();
@@ -276,8 +276,9 @@ export const SettingsScreen: React.FC = () => {
             </Text>
           </View>
           <Switch
+            accessibilityLabel={t('settings.themeDark')}
             value={isDark}
-            onValueChange={toggleTheme}
+            onValueChange={value => setThemeMode(value ? 'dark' : 'light')}
             trackColor={{
               false: colors.superficie.borde,
               true: colors.marca.primario,

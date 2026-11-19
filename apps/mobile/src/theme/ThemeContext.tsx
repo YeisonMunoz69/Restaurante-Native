@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LightColors, DarkColors, Spacing, Radii, Typography } from './tokens';
 
-type ThemeMode = 'light' | 'dark' | 'system';
+type ThemeMode = 'light' | 'dark';
+const storageKey = 'encanto.appearance.v1';
 
 interface ThemeContextType {
   isDark: boolean;
-  themeMode: ThemeMode;
+  isThemeReady: boolean;
   setThemeMode: (mode: ThemeMode) => void;
-  toggleTheme: () => void;
   colors: typeof LightColors;
   spacing: typeof Spacing;
   radii: typeof Radii;
@@ -21,27 +21,32 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const sistemaScheme = useColorScheme();
-  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
+  const [themeMode, setStoredMode] = useState<ThemeMode | null>(null);
 
-  // calculo si esta oscuro segun la eleccion del usuario o el tema del celular
-  const isDark =
-    themeMode === 'system' ? sistemaScheme === 'dark' : themeMode === 'dark';
+  // Leo la preferencia antes de mostrar el acceso para evitar un destello al abrir.
+  useEffect(() => {
+    let active = true;
+    void AsyncStorage.getItem(storageKey).catch(() => null).then(saved => {
+      if (active) setStoredMode(saved === 'dark' ? 'dark' : 'light');
+    });
+    return () => { active = false; };
+  }, []);
 
+  const isDark = themeMode === 'dark';
   const colors = isDark ? DarkColors : LightColors;
 
-  // funcion sencilla para alternar entre claro y oscuro desde la pantalla de Ajustes
-  const toggleTheme = () => {
-    setThemeMode(prev => (prev === 'dark' ? 'light' : 'dark'));
+  // La elección queda en este dispositivo y se carga nuevamente al iniciar.
+  const setThemeMode = (mode: ThemeMode) => {
+    setStoredMode(mode);
+    void AsyncStorage.setItem(storageKey, mode).catch(() => undefined);
   };
 
   return (
     <ThemeContext.Provider
       value={{
         isDark,
-        themeMode,
+        isThemeReady: themeMode !== null,
         setThemeMode,
-        toggleTheme,
         colors,
         spacing: Spacing,
         radii: Radii,
