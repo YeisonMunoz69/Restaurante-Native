@@ -5,6 +5,7 @@ import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { Button } from '../../components/ui/Button';
 import { launchImageLibrary } from 'react-native-image-picker';
+import Share from 'react-native-share';
 import { ReservationImagePreview } from '../../components/reservations/ReservationReceipt';
 import { useConnection } from '../../context/ConnectionContext';
 import { menuApi } from '../../services/menu.service';
@@ -155,6 +156,10 @@ describe('ReservationCreateScreen', () => {
     expect(api.uploadReceipt).toHaveBeenCalledWith('reservation-id', expect.objectContaining({ uri: 'file:///comprobante.png' }));
     await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-receipt-preview' }).props.onPress(); });
     expect(tree.root.findByType(ReservationImagePreview).props.image.alto).toBe(1340);
+    await ReactTestRenderer.act(async () => tree.root.findByType(ReservationImagePreview).props.onShare());
+    expect(Share.open).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'data:image/png;base64,cG5n', type: 'image/png', useInternalStorage: true,
+    }));
     ReactTestRenderer.act(() => tree.unmount());
   });
 
