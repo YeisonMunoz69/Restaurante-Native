@@ -156,6 +156,27 @@ describe('MenuScreen', () => {
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
+  it('keeps a compact date only after the full header scrolls away', async () => {
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(<ThemeProvider><MenuScreen /></ThemeProvider>);
+    });
+    const carousel = () => tree.root.findByType(MenuCarousels);
+    const scroll = (y: number) => ReactTestRenderer.act(() => {
+      carousel().props.onScroll({ nativeEvent: { contentOffset: { y } } });
+    });
+    ReactTestRenderer.act(() => {
+      carousel().props.header.props.onLayout({ nativeEvent: { layout: { height: 160 } } });
+    });
+    scroll(100);
+    expect(tree.root.findAllByProps({ testID: 'menu-compact-date' })).toHaveLength(0);
+    scroll(180);
+    expect(tree.root.findAllByProps({ testID: 'menu-compact-date' }).length).toBeGreaterThan(0);
+    scroll(0);
+    expect(tree.root.findAllByProps({ testID: 'menu-compact-date' })).toHaveLength(0);
+    ReactTestRenderer.act(() => tree.unmount());
+  });
+
   it('requests a different civil date when the user changes the day', async () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => {

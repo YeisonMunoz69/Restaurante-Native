@@ -1,5 +1,6 @@
 {
   "title": "Mi Pedido", "add": "Agregar a Mi Pedido", "remove": "Quitar", "empty": "Todavía no elegiste platos.",
+  "addShort": "Añadir", "addDish": "Agregar {{name}} a Mi Pedido",
   "edit": "Revisar Mi Pedido", "reserve": "Continuar con mi reserva", "tableOnly": "Solo mesa · pediré en el restaurante",
   "openSummarySingle": "Mi Pedido, un plato, total estimado {{total}}",
   "openSummary": "Mi Pedido, {{count}} platos, total estimado {{total}}",

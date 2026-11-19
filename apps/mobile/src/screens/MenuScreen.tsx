@@ -8,10 +8,11 @@ import React, {
 import { useNavigation, type RouteProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RootTabParamList } from '../navigation/BottomTabNavigator';
-import { OrderDraftPanel } from '../components/menu/OrderDraftPanel';
+import { ORDER_BUTTON_CLEARANCE, OrderDraftPanel } from '../components/menu/OrderDraftPanel';
 import { MenuCarousels } from '../components/menu/MenuCarousels';
 import {
   ActivityIndicator,
+  ScrollView,
   Pressable,
   StyleSheet,
   Text,
@@ -20,6 +21,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import {
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   UtensilsCrossed,
@@ -66,12 +68,15 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   const [selectedDishId, setSelectedDishId] = useState<string | null>(null);
   const [nextPage, setNextPage] = useState(2);
   const [totalPages, setTotalPages] = useState(0);
+  const [showCompactDate, setShowCompactDate] = useState(false);
+  const headerHeight = useRef(Infinity);
   const requestNumber = useRef(0);
   const loadingMoreRef = useRef(false);
 
   // Cargo sede, próximo día, categorías y primera página para el entorno elegido.
   const loadInitial = useCallback(async () => {
     const currentRequest = ++requestNumber.current;
+    setShowCompactDate(false);
     setCategories([]);
     setDishes([]);
     setFecha(null);
@@ -134,6 +139,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
     async (nextDate: string) => {
       if (!restauranteId) return;
       const currentRequest = ++requestNumber.current;
+      setShowCompactDate(false);
       setFecha(nextDate);
       setDayOpen(null);
       setDayHours([]);
@@ -230,10 +236,90 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   );
 
 
+  const dateLabel = fecha ? formatCivilDate(fecha) : '';
+  const compactDate = fecha ? formatCivilDate(fecha, {
+    weekday: 'short', day: 'numeric', month: 'short',
+  }) : '';
+  const hours = dayHours.join(' · ');
+  const header = (
+    <View
+      testID="menu-scroll-header"
+      onLayout={event => { headerHeight.current = event.nativeEvent.layout.height; }}
+      style={[styles.header, { paddingHorizontal: spacing.margenLateral }]}
+    >
+      <Text accessibilityRole="header" style={[typography.display, { color: colors.texto.primario }]}>
+        {t('menu.title')}
+      </Text>
+      <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
+        {t('menu.subtitle')}
+      </Text>
+      {fecha && (
+        <View style={[styles.date, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
+          <View style={styles.dateRow}>
+            <CalendarDays size={20} color={colors.marca.primario} />
+            <View style={styles.dateInfo}>
+              <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
+                {t(fecha === nextOpenDate ? 'menu.nextOpenDay' : 'menu.selectedDate')}
+              </Text>
+              <Text style={[typography.cuerpoM, { color: colors.texto.primario }]}>{dateLabel}</Text>
+              {!!hours && (
+                <Text testID="menu-day-hours" style={[typography.pie, { color: colors.texto.secundario }]}>
+                  {hours}
+                </Text>
+              )}
+            </View>
+            <View style={styles.dateControls}>
+              <Pressable
+                testID="menu-date-previous"
+                accessibilityRole="button"
+                accessibilityLabel={t('menu.previousDay')}
+                onPress={() => loadDate(shiftCivilDate(fecha, -1))}
+                style={styles.dateButton}
+              >
+                <ChevronLeft size={21} color={colors.marca.primario} />
+              </Pressable>
+              <Pressable
+                testID="menu-date-next"
+                accessibilityRole="button"
+                accessibilityLabel={t('menu.nextDay')}
+                onPress={() => loadDate(shiftCivilDate(fecha, 1))}
+                style={styles.dateButton}
+              >
+                <ChevronRight size={21} color={colors.marca.primario} />
+              </Pressable>
+            </View>
+          </View>
+          {noNextOpenDay && (
+            <Text style={[typography.pie, { color: colors.texto.secundario }]}>
+              {t('menu.noNextOpenDay')}
+            </Text>
+          )}
+          {dayOpen === false && (
+            <Text testID="menu-day-closed" style={[typography.pie, { color: colors.estado.error }]}>
+              {t('menu.dayClosed')}
+            </Text>
+          )}
+          {dayOpen === false && nextAvailableDay && (
+            <Pressable
+              testID="menu-next-open-date"
+              accessibilityRole="button"
+              onPress={() => loadDate(nextAvailableDay)}
+              style={styles.nextOpen}
+            >
+              <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
+                {t('menu.goToNextOpenDay', { date: formatCivilDate(nextAvailableDay) })}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <View
       testID="menu-screen"
-      style={[styles.container, { backgroundColor: colors.superficie.fondo }]}
+      style={[styles.container, { backgroundColor: colors.superficie.fondo, paddingTop: insets.top }]}
     >
       {!restauranteId ? (
         <View style={styles.centered}>
@@ -254,198 +340,46 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
         </View>
       ) : (
         <>
-          <View
-            style={[
-              styles.header,
-              {
-                paddingHorizontal: spacing.margenLateral,
-                paddingTop: insets.top + spacing.l,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                typography.display,
-                { color: colors.texto.primario, marginBottom: spacing.xs },
-              ]}
-            >
-              {t('menu.title')}
-            </Text>
-            <Text
-              style={[typography.cuerpoM, { color: colors.texto.secundario }]}
-            >
-              {t('menu.subtitle')}
-            </Text>
-
-            {fecha && (
-              <View
-                style={[
-                  styles.dateCard,
-                  {
-                    backgroundColor: colors.superficie.elevada,
-                    borderColor: colors.superficie.borde,
-                    borderRadius: radii.m,
-                    marginTop: spacing.m,
-                    padding: spacing.m,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    typography.etiqueta,
-                    { color: colors.marca.primario },
-                  ]}
-                >
-                  {t(
-                    fecha === nextOpenDate
-                      ? 'menu.nextOpenDay'
-                      : 'menu.selectedDate',
-                  )}
-                </Text>
-                <Text
-                  accessibilityRole="header"
-                  style={[
-                    typography.cuerpoL,
-                    { color: colors.texto.primario, marginTop: spacing.xs },
-                  ]}
-                >
-                  {formatCivilDate(fecha)}
-                </Text>
-                {dayHours.length > 0 && (
-                  <Text testID="menu-day-hours" style={[typography.pie, { color: colors.texto.secundario, marginTop: spacing.xs }]}>
-                    {dayHours.join(' · ')}
-                  </Text>
-                )}
-                <View style={[styles.dateControls, { marginTop: spacing.s }]}>
-                  <Pressable
-                    testID="menu-date-previous"
-                    accessibilityRole="button"
-                    accessibilityLabel={t('menu.previousDay')}
-                    onPress={() => {
-                      loadDate(shiftCivilDate(fecha, -1));
-                    }}
-                    style={[
-                      styles.dateButton,
-                      {
-                        borderColor: colors.superficie.borde,
-                        borderRadius: radii.s,
-                      },
-                    ]}
-                  >
-                    <ChevronLeft size={20} color={colors.marca.primario} />
-                    <Text
-                      style={[typography.pie, { color: colors.texto.primario }]}
-                    >
-                      {t('menu.previousDay')}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    testID="menu-date-next"
-                    accessibilityRole="button"
-                    accessibilityLabel={t('menu.nextDay')}
-                    onPress={() => {
-                      loadDate(shiftCivilDate(fecha, 1));
-                    }}
-                    style={[
-                      styles.dateButton,
-                      {
-                        borderColor: colors.superficie.borde,
-                        borderRadius: radii.s,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[typography.pie, { color: colors.texto.primario }]}
-                    >
-                      {t('menu.nextDay')}
-                    </Text>
-                    <ChevronRight size={20} color={colors.marca.primario} />
-                  </Pressable>
-                </View>
-                {noNextOpenDay && (
-                  <Text
-                    style={[
-                      typography.pie,
-                      { color: colors.texto.secundario, marginTop: spacing.s },
-                    ]}
-                  >
-                    {t('menu.noNextOpenDay')}
-                  </Text>
-                )}
-                {dayOpen === false && (
-                  <Text
-                    testID="menu-day-closed"
-                    style={[
-                      typography.pie,
-                      { color: colors.estado.error, marginTop: spacing.s },
-                    ]}
-                  >
-                    {t('menu.dayClosed')}
-                  </Text>
-                )}
-                {dayOpen === false && nextAvailableDay && (
-                  <Pressable
-                    testID="menu-next-open-date"
-                    accessibilityRole="button"
-                    onPress={() => loadDate(nextAvailableDay)}
-                    style={[styles.retryButton, { marginTop: spacing.s }]}
-                  >
-                    <Text style={[typography.pie, { color: colors.marca.primario }]}>
-                      {t('menu.goToNextOpenDay', { date: formatCivilDate(nextAvailableDay) })}
-                    </Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
-          </View>
-
           {loading && dishes.length === 0 ? (
-            <View style={styles.centered}>
-              <ActivityIndicator
-                testID="menu-loading"
-                color={colors.marca.primario}
-              />
-              <Text
-                style={[
-                  typography.cuerpoM,
-                  { color: colors.texto.secundario, marginTop: spacing.m },
-                ]}
-              >
-                {t('common.loading')}
-              </Text>
-            </View>
-          ) : error ? (
-            <View style={[styles.centered, { padding: spacing.l }]}>
-              <Text
-                testID="menu-error"
-                style={[
-                  typography.cuerpoM,
-                  styles.centerText,
-                  { color: colors.estado.error },
-                ]}
-              >
-                {errorStatus(error) === 404
-                  ? t('menu.restaurantNotFound')
-                  : t('menu.requestError')}
-              </Text>
-              <Pressable
-                testID="menu-retry"
-                accessibilityRole="button"
-                onPress={refresh}
-                style={[styles.retryButton, { marginTop: spacing.m }]}
-              >
-                <Text
-                  style={[
-                    typography.etiqueta,
-                    { color: colors.marca.primario },
-                  ]}
-                >
-                  {t('common.retry')}
+            <ScrollView contentContainerStyle={styles.statusContent}>
+              {header}
+              <View style={styles.centered}>
+                <ActivityIndicator testID="menu-loading" color={colors.marca.primario} />
+                <Text style={[typography.cuerpoM, { color: colors.texto.secundario, marginTop: spacing.m }]}>
+                  {t('common.loading')}
                 </Text>
-              </Pressable>
-            </View>
+              </View>
+            </ScrollView>
+          ) : error ? (
+            <ScrollView contentContainerStyle={styles.statusContent}>
+              {header}
+              <View style={[styles.centered, { padding: spacing.l }]}>
+                <Text
+                  testID="menu-error"
+                  style={[typography.cuerpoM, styles.centerText, { color: colors.estado.error }]}
+                >
+                  {errorStatus(error) === 404 ? t('menu.restaurantNotFound') : t('menu.requestError')}
+                </Text>
+                <Pressable
+                  testID="menu-retry"
+                  accessibilityRole="button"
+                  onPress={refresh}
+                  style={[styles.retryButton, { marginTop: spacing.m }]}
+                >
+                  <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
+                    {t('common.retry')}
+                  </Text>
+                </Pressable>
+              </View>
+            </ScrollView>
           ) : (
             <MenuCarousels
+              header={header}
+              bottomInset={ORDER_BUTTON_CLEARANCE}
+              onScroll={event => {
+                // Solo fijo una línea cuando ya salió toda la cabecera de la lista.
+                setShowCompactDate(event.nativeEvent.contentOffset.y >= headerHeight.current);
+              }}
               sections={sections}
               fecha={fecha ?? todayInBogota()}
               open={dayOpen === true}
@@ -456,6 +390,23 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
               onRefresh={refresh}
               onDetail={setSelectedDishId}
             />
+          )}
+
+          {showCompactDate && fecha && !loading && !error && (
+            <View
+              pointerEvents="none"
+              testID="menu-compact-date"
+              style={[styles.compactDate, {
+                top: insets.top,
+                backgroundColor: colors.superficie.elevada,
+                paddingHorizontal: spacing.margenLateral,
+              }]}
+            >
+              <CalendarDays size={14} color={colors.marca.primario} />
+              <Text style={[typography.pie, styles.dateInfo, { color: colors.texto.primario }]}>
+                {[compactDate, dayOpen === false ? t('discovery.closed') : hours].filter(Boolean).join(' · ')}
+              </Text>
+            </View>
           )}
 
           <MenuDishDetailModal
@@ -477,40 +428,20 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
 };
 
 const styles = StyleSheet.create({
-  addOrder: { marginHorizontal: 16, marginBottom: 8 },
   container: { flex: 1 },
-  header: { paddingBottom: 12 },
-  dateCard: { borderWidth: 1 },
-  dateControls: { flexDirection: 'row', justifyContent: 'space-between' },
-  dateButton: {
-    minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    paddingHorizontal: 8,
+  header: { paddingTop: 10, paddingBottom: 16, gap: 4 },
+  date: { marginTop: 12, paddingVertical: 10, paddingHorizontal: 12, gap: 6 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dateInfo: { flex: 1 },
+  dateControls: { flexDirection: 'row' },
+  dateButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  nextOpen: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  compactDate: {
+    position: 'absolute', left: 0, right: 0, zIndex: 2,
+    flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 7,
   },
+  statusContent: { flexGrow: 1, paddingBottom: ORDER_BUTTON_CLEARANCE },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   centerText: { textAlign: 'center' },
-  retryButton: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  listContent: { flexGrow: 1 },
-  sectionTitle: { paddingBottom: 8 },
-  dishCard: { borderWidth: 1 },
-  dishPhoto: {
-    width: '100%',
-    aspectRatio: 4 / 3,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  dishPhotoFallback: { alignItems: 'center', justifyContent: 'center' },
-  dishHeading: { flexDirection: 'row', alignItems: 'center' },
-  dishName: { flex: 1 },
-  dishFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+  retryButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
 });
