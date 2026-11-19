@@ -137,7 +137,7 @@
     "datePlaceholder": "AAAA-MM-DD",
     "requests": "Solicitudes",
     "agenda": "Agenda",
-    "noRequests": "No hay solicitudes pendientes para esta fecha.",
+    "noRequests": "No hay solicitudes pendientes.",
     "noAgenda": "No hay reservas confirmadas para esta fecha.",
     "adminLoadError": "No pudimos cargar la operación de reservas.",
     "adminActionError": "La operación no se completó. Actualiza y vuelve a revisar.",
