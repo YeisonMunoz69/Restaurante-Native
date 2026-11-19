@@ -1,10 +1,9 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { Switch } from 'react-native';
+import { Switch, Text } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { SettingsScreen } from '../SettingsScreen';
-import { Action } from '../../components/attention/Controls';
 import { ConnectionForm } from '../../components/ConnectionForm';
 import { BackButton } from '../../components/navigation/BackButton';
 
@@ -83,7 +82,7 @@ describe('SettingsScreen authentication form', () => {
   });
 
   it.each(['ADMIN', 'COMENSAL', 'STAFF'])(
-    'muestra el acceso administrativo únicamente para ADMIN: %s',
+    'muestra las opciones del rol %s dentro de su grupo',
     rol => {
       jest
         .mocked(useAuth)
@@ -104,11 +103,11 @@ describe('SettingsScreen authentication form', () => {
           </ThemeProvider>,
         );
       });
-      expect(
-        tree!.root
-          .findAllByType(Action)
-          .filter(node => node.props.label === 'attention.title'),
-      ).toHaveLength(rol === 'ADMIN' ? 1 : 0);
+      const hasEntry = (id: string) => tree!.root
+        .findAllByProps({ testID: `settings-${id}` })
+        .some(node => node.props.onPress);
+      expect(hasEntry('attention')).toBe(rol === 'ADMIN');
+      expect(hasEntry('reservations')).toBe(rol === 'ADMIN' || rol === 'STAFF');
       ReactTestRenderer.act(() => tree!.unmount());
     },
   );
@@ -127,18 +126,28 @@ describe('SettingsScreen authentication form', () => {
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
-  it('abre Apariencia desde Aplicación y vuelve al índice de Ajustes', async () => {
+  it('muestra la sesión de Google y actualiza el resumen de apariencia al volver', async () => {
+    jest.mocked(useAuth).mockReturnValue({
+      user: { id: 'test', correo: 'prueba@example.test', rol: 'COMENSAL', provider: 'google' },
+      isAuthenticated: true, isLoading: false, login, register, logout,
+      loginWithGoogle: jest.fn(), checkSession: jest.fn(),
+    });
     let tree!: ReactTestRenderer.ReactTestRenderer;
+    const shows = (label: string) => tree.root.findAllByType(Text).some(node => node.props.children === label);
     await ReactTestRenderer.act(async () => {
       tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>);
     });
     expect(tree.root.findAllByType(Switch)).toHaveLength(0);
+    expect(shows('settings.googleConnected')).toBe(true);
+    expect(shows('settings.themeLight')).toBe(true);
     const application = tree.root.findAllByProps({ testID: 'settings-application' }).find(node => node.props.onPress)!;
     ReactTestRenderer.act(() => application.props.onPress());
     await ReactTestRenderer.act(async () => tree.root.findByType(Switch).props.onValueChange(true));
     expect(tree.root.findByType(Switch).props.value).toBe(true);
     ReactTestRenderer.act(() => tree.root.findByType(BackButton).props.onPress());
     expect(tree.root.findAllByType(Switch)).toHaveLength(0);
+    expect(shows('settings.themeDark')).toBe(true);
+    expect(shows('settings.themeLight')).toBe(false);
     ReactTestRenderer.act(() => tree.unmount());
   });
 });

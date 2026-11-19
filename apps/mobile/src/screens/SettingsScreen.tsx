@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { AppWindow, ChevronRight, Globe, Info, LogOut, MapPin, Moon, ShieldCheck, SlidersHorizontal, Sun, User } from 'lucide-react-native';
+import {
+  CalendarDays, ChevronRight, ClipboardList, Globe, Info, LogOut, MapPin, Moon,
+  Newspaper, ShieldCheck, SlidersHorizontal, Sun, User, Users, Utensils, Wallet,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -10,7 +14,6 @@ import { GoogleAccess } from '../components/GoogleAccess';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { BackButton } from '../components/navigation/BackButton';
 import { TabPageHeader } from '../components/navigation/TabPageHeader';
-import { Action } from '../components/attention/Controls';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
@@ -21,7 +24,7 @@ import { AdminNewsScreen } from './AdminNewsScreen';
 const sections = {
   profile: { label: 'settings.profile', icon: User },
   preferences: { label: 'settings.preferences', icon: SlidersHorizontal },
-  application: { label: 'settings.application', icon: AppWindow },
+  application: { label: 'settings.appearance', icon: Sun },
   security: { label: 'auth.title', icon: ShieldCheck },
   information: { label: 'settings.information', icon: Info },
 } as const;
@@ -34,7 +37,7 @@ export const SettingsScreen: React.FC = () => {
   const route = useRoute<any>();
   const isFocused = useIsFocused();
   const { t } = useTranslation();
-  const { colors, typography, spacing } = useTheme();
+  const { colors, isDark, spacing } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<Section | null>(null);
@@ -75,10 +78,10 @@ export const SettingsScreen: React.FC = () => {
   return (
     <KeyboardAwareScrollView
       key={section ?? 'index'}
-      style={{ backgroundColor: colors.superficie.fondo }}
+      style={{ backgroundColor: isDark ? colors.superficie.fondo : colors.superficie.elevada }}
       contentContainerStyle={[styles.content, {
         paddingHorizontal: spacing.margenLateral,
-        paddingTop: insets.top + spacing.s,
+          paddingTop: insets.top + spacing.l,
       }]}
     >
       {section ? (
@@ -87,50 +90,123 @@ export const SettingsScreen: React.FC = () => {
           <TabPageHeader title={t(sections[section].label)} />
           <SettingsDetails section={section} />
         </>
-      ) : (
-        <>
-          <TabPageHeader title={t('settings.title')} />
-          <View style={styles.list}>
-            {(Object.keys(sections) as Section[]).map(key => {
-              const { label, icon: Icon } = sections[key];
-              return (
-                <Pressable
-                  key={key}
-                  testID={`settings-${key}`}
-                  accessibilityRole="button"
-                  onPress={() => setSection(key)}
-                  style={({ pressed }) => [styles.row, {
-                    borderBottomColor: colors.superficie.borde,
-                    backgroundColor: pressed ? colors.superficie.elevada : colors.superficie.fondo,
-                  }]}
-                >
-                  <Icon size={21} color={colors.marca.primario} accessible={false} />
-                  <Text style={[typography.cuerpoL, styles.label, { color: colors.texto.primario }]}>
-                    {t(label)}
-                  </Text>
-                  <ChevronRight size={18} color={colors.texto.secundario} accessible={false} />
-                </Pressable>
-              );
-            })}
-          </View>
-          {user?.rol === 'ADMIN' && (
-            <View>
-              <Action label={t('menuAdmin.title')} onPress={() => setAdminView('menu')} />
-              <Action label={t('newsAdmin.title')} onPress={() => setAdminView('news')} />
-              <Action label={t('payments.title')} onPress={() => setAdminView('payments')} />
-              <Action label={t('admins.title')} onPress={() => setAdminView('admins')} />
-              <Action label={t('reservations.adminTitle')} onPress={() => setAdminView('reservations')} />
-              <Action label={t('attention.title')} onPress={() => setAdminView('attention')} />
-            </View>
-          )}
-          {user?.rol === 'STAFF' && (
-            <Action label={t('reservations.agenda')} onPress={() => setAdminView('reservations')} />
-          )}
-        </>
-      )}
+      ) : <SettingsIndex openSection={setSection} openAdminView={setAdminView} />}
     </KeyboardAwareScrollView>
   );
 };
+
+type SettingsEntry = {
+  id: Section | AdminView;
+  title: string;
+  summary?: string;
+  icon: LucideIcon;
+  onPress: () => void;
+};
+
+// En el índice muestro el estado actual y dejo los controles en su subpantalla.
+function SettingsIndex({ openSection, openAdminView }: {
+  openSection: (section: Section) => void;
+  openAdminView: (view: AdminView) => void;
+}) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { colors, isDark, typography } = useTheme();
+  const name = user?.nombre?.trim();
+  const personalEntry = (id: Section, summary: string): SettingsEntry => ({
+    id,
+    title: t(sections[id].label),
+    icon: id === 'application' && isDark ? Moon : sections[id].icon,
+    onPress: () => openSection(id),
+    summary,
+  });
+  const adminEntry = (id: AdminView, label: string, icon: LucideIcon): SettingsEntry => ({
+    id, title: t(label), icon, onPress: () => openAdminView(id),
+  });
+
+  return (
+    <View style={styles.index}>
+      <Text accessibilityRole="header" style={[styles.indexTitle, { color: colors.texto.primario }]}>
+        {t('settings.title')}
+      </Text>
+      {user && (
+        <View style={[styles.accountCard, { backgroundColor: colors.marca.primarioSuave }]}>
+          <View style={[styles.accountIcon, { backgroundColor: colors.marca.primario }]}>
+            <User size={24} strokeWidth={1.9} color={colors.texto.inverso} accessible={false} />
+          </View>
+          <View style={styles.label}>
+            <Text style={[typography.tituloM, { color: colors.texto.primario }]}>
+              {name || t('settings.signedIn')}
+            </Text>
+            <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>{user.correo}</Text>
+          </View>
+        </View>
+      )}
+      <SettingsGroup title={t('settings.accountGroup')} entries={[
+        personalEntry('profile', t('settings.profileSummary')),
+        personalEntry('security', t(user?.provider === 'google' ? 'settings.googleConnected' : 'settings.securitySummary')),
+      ]} />
+      <SettingsGroup title={t('settings.experienceGroup')} entries={[
+        personalEntry('application', t(isDark ? 'settings.themeDark' : 'settings.themeLight')),
+        personalEntry('preferences', t('settings.languageSummary', { language: t('settings.langSpanish') })),
+      ]} />
+      <SettingsGroup title={t('settings.helpGroup')} entries={[
+        personalEntry('information', t('settings.informationSummary')),
+      ]} />
+      {user?.rol === 'ADMIN' && (
+        <SettingsGroup title={t('settings.adminGroup')} entries={[
+          adminEntry('menu', 'menuAdmin.title', Utensils),
+          adminEntry('news', 'newsAdmin.title', Newspaper),
+          adminEntry('payments', 'payments.title', Wallet),
+          adminEntry('admins', 'admins.title', Users),
+          adminEntry('reservations', 'reservations.adminTitle', ClipboardList),
+          adminEntry('attention', 'attention.title', CalendarDays),
+        ]} />
+      )}
+      {user?.rol === 'STAFF' && (
+        <SettingsGroup title={t('settings.operationsGroup')} entries={[
+          adminEntry('reservations', 'reservations.agenda', ClipboardList),
+        ]} />
+      )}
+    </View>
+  );
+}
+
+// Comparto el tratamiento de las filas para que cada categoría tenga el mismo gesto de entrada.
+function SettingsGroup({ title, entries }: { title: string; entries: SettingsEntry[] }) {
+  const { colors, isDark, typography } = useTheme();
+  const surface = isDark ? colors.superficie.elevada : colors.superficie.fondo;
+  return (
+    <View style={styles.group}>
+      <Text accessibilityRole="header" style={[typography.etiqueta, styles.groupTitle, { color: colors.texto.secundario }]}>
+        {title}
+      </Text>
+      <View style={[styles.groupCard, { backgroundColor: surface }]}>
+        {entries.map(({ id, title: label, summary, icon: Icon, onPress }, index) => (
+          <View key={id}>
+            {index > 0 && <View style={[styles.divider, { backgroundColor: colors.superficie.borde }]} />}
+            <Pressable
+              testID={`settings-${id}`}
+              accessibilityRole="button"
+              onPress={onPress}
+              style={({ pressed }) => [styles.row, pressed && { backgroundColor: colors.marca.primarioSuave }]}
+            >
+              <View style={[styles.rowIcon, { backgroundColor: colors.marca.primarioSuave }]}>
+                <Icon size={20} strokeWidth={1.8} color={colors.marca.primario} accessible={false} />
+              </View>
+              <View style={styles.label}>
+                <Text style={[typography.cuerpoL, styles.rowTitle, { color: colors.texto.primario }]}>
+                  {label}
+                </Text>
+                {!!summary && <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>{summary}</Text>}
+              </View>
+              <ChevronRight size={18} strokeWidth={1.8} color={colors.texto.secundario} accessible={false} />
+            </Pressable>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 // Muestro los datos y acciones de la sección abierta, sin montar los formularios de las demás.
 function SettingsDetails({ section }: { section: Section }) {
@@ -140,11 +216,13 @@ function SettingsDetails({ section }: { section: Section }) {
   const primary = { color: colors.texto.primario };
   const secondary = { color: colors.texto.secundario };
   const accent = colors.marca.primario;
+  const detailSurface = isDark ? colors.superficie.elevada : colors.superficie.fondo;
+  const card = { backgroundColor: detailSurface, borderRadius: radii.l };
 
   switch (section) {
     case 'profile':
       return user && (
-        <View style={[styles.panel, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
+        <View style={[styles.panel, card]}>
           <View style={styles.detailRow}>
             <User color={accent} size={22} />
             <View style={styles.label}>
@@ -157,7 +235,7 @@ function SettingsDetails({ section }: { section: Section }) {
       );
     case 'preferences':
       return (
-        <View style={styles.detailRow}>
+        <View style={[styles.detailRow, card]}>
           <Globe size={22} color={accent} />
           <View style={styles.label}>
             <Text style={[typography.cuerpoL, primary]}>{t('settings.language')}</Text>
@@ -168,7 +246,7 @@ function SettingsDetails({ section }: { section: Section }) {
     case 'application': {
       const ThemeIcon = isDark ? Moon : Sun;
       return (
-        <View style={styles.detailRow}>
+        <View style={[styles.detailRow, card]}>
           <ThemeIcon size={22} color={accent} />
           <View style={styles.label}>
             <Text style={[typography.cuerpoL, primary]}>{t('settings.appearance')}</Text>
@@ -189,7 +267,7 @@ function SettingsDetails({ section }: { section: Section }) {
     case 'security':
       return user && (
         <View style={styles.list}>
-          <View style={styles.detailRow}>
+          <View style={[styles.detailRow, card]}>
             <ShieldCheck size={22} color={accent} />
             <Text style={[typography.cuerpoM, styles.label, secondary]}>{t('auth.secureStorage')}</Text>
           </View>
@@ -214,7 +292,7 @@ function SettingsDetails({ section }: { section: Section }) {
       );
     case 'information':
       return (
-        <View style={styles.list}>
+        <View style={[styles.list, card]}>
           <View style={styles.detailRow}>
             <MapPin size={22} color={accent} />
             <Text style={[typography.cuerpoL, styles.label, primary]}>{t('settings.location')}</Text>
@@ -231,10 +309,22 @@ function SettingsDetails({ section }: { section: Section }) {
 const styles = StyleSheet.create({
   content: { paddingBottom: 40, width: '100%', maxWidth: 600, alignSelf: 'center', gap: 8 },
   list: { marginVertical: 4 },
-  row: {
-    flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 58,
-    padding: 12, borderBottomWidth: StyleSheet.hairlineWidth,
+  index: { gap: 21 },
+  indexTitle: { fontSize: 34, lineHeight: 41, letterSpacing: -1.1, fontWeight: '700', paddingHorizontal: 4 },
+  accountCard: {
+    minHeight: 76, borderRadius: 22, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 14,
   },
+  accountIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  group: { gap: 8 },
+  groupTitle: { paddingHorizontal: 4, letterSpacing: 0.7, textTransform: 'uppercase' },
+  groupCard: { borderRadius: 22, overflow: 'hidden' },
+  divider: { height: StyleSheet.hairlineWidth, marginHorizontal: 14 },
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64,
+    paddingVertical: 11, paddingHorizontal: 14,
+  },
+  rowIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  rowTitle: { fontWeight: '600' },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 12 },
   panel: { paddingHorizontal: 8, paddingBottom: 12 },
   label: { flex: 1 },
