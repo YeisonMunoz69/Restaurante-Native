@@ -18,8 +18,8 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
-import { RegisterSchema, LoginSchema } from '@encanto/shared';
-import type { RegisterDto, LoginDto } from '@encanto/shared';
+import { RegisterSchema, LoginSchema, GoogleLoginSchema, GoogleLinkSchema } from '@encanto/shared';
+import type { RegisterDto, LoginDto, GoogleLoginDto } from '@encanto/shared';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
 import {
   JwtAuthGuard,
@@ -74,6 +74,21 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto) {
     // Proceso el login para obtener los tokens JWT
     return this.authService.login(loginDto);
+  }
+
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ZodValidationPipe(GoogleLoginSchema))
+  google(@Body() body: GoogleLoginDto) {
+    return this.authService.googleLogin(body);
+  }
+
+  @Post('google/vincular')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.COMENSAL, Role.STAFF, Role.ADMIN)
+  linkGoogle(@Req() req: AuthenticatedRequest, @Body(new ZodValidationPipe(GoogleLinkSchema)) body: { idToken: string }) {
+    return this.authService.linkGoogle(req.user.sub, req.user.sid, body.idToken);
   }
 
   @Post('refresh')

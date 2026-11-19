@@ -1,14 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, ServiceUnavailableException, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import * as argon2 from 'argon2';
-import type { RegisterDto, LoginDto } from '@encanto/shared';
+import type { RegisterDto, LoginDto, GoogleLoginDto } from '@encanto/shared';
+import { Prisma, type Role } from '@prisma/client';
+import { OAuth2Client } from 'google-auth-library';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class AuthService {
+  private readonly google = new OAuth2Client();
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -16,13 +19,13 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
+    this.requirePasswordEnabled();
     // Verificar si el correo ya existe
     const existing = await this.prisma.user.findUnique({
       where: { correo: registerDto.correo.toLowerCase() },
     });
 
     if (existing) {
-      const { ConflictException } = await import('@nestjs/common');
       throw new ConflictException('El correo ya está registrado');
     }
 
@@ -53,12 +56,13 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    this.requirePasswordEnabled();
     // Buscar usuario por correo en la tabla usuarios
     const user = await this.prisma.user.findUnique({
       where: { correo: loginDto.correo.toLowerCase() },
     });
 
-    if (!user) {
+    if (!user?.passwordHash) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
@@ -75,12 +79,100 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    return this.startSession(user, 'password');
+  }
+
+  // Las cuentas antiguas conservan su acceso mientras se vinculan en el entorno de migración.
+  private requirePasswordEnabled() {
+    if (this.configService.get<string>('AUTH_GOOGLE_ONLY') === 'true') {
+      throw new ForbiddenException('Inicia sesión con Google');
+    }
+  }
+
+  // Solo uso datos de identidad verificados por Google y emitidos para nuestro cliente.
+  private async googleIdentity(idToken: string) {
+    const audience = this.configService.get<string>('GOOGLE_WEB_CLIENT_ID')?.trim();
+    if (!audience) throw new ServiceUnavailableException('El acceso con Google todavía no está configurado');
+    try {
+      const payload = (await this.google.verifyIdToken({ idToken, audience })).getPayload();
+      if (payload?.email_verified && payload.email && payload.sub) {
+        return {
+          sub: payload.sub,
+          correo: payload.email.trim().toLowerCase(),
+          nombre: payload.name?.trim().slice(0, 100) || payload.email.split('@')[0].slice(0, 100),
+        };
+      }
+    } catch {
+      // Evito registrar el token de identidad o la respuesta privada de Google.
+    }
+    throw new UnauthorizedException('No se pudo verificar la cuenta de Google');
+  }
+
+  async googleLogin(input: GoogleLoginDto) {
+    const identity = await this.googleIdentity(input.idToken);
+    const linked = await this.prisma.user.findUnique({ where: { googleSub: identity.sub } });
+    if (linked) return this.startSession(linked, 'google');
+
+    // Un correo coincidente nunca transfiere por sí solo una cuenta ni sus privilegios.
+    const existing = await this.prisma.user.findUnique({ where: { correo: identity.correo } });
+    if (existing) throw new ConflictException({ code: 'GOOGLE_LINK_REQUIRED', message: 'Esta cuenta de Encanto requiere un vínculo previo' });
+    if (!input.telefono) throw new UnprocessableEntityException({ code: 'GOOGLE_PHONE_REQUIRED', message: 'Completa tu teléfono para crear la cuenta' });
+
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          googleSub: identity.sub,
+          nombre: identity.nombre,
+          correo: identity.correo,
+          telefono: input.telefono,
+          correoVerificado: true,
+        },
+      });
+      return this.startSession(user, 'google');
+    } catch (error) {
+      if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') throw error;
+      const created = await this.prisma.user.findUnique({ where: { googleSub: identity.sub } });
+      if (created) return this.startSession(created, 'google');
+      throw new ConflictException({ code: 'GOOGLE_LINK_REQUIRED', message: 'Esta cuenta de Encanto requiere un vínculo previo' });
+    }
+  }
+
+  // Vínculo explícito desde una sesión vigente. Actualizo el mismo usuario y conservo sus relaciones.
+  async linkGoogle(userId: string, sessionId: string, idToken: string) {
+    const identity = await this.googleIdentity(idToken);
+    const user = await this.prisma.$transaction(async db => {
+      const session = await db.refreshToken.findFirst({
+        where: { id: sessionId, usuarioId: userId, revocadoEn: null, expiraEn: { gt: new Date() } },
+        select: { id: true },
+      });
+      const account = await db.user.findUnique({ where: { id: userId } });
+      if (!session || !account?.activo) throw new UnauthorizedException('La sesión ya no está activa');
+      if (account.correo.toLowerCase() !== identity.correo) throw new ForbiddenException('Selecciona el correo de tu cuenta de Encanto');
+      if (account.googleSub === identity.sub) return account;
+      try {
+        const changed = await db.user.updateMany({
+          where: { id: userId, activo: true, googleSub: null },
+          data: { googleSub: identity.sub, correoVerificado: true },
+        });
+        if (changed.count === 1) return account;
+      } catch (error) {
+        if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') throw error;
+      }
+      throw new ConflictException('Ya existe un vínculo para esa identidad');
+    });
+    return this.startSession(user, 'google');
+  }
+
+  // Ambos proveedores emiten la misma sesión interna y comparten la política de refresco.
+  private async startSession(user: { id: string; correo: string; rol: Role; activo: boolean }, provider: 'password' | 'google') {
+    if (!user.activo) throw new UnauthorizedException('Cuenta inactiva');
     const sessionId = randomUUID();
     const payload = {
       sub: user.id,
       correo: user.correo,
       rol: user.rol,
       sid: sessionId,
+      provider,
     };
     const tokens = await this.generateTokens(payload);
 
@@ -106,6 +198,7 @@ export class AuthService {
     try {
       const secret = this.configService.get<string>('JWT_REFRESH_SECRET');
       const payload = this.jwtService.verify(refreshToken, { secret });
+      if (payload.provider !== 'google') this.requirePasswordEnabled();
 
       // Buscar registros activos (no revocados, no expirados) para el usuario
       const storedTokens = await this.prisma.refreshToken.findMany({
@@ -155,6 +248,7 @@ export class AuthService {
         correo: user.correo,
         rol: user.rol,
         sid: stored.id,
+        provider: payload.provider === 'google' ? 'google' : 'password',
       });
       const newHash = await argon2.hash(newTokens.refreshToken, {
         type: argon2.argon2id,

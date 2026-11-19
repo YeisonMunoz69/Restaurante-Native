@@ -74,7 +74,8 @@ model User {
   nombre            String
   correo            String   @unique
   telefono          String
-  passwordHash      String   @map("password_hash")
+  passwordHash      String?  @map("password_hash")
+  googleSub         String?  @unique @map("google_sub")
   rol               Role     @default(COMENSAL)
   correoVerificado  Boolean  @default(false) @map("correo_verificado")
   totpSecretCifrado String?  @map("totp_secret_cifrado")

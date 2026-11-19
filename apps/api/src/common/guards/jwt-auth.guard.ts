@@ -3,9 +3,11 @@ import {
   ExecutionContext,
   Injectable,
   Inject,
+  Optional,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -15,6 +17,7 @@ export interface AuthenticatedUser {
   correo: string;
   rol: Role;
   sid: string;
+  provider?: 'google' | 'password';
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -24,7 +27,11 @@ export interface AuthenticatedRequest extends Request {
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   // Inyecto el servicio JWT configurado para validar los tokens de acceso.
-  constructor(private readonly jwtService: JwtService, @Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Optional() @Inject(ConfigService) private readonly config?: ConfigService,
+  ) {}
 
   // Valido el token y adjunto al request únicamente una sesión bien formada.
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -39,6 +46,9 @@ export class JwtAuthGuard implements CanActivate {
     try {
       const payload =
         await this.jwtService.verifyAsync<AuthenticatedUser>(token);
+      if (payload.provider !== 'google' && this.config?.get('AUTH_GOOGLE_ONLY') === 'true') {
+        throw new UnauthorizedException('Inicia sesión con Google');
+      }
       const roles = Object.values(Role) as string[];
 
       if (

@@ -39,3 +39,11 @@ export const LoginSchema = z.object({
 
 // tipo inferido para el inicio de sesion
 export type LoginDto = z.infer<typeof LoginSchema>;
+
+const GoogleTokenSchema = z.string().min(1).max(8192);
+export const GoogleLoginSchema = z.object({
+  idToken: GoogleTokenSchema,
+  telefono: z.string().trim().regex(/^\d{10}$/).optional(),
+}).strict();
+export const GoogleLinkSchema = z.object({ idToken: GoogleTokenSchema }).strict();
+export type GoogleLoginDto = z.infer<typeof GoogleLoginSchema>;
