@@ -1,6 +1,10 @@
 {
   "title": "Mi Pedido", "add": "Agregar a Mi Pedido", "remove": "Quitar", "empty": "Todavía no elegiste platos.",
   "edit": "Revisar Mi Pedido", "reserve": "Continuar con mi reserva", "tableOnly": "Solo mesa · pediré en el restaurante",
+  "openSummarySingle": "Mi Pedido, un plato, total estimado {{total}}",
+  "openSummary": "Mi Pedido, {{count}} platos, total estimado {{total}}",
+  "estimatedTotal": "Total estimado", "estimateNote": "Confirmaremos precios y disponibilidad para la fecha elegida.",
+  "removeDish": "Quitar {{name}} del pedido",
   "estimate": "Total estimado: {{total}}. Confirmaremos precios y disponibilidad para la fecha elegida.",
   "draftDate": "Pedido para {{date}}", "clearTitle": "¿Reservar solo mesa?", "clearBody": "Quitaremos los platos del borrador. Para grupos de ocho o más se sigue requiriendo pedido anticipado.",
   "close": "Cerrar Mi Pedido", "moreCategories": "Otras categorías", "previousCategories": "Categorías anteriores", "loadMore": "Cargar más platos",

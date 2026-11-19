@@ -1,33 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { BackHandler, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Minus, Plus, ShoppingBasket, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useOrderDraft } from '../../context/OrderDraftContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { formatCivilDate, formatCop } from '../../utils/formatters';
-import { Action, Note } from '../attention/Controls';
 import { Feedback } from '../feedback/Feedback';
-import { BackButton } from '../navigation/BackButton';
 
-// Comparto una revisión editable: es un borrador para reservar, nunca un checkout.
+export const ORDER_BUTTON_CLEARANCE = 80;
+
+// Dejo la carta libre para recorrerla y abro el borrador solo al pulsar la cesta.
 export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
   const draft = useOrderDraft();
   const [open, setOpen] = useState(false);
   const { t } = useTranslation();
-  const { colors, typography } = useTheme();
+  const { colors, typography, radii } = useTheme();
   const insets = useSafeAreaInsets();
   const units = draft.lines.reduce((sum, line) => sum + line.cantidad, 0);
-  const total = draft.lines.reduce(
-    (sum, line) => sum + line.cantidad * line.dish.precio,
-    0,
-  );
-  // La hoja vive en la pantalla, sin abrir otra ventana nativa al cambiar de pestaña.
-  useEffect(() => {
-    if (!open) return;
-    const listener = BackHandler.addEventListener('hardwareBackPress', () => { setOpen(false); return true; });
-    return () => listener.remove();
-  }, [open]);
-  const reserve = () => { setOpen(false); draft.request(); onReserve(); };
+  const total = draft.lines.reduce((sum, line) => sum + line.cantidad * line.dish.precio, 0);
+  const close = () => setOpen(false);
+
+  const reserve = () => {
+    close();
+    draft.request();
+    onReserve();
+  };
+
+  // Solo borro los platos al continuar con la opción de reservar únicamente la mesa.
   const tableOnly = () => {
     const proceed = () => {
       draft.clear();
@@ -39,162 +39,231 @@ export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
     }
     Feedback.alert(t('discovery.clearTitle'), t('discovery.clearBody'), [
       { text: t('common.back'), style: 'cancel' },
-      {
-        text: t('discovery.tableOnly'),
-        style: 'destructive',
-        onPress: proceed,
-      },
+      { text: t('discovery.tableOnly'), style: 'destructive', onPress: proceed },
     ]);
   };
-  return (
-    <>
-      <View
-        style={[
-          styles.bar,
-          {
-            backgroundColor: colors.superficie.fondo,
-            borderColor: colors.superficie.borde,
-          },
+
+  if (!open) {
+    return (
+      <Pressable
+        testID="order-open"
+        accessibilityRole="button"
+        accessibilityLabel={t(units === 1 ? 'discovery.openSummarySingle' : 'discovery.openSummary', {
+          count: units, total: formatCop(total),
+        })}
+        onPress={() => setOpen(true)}
+        style={({ pressed }) => [
+          styles.fab,
+          { backgroundColor: colors.marca.primario, opacity: pressed ? 0.8 : 1 },
         ]}
       >
-        <Action
-          testID="order-open"
-          label={`${t('discovery.title')} · ${units} · ${formatCop(total)}`}
-          onPress={() => setOpen(true)}
-        />
-      </View>
-      {open && <View testID="order-sheet" style={styles.overlay} accessibilityViewIsModal>
+        <ShoppingBasket size={25} color={colors.texto.inverso} />
+        {units > 0 && (
           <View
-            style={[
-              styles.sheet,
-              {
-                backgroundColor: colors.superficie.fondo,
-                marginTop: insets.top + 16,
-                marginBottom: insets.bottom + 16,
-              },
-            ]}
+            importantForAccessibility="no-hide-descendants"
+            style={[styles.count, { backgroundColor: colors.marca.acento }]}
           >
-            <ScrollView
-              contentContainerStyle={styles.content}
-              keyboardShouldPersistTaps="handled"
+            <Text style={[typography.etiqueta, { color: colors.texto.inverso }]}>
+              {units > 99 ? '99+' : units}
+            </Text>
+          </View>
+        )}
+      </Pressable>
+    );
+  }
+
+  // Aíslo el diálogo de la carta y las pestañas, también al navegar con lector de pantalla.
+  return (
+    <Modal
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={close}
+    >
+      <View testID="order-sheet" style={[styles.overlay, {
+        paddingTop: insets.top + 16,
+        paddingBottom: insets.bottom + 16,
+      }]}>
+        <Pressable
+          testID="order-dismiss"
+          accessible={false}
+          importantForAccessibility="no"
+          style={styles.backdrop}
+          onPress={close}
+        />
+        <View accessibilityViewIsModal style={[styles.sheet, { backgroundColor: colors.superficie.fondo }]}>
+          <View style={styles.header}>
+            <View style={styles.heading}>
+              <View style={[styles.orderIcon, { backgroundColor: colors.marca.primarioSuave }]}>
+                <ShoppingBasket size={22} color={colors.marca.primario} />
+              </View>
+              <View style={styles.title}>
+                <Text accessibilityRole="header" style={[typography.tituloL, { color: colors.texto.primario }]}>
+                  {t('discovery.title')}
+                </Text>
+                {!!draft.fecha && (
+                  <Text style={[typography.pie, { color: colors.texto.secundario }]}>
+                    {t('discovery.draftDate', { date: formatCivilDate(draft.fecha) })}
+                  </Text>
+                )}
+              </View>
+            </View>
+            <Pressable
+              testID="order-close"
+              accessibilityRole="button"
+              accessibilityLabel={t('discovery.close')}
+              onPress={close}
+              style={styles.iconButton}
             >
-              <BackButton onPress={() => setOpen(false)} />
-              <Text
-                accessibilityRole="header"
-                style={[typography.display, { color: colors.texto.primario }]}
-              >
-                {t('discovery.title')}
+              <X size={23} color={colors.texto.secundario} />
+            </Pressable>
+          </View>
+
+          <ScrollView
+            bounces={false}
+            style={styles.body}
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+          >
+            {!draft.lines.length && (
+              <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
+                {t('discovery.empty')}
               </Text>
-              {!!draft.fecha && (
-                <Note>
-                  {t('discovery.draftDate', {
-                    date: formatCivilDate(draft.fecha),
-                  })}
-                </Note>
-              )}
-              {!draft.lines.length && <Note>{t('discovery.empty')}</Note>}
-              {draft.lines.map(line => (
-                <View key={line.dish.id} style={styles.line}>
-                  <Text
-                    style={[
-                      typography.tituloM,
-                      { color: colors.texto.primario },
-                    ]}
-                  >
+            )}
+            {draft.lines.map(line => (
+              <View key={line.dish.id} style={[styles.line, { borderBottomColor: colors.superficie.borde }]}>
+                <View style={styles.lineInfo}>
+                  <Text style={[typography.etiqueta, { color: colors.texto.primario }]}>
                     {line.dish.nombre}
                   </Text>
-                  <Note>{formatCop(line.dish.precio * line.cantidad)}</Note>
-                  <View style={styles.quantity}>
-                    <Action
-                      label="−"
-                      accessibilityLabel={t('discovery.decrease', {
-                        name: line.dish.nombre,
-                      })}
-                      onPress={() =>
-                        draft.setQuantity(
-                          line.dish,
-                          line.cantidad - 1,
-                          draft.fecha!,
-                        )
-                      }
-                    />
-                    <Text
-                      accessibilityLabel={t('discovery.quantity', {
-                        name: line.dish.nombre,
-                      })}
-                      style={[
-                        typography.tituloM,
-                        { color: colors.texto.primario },
-                      ]}
-                    >
-                      {line.cantidad}
+                  <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
+                    {formatCop(line.dish.precio * line.cantidad)}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('discovery.removeDish', { name: line.dish.nombre })}
+                    onPress={() => draft.setQuantity(line.dish, 0, draft.fecha!)}
+                    style={styles.remove}
+                  >
+                    <Text style={[typography.pie, { color: colors.marca.primario }]}>
+                      {t('discovery.remove')}
                     </Text>
-                    <Action
-                      label="+"
-                      accessibilityLabel={t('discovery.increase', {
-                        name: line.dish.nombre,
-                      })}
-                      disabled={line.cantidad >= 99}
-                      onPress={() =>
-                        draft.setQuantity(
-                          line.dish,
-                          line.cantidad + 1,
-                          draft.fecha!,
-                        )
-                      }
-                    />
-                    <Action
-                      label={t('discovery.remove')}
-                      onPress={() =>
-                        draft.setQuantity(line.dish, 0, draft.fecha!)
-                      }
-                    />
-                  </View>
+                  </Pressable>
                 </View>
-              ))}
-              <Note>
-                {t('discovery.estimate', { total: formatCop(total) })}
-              </Note>
-              <Action
-                testID="order-reserve"
-                label={t('discovery.reserve')}
-                disabled={!draft.lines.length}
-                onPress={reserve}
-              />
-              <Action
-                testID="order-table-only"
-                label={t('discovery.tableOnly')}
-                onPress={tableOnly}
-              />
-            </ScrollView>
-          </View>
-        </View>}
-    </>
+                <View style={[styles.quantity, {
+                  backgroundColor: colors.superficie.elevada,
+                  borderRadius: radii.completo,
+                }]}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('discovery.decrease', { name: line.dish.nombre })}
+                    onPress={() => draft.setQuantity(line.dish, line.cantidad - 1, draft.fecha!)}
+                    style={styles.iconButton}
+                  >
+                    <Minus size={18} color={colors.texto.primario} />
+                  </Pressable>
+                  <Text
+                    accessibilityLabel={t('discovery.quantity', { name: line.dish.nombre })}
+                    style={[typography.etiqueta, { color: colors.texto.primario }]}
+                  >
+                    {line.cantidad}
+                  </Text>
+                  <Pressable
+                    testID={`order-increase-${line.dish.id}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('discovery.increase', { name: line.dish.nombre })}
+                    disabled={line.cantidad >= 99}
+                    accessibilityState={{ disabled: line.cantidad >= 99 }}
+                    onPress={() => draft.setQuantity(line.dish, line.cantidad + 1, draft.fecha!)}
+                    style={[styles.iconButton, line.cantidad >= 99 && styles.disabled]}
+                  >
+                    <Plus size={18} color={colors.texto.primario} />
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+            {!!draft.lines.length && (
+              <>
+                <View style={styles.total}>
+                  <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
+                    {t('discovery.estimatedTotal')}
+                  </Text>
+                  <Text style={[typography.precio, { color: colors.texto.primario }]}>
+                    {formatCop(total)}
+                  </Text>
+                </View>
+                <Text style={[typography.pie, { color: colors.texto.secundario }]}>
+                  {t('discovery.estimateNote')}
+                </Text>
+                <Pressable
+                  testID="order-reserve"
+                  accessibilityRole="button"
+                  style={[styles.primary, { backgroundColor: colors.marca.primario }]}
+                  onPress={reserve}
+                >
+                  <Text style={[typography.etiqueta, styles.buttonText, { color: colors.texto.inverso }]}>
+                    {t('discovery.reserve')}
+                  </Text>
+                </Pressable>
+              </>
+            )}
+            <Pressable
+              testID="order-table-only"
+              accessibilityRole="button"
+              style={[
+                styles.primary,
+                { backgroundColor: draft.lines.length ? colors.superficie.elevada : colors.marca.primario },
+              ]}
+              onPress={tableOnly}
+            >
+              <Text style={[typography.etiqueta, styles.buttonText, {
+                color: draft.lines.length ? colors.texto.primario : colors.texto.inverso,
+              }]}>
+                {t('discovery.tableOnly')}
+              </Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 }
+
 const styles = StyleSheet.create({
-  bar: { paddingHorizontal: 16, paddingVertical: 6, borderTopWidth: 1 },
+  fab: {
+    position: 'absolute', bottom: 14, right: 16, zIndex: 5,
+    width: 56, height: 56, borderRadius: 28, elevation: 5,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  count: {
+    position: 'absolute', top: -3, right: -3, minWidth: 22, minHeight: 22,
+    paddingHorizontal: 4, borderRadius: 11, alignItems: 'center', justifyContent: 'center',
+  },
   overlay: {
-    position: 'absolute', top: 0, bottom: 0, left: 0, right: 0,
-    zIndex: 20,
-    elevation: 20,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16,
   },
-  sheet: {
-    maxHeight: '90%',
-    width: '100%',
-    maxWidth: 640,
-    borderRadius: 24,
-    overflow: 'hidden',
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.62)' },
+  sheet: { maxHeight: '90%', width: '100%', maxWidth: 420, borderRadius: 24, overflow: 'hidden' },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    gap: 4, paddingTop: 12, paddingLeft: 16, paddingRight: 8,
   },
-  content: { padding: 20 },
-  line: { paddingVertical: 12 },
-  quantity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    flexWrap: 'wrap',
+  heading: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  title: { flex: 1 },
+  orderIcon: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 20 },
+  body: { flexGrow: 0, flexShrink: 1 },
+  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16, gap: 10 },
+  line: {
+    paddingTop: 8, borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8,
   },
+  lineInfo: { flexGrow: 1, flexShrink: 1, flexBasis: 120 },
+  iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  remove: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  quantity: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  disabled: { opacity: 0.45 },
+  total: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
+  primary: { minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, padding: 10 },
+  buttonText: { textAlign: 'center' },
 });
