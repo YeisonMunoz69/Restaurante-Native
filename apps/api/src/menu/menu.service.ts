@@ -154,11 +154,19 @@ export class MenuService {
   }
 
   // La sede y la categoría activa también delimitan el acceso por ID.
-  async dish(id: string, query: MenuDishQuery): Promise<MenuDishResult> {
+  dish(id: string, query: MenuDishQuery) {
+    return this.readDish({ id }, query);
+  }
+
+  dishBySlug(slug: string, query: MenuDishQuery) {
+    return this.readDish({ slug }, query);
+  }
+
+  private async readDish(identity: { id: string } | { slug: string }, query: MenuDishQuery): Promise<MenuDishResult> {
     return this.read(query.restauranteId, async (db) => {
       const dish = await db.dish.findFirst({
         where: {
-          id,
+          ...identity,
           activo: true,
           category: { restaurantId: query.restauranteId, activa: true },
         },

@@ -9,6 +9,7 @@ import {
 import {
   MenuDishIdSchema,
   MenuDishQuerySchema,
+  MenuDishSlugSchema,
   MenuDishesQuerySchema,
   MenuPageQuerySchema,
 } from '@encanto/shared';
@@ -55,6 +56,15 @@ export class MenuController {
   @ApiOkResponse({ schema: menuPageResponse(menuDishResponse, true) })
   dishes(@Query() query: unknown) {
     return this.menu.dishes(parseMenu(MenuDishesQuerySchema, query));
+  }
+
+  // Reutilizo la lectura pública para la página compartida del plato.
+  @Get('platos/slug/:slug')
+  dishBySlug(@Param('slug') slug: string, @Query() query: unknown) {
+    return this.menu.dishBySlug(
+      parseMenu(MenuDishSlugSchema, slug),
+      parseMenu(MenuDishQuerySchema, query),
+    );
   }
 
   // Un ID válido no permite consultar platos de otra sede o categoría inactiva.

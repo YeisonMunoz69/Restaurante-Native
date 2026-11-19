@@ -71,6 +71,7 @@ describe.skipIf(!databaseUrl)('Noticias con HTTP real y PostgreSQL desechable', 
     const withImage = (await http.put(postRoute + '/imagen').query(query).auth(admin, auth)
       .field('version', draft.version).attach('foto', png, 'qa.png').expect(200)).body;
     await http.get(imageRoute).query(query).expect(404);
+    await http.get(publicRoute + '/' + draft.id).query(query).expect(404);
     await http.get(publicRoute).query(query).expect(200, []);
     await http.put(postRoute).query(query).auth(admin, auth).send({ ...content, version: draft.version }).expect(409);
 
@@ -81,6 +82,7 @@ describe.skipIf(!databaseUrl)('Noticias con HTTP real y PostgreSQL desechable', 
     const feed = (await http.get(publicRoute).query(query).expect(200)).body;
     expect(feed.map((row: { id: string }) => row.id)).toEqual([published.id, second.id]);
     expect(feed[0]).toMatchObject({ ...content, publicada: true, fijada: true, imagen: withImage.imagen });
+    await http.get(publicRoute + '/' + draft.id).query(query).expect(200, published);
     await http.get(imageRoute).query(query).expect('Content-Type', /image\/webp/).expect(200);
     await http.get(imageRoute).query({ restauranteId: secondRestaurantId }).expect(404);
 

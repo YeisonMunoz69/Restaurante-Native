@@ -17,6 +17,8 @@ export const MenuPageQuerySchema = MenuRestaurantQuerySchema.extend({
 export const MenuDishesQuerySchema = MenuPageQuerySchema.extend({ fecha: CalendarDateSchema });
 export const MenuDishQuerySchema = MenuRestaurantQuerySchema.extend({ fecha: CalendarDateSchema });
 export const MenuDishIdSchema = z.string().uuid();
+export const MenuDishSlugSchema = z.string().trim().min(1).max(120)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'El slug usa minúsculas y guiones');
 
 export type MenuPageQuery = z.infer<typeof MenuPageQuerySchema>;
 export type MenuDishesQuery = z.infer<typeof MenuDishesQuerySchema>;

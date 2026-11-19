@@ -25,6 +25,12 @@ export class NewsController {
     return this.news.list(parseMenu(MenuRestaurantQuerySchema, query).restauranteId);
   }
 
+  @Get(':id')
+  detail(@Param('id') id: string, @Query() query: unknown) {
+    const { restauranteId } = parseMenu(MenuRestaurantQuerySchema, query);
+    return this.news.detail(restauranteId, parseMenu(MenuDishIdSchema, id));
+  }
+
   @Get(':id/imagen')
   @Header('Cache-Control', 'no-store')
   async image(@Param('id') id: string, @Query() query: unknown) {

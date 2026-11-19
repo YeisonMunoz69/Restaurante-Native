@@ -42,6 +42,15 @@ export class NewsService {
     return rows.map(serialize);
   }
 
+  async detail(restauranteId: string, id: string) {
+    const row = await this.prisma.newsPost.findFirst({
+      where: { id, restaurantId: restauranteId, publicada: true },
+      select: summary,
+    });
+    if (!row) throw new NotFoundException('Noticia inexistente');
+    return serialize(row);
+  }
+
   async create(restauranteId: string, autorId: string, content: NewsContent) {
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { id: restauranteId },

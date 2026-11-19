@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MenuDishSlugSchema } from './menu.schema';
 
 const pageNumber = (maximum: number, fallback: string) =>
   z
@@ -13,12 +14,7 @@ const pageNumber = (maximum: number, fallback: string) =>
 
 const text = (maximum: number) => z.string().trim().min(1).max(maximum);
 const categoryName = text(80);
-const slug = z
-  .string()
-  .trim()
-  .min(1)
-  .max(120)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'El slug usa minúsculas y guiones');
+const slug = MenuDishSlugSchema;
 const price = z
   .number()
   .finite()

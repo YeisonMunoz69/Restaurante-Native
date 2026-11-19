@@ -234,6 +234,14 @@ integration('EC-25: HTTP y persistencia en PostgreSQL aislado real', () => {
     ]);
   });
 
+  it('resuelve por slug con la misma sede, fecha y visibilidad de la carta', async () => {
+    const http = request(app.getHttpServer());
+    const found = await http.get(path('platos/slug/a', `&fecha=${fecha}`)).expect(200);
+    expect(found.body.plato).toMatchObject({ id: dishA, slug: 'a', disponible: false });
+    await http.get(path('platos/slug/oculto', `&fecha=${fecha}`)).expect(404);
+    await http.get(path('platos/slug/ajeno', `&fecha=${fecha}`)).expect(404);
+  });
+
   it('página tras página conserva categorías e IDs sin perder o duplicar platos', async () => {
     const ids: string[] = [];
     for (let pagina = 1; pagina <= 3; pagina++) {
