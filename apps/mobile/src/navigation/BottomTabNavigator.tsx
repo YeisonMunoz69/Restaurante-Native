@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useOnline } from '../context/ConnectivityContext';
+import { SlidingPillTabBar } from '../components/navigation/SlidingPillTabBar';
 import { MenuScreen } from '../screens/MenuScreen';
 import { ReservationsScreen } from '../screens/ReservationsScreen';
 import { NewsScreen } from '../screens/NewsScreen';
@@ -30,36 +29,18 @@ export type RootTabParamList = {
 const Tab = createBottomTabNavigator<RootTabParamList>();
 export const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 64 : 80;
 
-// navegador principal con cinco destinos y boton central de noticias elevado
+// Uso un único indicador elevado para todos los destinos visibles.
 export const BottomTabNavigator: React.FC = () => {
   const { t } = useTranslation();
-  const { colors, typography } = useTheme();
   const { user } = useAuth();
   const online = useOnline();
   const canUsePrivateTabs = !!user && online;
-  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
       initialRouteName="Menu"
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.marca.primario,
-        tabBarInactiveTintColor: colors.texto.secundario,
-        tabBarStyle: {
-          backgroundColor: colors.superficie.fondo,
-          borderTopColor: colors.superficie.borde,
-          // Reservo el espacio de los botones o gestos del sistema sin tapar las pestañas.
-          height: TAB_BAR_HEIGHT + insets.bottom,
-          paddingBottom: 8 + insets.bottom,
-          paddingTop: 6,
-          elevation: 8, // sombra en Android
-        },
-        tabBarLabelStyle: {
-          ...typography.pie,
-          fontWeight: '600',
-        },
-      }}
+      screenOptions={{ headerShown: false }}
+      tabBar={props => <SlidingPillTabBar {...props} height={TAB_BAR_HEIGHT} />}
     >
       {/* 1. Carta */}
       <Tab.Screen
@@ -85,34 +66,14 @@ export const BottomTabNavigator: React.FC = () => {
         }}
       />}
 
-      {/* 3. Noticias - boton central destacado del diseno C-10 */}
+      {/* 3. Noticias */}
       <Tab.Screen
         name="News"
         component={NewsScreen}
         options={{
           tabBarLabel: t('tabs.news'),
-          tabBarIcon: ({
-            focused,
-          }: {
-            color: string;
-            focused: boolean;
-          }) => (
-            <View
-              style={[
-                styles.botonCentral,
-                {
-                  backgroundColor: focused
-                    ? colors.marca.primario
-                    : colors.marca.primarioSuave,
-                  borderColor: colors.superficie.fondo,
-                },
-              ]}
-            >
-              <Newspaper
-                color={focused ? colors.texto.inverso : colors.marca.primario}
-                size={22}
-              />
-            </View>
+          tabBarIcon: ({ color, size }) => (
+            <Newspaper color={color} size={size} />
           ),
         }}
       />
@@ -143,15 +104,3 @@ export const BottomTabNavigator: React.FC = () => {
     </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  botonCentral: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-    borderWidth: 2,
-  },
-});
