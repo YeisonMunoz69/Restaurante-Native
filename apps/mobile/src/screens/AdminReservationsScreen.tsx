@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
 import { Feedback as Alert } from '../components/feedback/Feedback';
@@ -9,7 +9,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { Action, Field, Note, Panel } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { reservationsApi, type ReservationWithCustomer } from '../services/reservations.service';
-import { todayInBogota } from '../utils/formatters';
+import { formatCivilDate, todayInBogota } from '../utils/formatters';
 import { BackButton } from '../components/navigation/BackButton';
 
 type Tab = 'requests' | 'agenda';
@@ -35,28 +35,50 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now);
+  const agendaDate = tab === 'agenda' ? date : null;
+  const loadSequence = useRef(0);
+  const activeLoader = useRef<(() => Promise<void>) | null>(null);
 
   const load = useCallback(async () => {
     if (!isAdmin && !isStaff) return;
+    const sequence = ++loadSequence.current;
     setLoading(true);
     setError(null);
     try {
       const [nextRequests, nextAgenda] = await Promise.all([
-        isAdmin ? reservationsApi.requests({ fecha: date }) : Promise.resolve([]),
-        reservationsApi.agenda(date),
+        // Reviso las solicitudes de cualquier fecha. El filtro solo aplica a la agenda.
+        isAdmin && !agendaDate ? reservationsApi.requests() : Promise.resolve([]),
+        agendaDate ? reservationsApi.agenda(agendaDate) : Promise.resolve([]),
       ]);
+      // Descarto una respuesta anterior si ya se cambió de vista o fecha.
+      if (sequence !== loadSequence.current) return;
       setRequests(nextRequests);
       setAgenda(nextAgenda);
     } catch (cause) {
-      setError(errorText(cause, t('reservations.adminLoadError')));
+      if (sequence === loadSequence.current) {
+        setError(errorText(cause, t('reservations.adminLoadError')));
+      }
     } finally {
-      setLoading(false);
+      if (sequence === loadSequence.current) setLoading(false);
     }
-  }, [date, isAdmin, isStaff, t]);
+  }, [agendaDate, isAdmin, isStaff, t]);
 
   useEffect(() => {
+    activeLoader.current = load;
     void load();
+    return () => {
+      activeLoader.current = null;
+      loadSequence.current += 1;
+    };
   }, [load]);
+
+  useEffect(() => {
+    if (!isAdmin || tab !== 'requests') return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, [isAdmin, tab]);
 
   const executeAct = async (id: string, operation: () => Promise<unknown>) => {
     if (busyId) return;
@@ -64,7 +86,7 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
     setError(null);
     try {
       await operation();
-      await load();
+      await activeLoader.current?.();
     } catch (cause) {
       setError(errorText(cause, t('reservations.adminActionError')));
     } finally {
@@ -89,23 +111,31 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <BackButton onPress={onBack} />
         <Text style={[typography.display, { color: colors.texto.primario }]}>{t('reservations.adminTitle')}</Text>
-        <Field label={t('reservations.agendaDate')} value={date} onChangeText={setDate} placeholder={t('reservations.datePlaceholder')} />
         {isAdmin && (
           <View style={styles.row}>
             <View style={styles.flex}><Action label={t('reservations.requests')} selected={tab === 'requests'} onPress={() => setTab('requests')} /></View>
             <View style={styles.flex}><Action label={t('reservations.agenda')} selected={tab === 'agenda'} onPress={() => setTab('agenda')} /></View>
           </View>
         )}
+        {tab === 'agenda' && <Field label={t('reservations.agendaDate')} value={date} onChangeText={setDate} placeholder={t('reservations.datePlaceholder')} />}
         {error && <Note live>{error}</Note>}
         {loading && <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />}
         {!loading && tab === 'requests' && isAdmin && requests.length === 0 && <Note>{t('reservations.noRequests')}</Note>}
         {!loading && tab === 'agenda' && agenda.length === 0 && <Note>{t('reservations.noAgenda')}</Note>}
 
-        {tab === 'requests' && requests.map(reservation => (
+        {isAdmin && tab === 'requests' && requests.map(reservation => {
+          const remaining = reservation.expiraEn ? Date.parse(reservation.expiraEn) - now : Infinity;
+          return (
           <Panel key={reservation.id}>
             <Text style={[typography.codigo, { color: colors.marca.primario }]}>{reservation.codigo}</Text>
             <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{reservation.cliente.nombre} · {reservation.horaInicio}–{reservation.horaFin}</Text>
+            <Note>{formatCivilDate(reservation.fecha)}</Note>
             <Note>{reservation.cliente.telefono} · {t('reservations.people', { count: reservation.numComensales })}</Note>
+            {remaining <= 3_600_000 && (
+              <Text style={[typography.cuerpoM, { color: colors.texto.primario, fontWeight: '700' }]}>
+                {t(remaining > 0 ? 'reservations.expiringSoon' : 'reservations.expirationReached')}
+              </Text>
+            )}
             {(reservation.cliente.cancelaciones > 0 || reservation.cliente.inasistencias > 0) && <Note>{t('reservations.previousRecords', { cancellations: reservation.cliente.cancelaciones, noShows: reservation.cliente.inasistencias })}</Note>}
             <Text selectable style={[typography.pie, { color: colors.texto.secundario }]}>{reservation.ticket}</Text>
             <Action label={t('reservations.approve')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.approve(reservation.id), t('reservations.approve'))} />
@@ -117,7 +147,8 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
             }} />
             <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: reservation.ticket })} />
           </Panel>
-        ))}
+          );
+        })}
 
         {tab === 'agenda' && agenda.map(reservation => (
           <Panel key={reservation.id}>

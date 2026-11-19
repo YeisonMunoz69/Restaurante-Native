@@ -132,6 +132,8 @@
     "rejectionReason": "Motivo de rechazo",
     "adminTitle": "Operación de reservas",
     "agendaDate": "Fecha (AAAA-MM-DD)",
+    "expiringSoon": "La solicitud vence dentro de una hora.",
+    "expirationReached": "Se alcanzó el vencimiento. Actualiza la bandeja.",
     "datePlaceholder": "AAAA-MM-DD",
     "requests": "Solicitudes",
     "agenda": "Agenda",

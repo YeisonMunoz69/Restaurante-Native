@@ -76,7 +76,8 @@ describe('AdminReservationsScreen', () => {
     expect(api.approve).not.toHaveBeenCalled();
     await ReactTestRenderer.act(async () => { await dialog.mock.calls[0][2]![1].onPress!(); });
     expect(api.approve).toHaveBeenCalledWith('reservation-id');
-    expect(api.requests).toHaveBeenCalled();
+    expect(api.requests).toHaveBeenCalledWith();
+    expect(api.agenda).not.toHaveBeenCalled();
     ReactTestRenderer.act(() => tree!.unmount());
   });
 

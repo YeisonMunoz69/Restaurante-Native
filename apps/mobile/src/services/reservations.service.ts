@@ -18,6 +18,7 @@ export interface ReservationSlotsResult {
 
 export interface ReservationWithCustomer extends ReservationResult {
   puedeMarcarInasistencia?: boolean;
+  expiraEn?: string | null;
   cliente: {
     id: string;
     nombre: string;

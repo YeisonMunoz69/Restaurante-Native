@@ -646,6 +646,10 @@ export class ReservationsService {
       return rows.map((row) => ({
         ...serialize(row),
         cliente: row.usuario,
+        // Devuelvo el mismo vencimiento que uso al expirar solicitudes.
+        expiraEn: row.estado === ReservationStatus.SOLICITADA
+          ? new Date(row.createdAt.getTime() + restaurant.horasExpiracionSolicitud * 3_600_000).toISOString()
+          : null,
       }));
     });
   }
