@@ -1,5 +1,20 @@
 # Carta original y carga segura
 
+**Fotografías del 19 de noviembre.** Conservamos los ocho originales en [`assets/carta/originales`](../assets/carta/originales/) e incluimos copias WebP de hasta 1120 px en [la app móvil](../apps/mobile/src/assets/carta/). La carta, la ficha y el pedido anticipado usan la copia incluida cuando el plato todavía carece de una galería publicada.
+
+| Plato de la carta | Archivo original |
+| --- | --- |
+| Costilla Ahumada | `Costilla-Ahumada.jpeg` |
+| Chicharrón Crocante | `Chicharron-Crocante.jpeg` |
+| Ajiaco | `Ajiaco.jpeg` |
+| Tilapia Ahumada | `Tipalia-Ahumada.jpeg` |
+| Porción de Empanadas | `Empanadas.jpeg` |
+| Picada para Compartir | `Picada-Compartir.jpeg` |
+| Sancocho de Gallina | `Sancocho-Gallina.jpeg` |
+| Churrasco | `Churrasco.png` |
+
+Asociamos cada foto por el slug estable. Cada plato admite hasta diez imágenes, incluida la portada, para mostrar otras tomas o presentaciones permitidas. Cuando ADMIN publica una galería, usamos esa colección con su orden y su foto principal. Los otros 36 productos de la carta original quedan pendientes de fotos. Mantenemos pendientes las pruebas de rendimiento representativo de [EC-22](https://yjmunoz.atlassian.net/browse/EC-22) y la carga y edición en Storage de [EC-27](https://yjmunoz.atlassian.net/browse/EC-27).
+
 Transcribimos visualmente las páginas 2–4 de «Carta final.pdf», entregada por Yeison el 22/10/2026. Son 44 productos en nueve categorías, incluidos platos, porciones y bebidas. No copiamos las fotos del PDF ni añadimos fotos aleatorias; los nuevos registros quedan sin galería para cargarla después desde la app hacia Storage.
 
 Yeison confirmó que **todos empiezan disponibles** y que el administrador puede cambiar precios, disponibilidad, descripción y fotos, así como crear productos nuevos. Los ocho habituales son Milanesa de Pollo, Tilapia Ahumada, Milanesa de Pollo Junior, Sancocho de Gallina, Ajiaco, Costilla Ahumada, Carne Ahumada y Churrasco. Esa lista no impide desactivarlos y no sobreescribe decisiones posteriores del administrador.

@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MenuDish } from '@encanto/shared';
 import { useTheme } from '../../theme/ThemeContext';
 import { menuApi } from '../../services/menu.service';
-import { publicMenuPhotoUrl } from './menu-photo';
+import { menuGallery } from './menu-photo';
 import { formatCop } from '../../utils/formatters';
 import { dishLink } from '../../config/web-links';
 import { Action } from '../attention/Controls';
@@ -44,6 +44,7 @@ export function MenuDishDetailModal({
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const shareUrl = dish?.disponible ? dishLink(dish.slug, fecha) : null;
+  const photos = dish ? menuGallery(dish) : [];
 
   useEffect(() => {
     if (!visible || (!dishId && !slug) || !restauranteId) return;
@@ -237,15 +238,13 @@ export function MenuDishDetailModal({
             >
               {t('menu.photos')}
             </Text>
-            {dish.fotos.length ? (
+            {photos.length ? (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingVertical: spacing.m }}
               >
-                {dish.fotos.slice(0, 10).map((photo, index) => {
-                  const uri = publicMenuPhotoUrl(photo.pathOg || photo.path);
-                  return (
+                {photos.map((photo, index) => (
                     <View
                       key={photo.id}
                       style={[
@@ -258,27 +257,14 @@ export function MenuDishDetailModal({
                         },
                       ]}
                     >
-                      {uri ? (
-                        <Image
-                          accessibilityLabel={t('menu.photoLabel', {
-                            number: index + 1,
-                          })}
-                          source={{ uri }}
-                          resizeMode="cover"
-                          style={styles.photo}
-                        />
-                      ) : (
-                        <View style={styles.photoFallback}>
-                          <Text
-                            style={[
-                              typography.cuerpoM,
-                              { color: colors.texto.secundario },
-                            ]}
-                          >
-                            {t('menu.photoUnavailable')}
-                          </Text>
-                        </View>
-                      )}
+                      <Image
+                        accessibilityLabel={t('menu.photoLabel', {
+                          number: index + 1,
+                        })}
+                        source={photo.source}
+                        resizeMode="contain"
+                        style={styles.photo}
+                      />
                       <Text
                         style={[
                           typography.pie,
@@ -290,12 +276,11 @@ export function MenuDishDetailModal({
                       >
                         {t('menu.photoPosition', {
                           number: index + 1,
-                          total: Math.min(dish.fotos.length, 10),
+                          total: photos.length,
                         })}
                       </Text>
                     </View>
-                  );
-                })}
+                ))}
               </ScrollView>
             ) : (
               <Text
@@ -378,13 +363,6 @@ const styles = StyleSheet.create({
   // Dejo crecer la tarjeta para que el contador no quede recortado debajo de la imagen 4:3.
   photoCard: { width: 280, overflow: 'hidden', borderWidth: 1 },
   photo: { width: '100%', aspectRatio: 4 / 3 },
-  photoFallback: {
-    width: '100%',
-    aspectRatio: 4 / 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-  },
   tags: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 16 },
   tag: {
     borderWidth: 1,

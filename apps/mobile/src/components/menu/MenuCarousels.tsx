@@ -16,7 +16,7 @@ import type { MenuDish } from '@encanto/shared';
 import { useTheme } from '../../theme/ThemeContext';
 import { useOrderDraft } from '../../context/OrderDraftContext';
 import { formatCop } from '../../utils/formatters';
-import { publicMenuPhotoUrl } from './menu-photo';
+import { menuGallery } from './menu-photo';
 import { Action, Note } from '../attention/Controls';
 
 type Section = { id: string; title: string; data: MenuDish[] };
@@ -93,7 +93,7 @@ export function MenuCarousels({
             windowSize={5}
             ListEmptyComponent={<Note>{t('discovery.emptyCategory')}</Note>}
             renderItem={({ item: dish }) => {
-              const photo = publicMenuPhotoUrl(dish.fotos[0]?.path);
+              const photo = menuGallery(dish)[0]?.source;
               const count =
                 draft.lines.find(line => line.dish.id === dish.id)?.cantidad ??
                 0;
@@ -119,7 +119,7 @@ export function MenuCarousels({
                   >
                     {photo ? (
                       <Image
-                        source={{ uri: photo }}
+                        source={photo}
                         accessibilityLabel={t('menu.photoLabel', { number: 1 })}
                         style={styles.photo}
                         resizeMode="cover"

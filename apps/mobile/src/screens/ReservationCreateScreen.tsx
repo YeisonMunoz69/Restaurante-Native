@@ -24,6 +24,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { Action, Field, Note, Panel } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { menuApi } from '../services/menu.service';
+import { menuGallery } from '../components/menu/menu-photo';
 import { reservationsApi } from '../services/reservations.service';
 import { PaymentInstructions } from '../components/PaymentInstructions';
 import { BackButton } from '../components/navigation/BackButton';
@@ -266,18 +267,21 @@ export function ReservationCreateScreen({
           <Panel>
             <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{t('reservations.preorderTitle')}</Text>
             <Note>{people >= 8 ? t('reservations.preorderRequired') : t('reservations.preorderOptional')}</Note>
-            {dishes.length === 0 ? <Note>{t('reservations.noDishes')}</Note> : dishes.map(dish => (
-              <View key={dish.id} style={styles.dishRow}>
-                {dish.fotos[0]?.path ? <Image source={{ uri: dish.fotos[0].path }} style={styles.thumbnail} /> : null}
-                <View style={styles.flex}>
-                  <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>{dish.nombre}</Text>
-                  <Text style={[typography.pie, { color: colors.texto.secundario }]}>{formatCop(dish.precio)}</Text>
+            {dishes.length === 0 ? <Note>{t('reservations.noDishes')}</Note> : dishes.map(dish => {
+              const photo = menuGallery(dish)[0]?.source;
+              return (
+                <View key={dish.id} style={styles.dishRow}>
+                  {photo ? <Image source={photo} style={styles.thumbnail} /> : null}
+                  <View style={styles.flex}>
+                    <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>{dish.nombre}</Text>
+                    <Text style={[typography.pie, { color: colors.texto.secundario }]}>{formatCop(dish.precio)}</Text>
+                  </View>
+                  <Action label="−" accessibilityLabel={t('discovery.decrease', { name: dish.nombre })} disabled={!quantities[dish.id]} onPress={() => updateQuantity(dish.id, -1)} />
+                  <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>{quantities[dish.id] ?? 0}</Text>
+                  <Action label="+" accessibilityLabel={t('discovery.increase', { name: dish.nombre })} disabled={(quantities[dish.id] ?? 0) >= 99} onPress={() => updateQuantity(dish.id, 1)} />
                 </View>
-                <Action label="−" accessibilityLabel={t('discovery.decrease', { name: dish.nombre })} disabled={!quantities[dish.id]} onPress={() => updateQuantity(dish.id, -1)} />
-                <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>{quantities[dish.id] ?? 0}</Text>
-                <Action label="+" accessibilityLabel={t('discovery.increase', { name: dish.nombre })} disabled={(quantities[dish.id] ?? 0) >= 99} onPress={() => updateQuantity(dish.id, 1)} />
-              </View>
-            ))}
+              );
+            })}
             <Field label={t('reservations.note')} value={note} onChangeText={setNote} multiline maxLength={500} />
             <Note>{t('reservations.orderTotal')}: {formatCop(total)}</Note>
             {people < 8 && orderLines.length === 0 && (
