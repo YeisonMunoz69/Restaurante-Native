@@ -86,7 +86,7 @@ function NewsFeed({ base, restaurant, linkedId, clearLink }: {
             {linkedId && status === 'ready' && !selected && (
               <>
                 <Note live tone="warning">{t('news.notFound')}</Note>
-                <Action label={t('common.back')} onPress={closeDetail} />
+                <Action variant="tertiary" label={t('common.back')} onPress={closeDetail} />
               </>
             )}
             {status === 'error' && (

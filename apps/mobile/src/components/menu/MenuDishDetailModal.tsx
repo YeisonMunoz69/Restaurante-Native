@@ -21,6 +21,7 @@ import { menuGallery } from './menu-photo';
 import { formatCop } from '../../utils/formatters';
 import { dishLink } from '../../config/web-links';
 import { Feedback } from '../feedback/Feedback';
+import { Button } from '../ui/Button';
 
 export function MenuDishDetailModal({
   visible,
@@ -95,18 +96,13 @@ export function MenuDishDetailModal({
           paddingHorizontal: spacing.margenLateral,
           paddingTop: insets.top + spacing.xs,
         }]}>
-          <TouchableOpacity
+          <Button
             testID="menu-detail-close"
-            accessibilityRole="button"
-            accessibilityLabel={t('common.back')}
+            label={t('common.back')}
+            variant="tertiary"
+            icon={ChevronLeft}
             onPress={onClose}
-            style={styles.backButton}
-          >
-            <ChevronLeft size={22} color={colors.texto.primario} />
-            <Text style={[typography.etiqueta, { color: colors.texto.primario }]}>
-              {t('common.back')}
-            </Text>
-          </TouchableOpacity>
+          />
           {shareUrl && dish && (
             <TouchableOpacity
               accessibilityRole="button"
@@ -134,16 +130,12 @@ export function MenuDishDetailModal({
             <Text testID="menu-detail-error" style={[typography.cuerpoM, { color: colors.estado.error }]}>
               {t('menu.detailError')}
             </Text>
-            <TouchableOpacity
+            <Button
               testID="menu-detail-retry"
-              accessibilityRole="button"
+              label={t('common.retry')}
+              variant="primary"
               onPress={() => setAttempt(value => value + 1)}
-              style={styles.retryButton}
-            >
-              <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
-                {t('common.retry')}
-              </Text>
-            </TouchableOpacity>
+            />
           </View>
         ) : dish ? (
           <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xxl }}>
@@ -254,11 +246,9 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
   },
-  backButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 5 },
   iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   detail: { alignSelf: 'center' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
-  retryButton: { minHeight: 48, justifyContent: 'center', padding: 12 },
   summary: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
   availability: {
     flexDirection: 'row', alignItems: 'center', gap: 6,

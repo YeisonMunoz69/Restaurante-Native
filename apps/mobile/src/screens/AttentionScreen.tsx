@@ -49,7 +49,7 @@ export function AttentionScreen({ onBack }: { onBack: () => void }) {
       >
         <BackButton onPress={onBack} />
         <Note>{t('attention.title')}</Note>
-        <Action
+        <Action variant="tertiary"
           label={t('attention.configure')}
           onPress={() => setConfigure(!configure)}
         />

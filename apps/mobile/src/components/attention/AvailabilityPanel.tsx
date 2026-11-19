@@ -129,7 +129,7 @@ export function AvailabilityPanel({
               </Panel>
             );
           })}
-          <Action
+          <Action variant="primary"
             testID="availability-save"
             label={t('attention.saveAvailability')}
             disabled={locked || !dirty}
@@ -150,7 +150,7 @@ export function AvailabilityPanel({
               });
             }}
           />
-          <Action
+          <Action variant="tertiary"
             label={t('attention.discard')}
             disabled={locked || !dirty}
             onPress={() => setChanges({})}
@@ -161,14 +161,14 @@ export function AvailabilityPanel({
               total: result.paginacion.totalPaginas,
             })}
           </Note>
-          <Action
+          <Action variant="tertiary"
             label={t('attention.previous')}
             disabled={locked || dirty || result.paginacion.pagina <= 1}
             onPress={() => {
               run(() => load(result.paginacion.pagina - 1));
             }}
           />
-          <Action
+          <Action variant="tertiary"
             label={t('attention.next')}
             disabled={
               locked ||
@@ -215,7 +215,7 @@ export function AvailabilityPanel({
                 destination: preview.destino,
               })}
             </Note>
-            <Action
+            <Action variant="primary"
               testID="availability-copy-confirm"
               label={t('attention.confirmCopy')}
               disabled={busy}

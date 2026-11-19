@@ -169,7 +169,7 @@ export function PaymentSettingsScreen({ onBack }: { onBack: () => void }) {
                 setForm({ ...form, instruccionesPago: value })
               }
             />
-            <Action
+            <Action variant="primary"
               testID="payments-save"
               label={t('payments.save')}
               disabled={busy || !dirty || conflict}
@@ -177,7 +177,7 @@ export function PaymentSettingsScreen({ onBack }: { onBack: () => void }) {
             />
           </Panel>
         )}
-        <Action label={t('payments.reload')} disabled={busy} onPress={reload} />
+        <Action variant="tertiary" label={t('payments.reload')} disabled={busy} onPress={reload} />
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

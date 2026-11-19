@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
-import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   CalendarDays, ChevronRight, ClipboardList, Globe, Info, LogOut, MapPin, Moon,
@@ -16,6 +16,7 @@ import { BackButton } from '../components/navigation/BackButton';
 import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { ProfileAvatar, ProfileDetails, useLocalProfilePhoto } from '../components/settings/AccountProfile';
 import { AppearancePicker } from '../components/settings/AppearancePicker';
+import { Button } from '../components/ui/Button';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
@@ -215,26 +216,15 @@ function SettingsGroup({ title, entries }: { title: string; entries: SettingsEnt
 function SettingsLogout() {
   const { t } = useTranslation();
   const { isLoading, logout } = useAuth();
-  const { colors, typography, radii } = useTheme();
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={t('auth.logout')}
-      accessibilityState={{ disabled: isLoading, busy: isLoading }}
-      disabled={isLoading}
+    <Button
+      variant="tertiary"
+      tone="danger"
+      label={t('auth.logout')}
+      icon={LogOut}
+      busy={isLoading}
       onPress={logout}
-      style={({ pressed }) => [styles.detailRow, styles.logout, {
-        backgroundColor: colors.estado.error + (pressed ? '20' : '12'),
-        borderRadius: radii.l,
-      }]}
-    >
-      {isLoading
-        ? <ActivityIndicator color={colors.estado.error} />
-        : <LogOut size={19} color={colors.estado.error} accessible={false} />}
-      <Text style={[typography.cuerpoM, styles.rowTitle, { color: colors.estado.error }]}>
-        {t('auth.logout')}
-      </Text>
-    </Pressable>
+    />
   );
 }
 
@@ -308,5 +298,4 @@ const styles = StyleSheet.create({
   rowTitle: { fontWeight: '600' },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 12 },
   label: { flex: 1 },
-  logout: { marginTop: 4, minHeight: 52, justifyContent: 'center' },
 });

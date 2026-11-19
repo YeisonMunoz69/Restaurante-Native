@@ -55,6 +55,13 @@ export const DarkColors = {
   },
 };
 
+// Mantengo los colores de la identidad de Google para los botones del proveedor.
+export const GoogleButtonColors = {
+  background: '#FFFFFF',
+  border: '#747775',
+  text: '#1F1F1F',
+};
+
 export const Spacing = {
   xs: 4,
   s: 8,

@@ -194,12 +194,12 @@ export const ReservationsScreen: React.FC = () => {
             <CalendarCheck size={40} color={colors.marca.primario} />
             <Text style={[typography.tituloM, { color: colors.texto.primario, marginTop: spacing.m }]}>{t('reservations.loginRequired')}</Text>
             <Note>{t('reservations.loginDescription')}</Note>
-            <Action testID="reservation-new" label={t('reservations.btnNewReservation')} onPress={() => setCreating(true)} />
-            <Action label={t('reservations.openSettings')} onPress={() => navigation.navigate('Settings')} />
+            <Action variant="primary" testID="reservation-new" label={t('reservations.btnNewReservation')} onPress={() => setCreating(true)} />
+            <Action variant="tertiary" label={t('reservations.openSettings')} onPress={() => navigation.navigate('Settings')} />
           </Panel>
         ) : (
           <>
-            <Action
+            <Action variant="primary"
               testID="reservation-new"
               label={t('reservations.btnNewReservation')}
               onPress={() => setCreating(true)}
@@ -253,10 +253,10 @@ export const ReservationsScreen: React.FC = () => {
                 {reservation.estado === 'SOLICITADA' || reservation.estado === 'CONFIRMADA' ? (
                   <>
                     {cancellationTooLate && <Note>{t('reservations.cancelTooLate')}</Note>}
-                    <Action label={t('reservations.cancelAction')} disabled={cancellationTooLate} onPress={() => cancel(reservation)} />
+                    <Action tone="danger" label={t('reservations.cancelAction')} disabled={cancellationTooLate} onPress={() => cancel(reservation)} />
                   </>
                 ) : null}
-                <Action label={t('reservations.copyTicket')} onPress={() => {
+                <Action variant="tertiary" label={t('reservations.copyTicket')} onPress={() => {
                   Clipboard.setString(reservation.ticket);
                   Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
                 }} />

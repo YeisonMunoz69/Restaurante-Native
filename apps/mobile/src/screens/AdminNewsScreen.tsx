@@ -56,7 +56,7 @@ export function AdminNewsScreen({ onBack }: { onBack: () => void }) {
           <>
             <BackButton onPress={onBack} />
             <Text accessibilityRole="header" style={[typography.display, { color: colors.texto.primario }]}>{t('newsAdmin.title')}</Text>
-            {restaurant ? <Action label={t('newsAdmin.new')} onPress={() => setSelected(null)} /> : <Note>{t('news.noRestaurant')}</Note>}
+            {restaurant ? <Action variant="primary" label={t('newsAdmin.new')} onPress={() => setSelected(null)} /> : <Note>{t('news.noRestaurant')}</Note>}
             {!!restaurant && status === 'loading' && <ActivityIndicator accessibilityLabel={t('common.loading')} />}
             {status === 'error' && <Note live tone="error">{t('news.loadError')}</Note>}
             {status === 'error' && <Action label={t('common.retry')} onPress={() => setAttempt(value => value + 1)} />}
@@ -185,7 +185,7 @@ function NewsEditor({ initial, restaurant, onBack }: { initial: NewsPost | null;
       <Action label={t('newsAdmin.pin')} selected={form.fijada} disabled={busy} onPress={() => setForm(value => ({ ...value, fijada: !value.fijada }))} />
       {error ? <Note live tone="error">{error}</Note> : saved && !dirty ? <Note live tone="success">{t('newsAdmin.saved')}</Note> : null}
       {busy && <ActivityIndicator accessibilityLabel={t('common.loading')} />}
-      <Action label={t(post?.publicada ? 'newsAdmin.save' : 'newsAdmin.saveDraft')} disabled={busy || !dirty} onPress={() => save(post?.publicada ?? false, post?.publicada ? t('newsAdmin.save') : undefined)} />
+      <Action variant="primary" label={t(post?.publicada ? 'newsAdmin.save' : 'newsAdmin.saveDraft')} disabled={busy || !dirty} onPress={() => save(post?.publicada ?? false, post?.publicada ? t('newsAdmin.save') : undefined)} />
       {post && (
         <>
           {preview && <Image source={{ uri: preview }} style={styles.preview} accessibilityLabel={t('newsAdmin.photo')} />}

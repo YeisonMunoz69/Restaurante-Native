@@ -13,7 +13,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -22,6 +21,7 @@ import { Check, Info, TriangleAlert, XCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../theme/ThemeContext';
 import { OverlayModal } from './OverlayModal';
+import { Button } from '../ui/Button';
 
 export type FeedbackKind = 'info' | 'success' | 'warning' | 'error';
 export interface FeedbackAction {
@@ -126,6 +126,8 @@ export function FeedbackHost({ scope }: { scope?: string }) {
   const actions = request.actions.length
     ? request.actions
     : [{ text: t('feedback.understood') }];
+  const primaryAction = actions.find(action => action.style === 'destructive') ??
+    actions.find(action => action.style !== 'cancel');
   const select = (action?: FeedbackAction) => {
     // Retiro primero para bloquear dobles toques; solo después ejecuto la acción confirmada.
     if (current()?.id !== request.id) return;
@@ -198,47 +200,16 @@ export function FeedbackHost({ scope }: { scope?: string }) {
                 </Text>
               )}
               <View style={styles.actions}>
-                {actions.map((action, index) => {
-                  const secondary = action.style === 'cancel';
-                  const backgroundColor = secondary
-                    ? colors.superficie.fondo
-                    : action.style === 'destructive'
-                      ? colors.estado.error
-                      : colors.marca.primario;
-                  return (
-                    <TouchableOpacity
+                {actions.map((action, index) => (
+                    <Button
                       key={index}
                       testID={`feedback-action-${index}`}
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        action.text ?? t('feedback.understood')
-                      }
+                      label={action.text ?? t('feedback.understood')}
+                      variant={action === primaryAction ? 'primary' : 'secondary'}
+                      tone={action.style === 'destructive' ? 'danger' : 'normal'}
                       onPress={() => select(action)}
-                      style={[
-                        styles.button,
-                        {
-                          backgroundColor,
-                          borderColor: secondary
-                            ? colors.superficie.borde
-                            : backgroundColor,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.buttonLabel,
-                          {
-                            color: secondary
-                              ? colors.texto.primario
-                              : colors.texto.inverso,
-                          },
-                        ]}
-                      >
-                        {action.text ?? t('feedback.understood')}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                    />
+                ))}
               </View>
             </ScrollView>
           </View>
@@ -330,14 +301,4 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, lineHeight: 31, fontWeight: '700' },
   message: { fontSize: 16, lineHeight: 24, marginTop: 12 },
   actions: { gap: 10, marginTop: 24 },
-  button: {
-    minHeight: 52,
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonLabel: { fontSize: 16, fontWeight: '700', textAlign: 'center' },
 });

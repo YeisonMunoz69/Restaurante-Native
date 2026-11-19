@@ -54,7 +54,7 @@ export function ConnectionForm({
         editable={!busy}
         onChangeText={restauranteId => setValue({ ...value, restauranteId })}
       />
-      <Action
+      <Action variant="primary"
         label={t('attention.saveConnection')}
         disabled={busy}
         onPress={async () => {

@@ -140,8 +140,8 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
             <Text selectable style={[typography.pie, { color: colors.texto.secundario }]}>{reservation.ticket}</Text>
             <Action label={t('reservations.approve')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.approve(reservation.id), t('reservations.approve'))} />
             <Field label={t('reservations.rejectionReason')} value={reasons[reservation.id] ?? ''} onChangeText={value => setReasons(current => ({ ...current, [reservation.id]: value }))} maxLength={500} />
-            <Action label={t('reservations.reject')} disabled={busyId === reservation.id || (reasons[reservation.id] ?? '').trim().length < 3} onPress={() => act(reservation.id, () => reservationsApi.reject(reservation.id, { motivo: reasons[reservation.id].trim() }), t('reservations.reject'))} />
-            <Action label={t('reservations.copyTicket')} onPress={() => {
+            <Action tone="danger" label={t('reservations.reject')} disabled={busyId === reservation.id || (reasons[reservation.id] ?? '').trim().length < 3} onPress={() => act(reservation.id, () => reservationsApi.reject(reservation.id, { motivo: reasons[reservation.id].trim() }), t('reservations.reject'))} />
+            <Action variant="tertiary" label={t('reservations.copyTicket')} onPress={() => {
               Clipboard.setString(reservation.ticket);
               Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
             }} />
@@ -158,9 +158,9 @@ export function AdminReservationsScreen({ onBack }: { onBack: () => void }) {
             {(reservation.cliente.cancelaciones > 0 || reservation.cliente.inasistencias > 0) && <Note>{t('reservations.previousRecords', { cancellations: reservation.cliente.cancelaciones, noShows: reservation.cliente.inasistencias })}</Note>}
             <Text selectable style={[typography.pie, { color: colors.texto.secundario }]}>{reservation.ticket}</Text>
             {reservation.estado === 'CONFIRMADA' && <Action label={t('reservations.markArrival')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.markArrival(reservation.id), t('reservations.markArrival'))} />}
-            {reservation.estado === 'CONFIRMADA' && reservation.puedeMarcarInasistencia && <Action label={t('reservations.markNoShow')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.markNoShow(reservation.id), t('reservations.markNoShow'))} />}
+            {reservation.estado === 'CONFIRMADA' && reservation.puedeMarcarInasistencia && <Action tone="danger" label={t('reservations.markNoShow')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.markNoShow(reservation.id), t('reservations.markNoShow'))} />}
             {reservation.estado === 'EN_CURSO' && <Action label={t('reservations.complete')} disabled={busyId === reservation.id} onPress={() => act(reservation.id, () => reservationsApi.complete(reservation.id), t('reservations.complete'))} />}
-            <Action label={t('reservations.copyTicket')} onPress={() => {
+            <Action variant="tertiary" label={t('reservations.copyTicket')} onPress={() => {
               Clipboard.setString(reservation.ticket);
               Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
             }} />

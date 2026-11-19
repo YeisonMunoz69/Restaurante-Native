@@ -147,7 +147,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
   return (
     <View>
       <Note>{t('attention.calendarIntro')}</Note>
-      <Action
+      <Action variant="tertiary"
         label={t('attention.reload')}
         disabled={locked}
         onPress={() => {
@@ -184,7 +184,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
                   .join('\n')}
               </Note>
               <Note>{t('attention.noCancellation')}</Note>
-              <Action
+              <Action variant="primary" tone="danger"
                 testID="calendar-confirm"
                 label={t('attention.confirmClosure')}
                 disabled={busy}
@@ -258,7 +258,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
               onValueChange={activo => updateRule(index, { activo })}
             />
             <ServiceChoices value={rule.servicios ?? ['RESTAURANTE']} disabled={locked} onChange={servicios => updateRule(index, { servicios })} />
-            <Action
+            <Action variant="tertiary" tone="danger"
               label={t('attention.removeRule')}
               disabled={locked}
               onPress={() => setRules(rules.filter((_, i) => i !== index))}
@@ -282,7 +282,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
             ])
           }
         />
-        <Action
+        <Action variant="primary"
           testID="calendar-save-rules"
           label={t('attention.saveRules')}
           disabled={locked || !ready}
@@ -385,7 +385,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
               editable={!locked}
               onChangeText={motivo => setForm({ ...form, motivo })}
             />
-            <Action
+            <Action variant="primary"
               testID="calendar-save-exception"
               label={t('attention.saveException')}
               disabled={locked || fecha !== loadedDate}
@@ -406,7 +406,7 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
                 }
               }}
             />
-            <Action
+            <Action variant="tertiary" tone="danger"
               label={t('attention.removeException')}
               disabled={locked || !exception || fecha !== loadedDate}
               onPress={() => {

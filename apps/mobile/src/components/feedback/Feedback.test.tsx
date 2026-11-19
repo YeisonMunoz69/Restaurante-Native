@@ -3,6 +3,7 @@ import Renderer from 'react-test-renderer';
 import { Modal, Text } from 'react-native';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Feedback, FeedbackHost } from './Feedback';
+import { Button } from '../ui/Button';
 
 const mockTranslate = (key: string) => key;
 jest.mock('react-i18next', () => ({
@@ -52,7 +53,7 @@ it('la acción se ejecuta una vez incluso si llega doble toque', async () => {
       { text: 'Guardar', onPress: confirm },
     ]),
   );
-  const button = tree.root.findByProps({ testID: 'feedback-action-0' });
+  const button = tree.root.findByType(Button);
   await Renderer.act(async () => {
     button.props.onPress();
     button.props.onPress();
@@ -69,7 +70,7 @@ it('encola eventos sin perder mensajes y localiza la acción por defecto', async
   expect(text()).not.toContain('Segundo');
   expect(text()).toContain('feedback.understood');
   await Renderer.act(async () => {
-    tree.root.findByProps({ testID: 'feedback-action-0' }).props.onPress();
+    tree.root.findByType(Button).props.onPress();
   });
   expect(text()).toContain('Segundo');
 });

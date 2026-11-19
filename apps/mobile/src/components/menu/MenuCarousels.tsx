@@ -22,6 +22,7 @@ import { useOrderDraft } from '../../context/OrderDraftContext';
 import { formatCop } from '../../utils/formatters';
 import { menuGallery } from './menu-photo';
 import { Note } from '../attention/Controls';
+import { Button } from '../ui/Button';
 
 type Section = { id: string; title: string; data: MenuDish[] };
 const DOUBLE_TAP_MS = 400;
@@ -265,23 +266,15 @@ export function MenuCarousels({
                         </Text>
                       </View>
                     </Pressable>
-                    <Pressable
+                    <Button
                       testID={`menu-add-${dish.id}`}
-                      accessibilityRole="button"
                       accessibilityLabel={t('discovery.addDish', { name: dish.nombre })}
-                      accessibilityState={{ disabled: !canAdd }}
+                      label={t('discovery.addShort') + (count ? ` · ${count}` : '')}
+                      icon={Plus}
                       disabled={!canAdd}
                       onPress={() => draft.setQuantity(dish, count + 1, fecha)}
-                      style={({ pressed }) => [
-                        styles.add,
-                        { backgroundColor: colors.marca.primarioSuave, opacity: pressed || !canAdd ? 0.55 : 1 },
-                      ]}
-                    >
-                      <Plus size={17} color={colors.marca.primario} />
-                      <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
-                        {t('discovery.addShort')}{count ? ` · ${count}` : ''}
-                      </Text>
-                    </Pressable>
+                      style={styles.add}
+                    />
                   </View>
                 );
               }}
@@ -324,7 +317,7 @@ export function MenuCarousels({
               ) : (
                 <RefreshCw size={16} color={colors.marca.primario} />
               )}
-              <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
+              <Text style={[typography.etiqueta, styles.footerMessage, { color: colors.marca.primario }]}>
                 {t(canLoadMore ? (loadMoreFailed ? 'common.retry' : 'discovery.loadMore') : 'menu.reloadMenu')}
               </Text>
             </Pressable>
@@ -350,9 +343,8 @@ const styles = StyleSheet.create({
   fallback: { justifyContent: 'center', alignItems: 'center' },
   body: { padding: 14, gap: 6 },
   add: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     alignSelf: 'flex-start', marginTop: 'auto', marginHorizontal: 14, marginBottom: 12,
-    minHeight: 44, borderRadius: 24, paddingHorizontal: 18, paddingVertical: 6,
+    borderRadius: 24,
   },
   footer: { alignItems: 'center', paddingHorizontal: 16, paddingBottom: 8 },
   loadControl: {

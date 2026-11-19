@@ -9,6 +9,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { formatCivilDate, formatCop } from '../../utils/formatters';
 import { Feedback } from '../feedback/Feedback';
 import { OverlayModal } from '../feedback/OverlayModal';
+import { Button } from '../ui/Button';
 import { MenuDishDetailModal } from './MenuDishDetailModal';
 import { menuGallery } from './menu-photo';
 
@@ -62,14 +63,14 @@ export function OrderDraftPanel({ restauranteId, onReserve }: { restauranteId: s
         onPress={() => setOpen(true)}
         style={({ pressed }) => [
           styles.fab,
-          { backgroundColor: colors.marca.primario, opacity: pressed ? 0.8 : 1 },
+          { backgroundColor: colors.marca.acento, opacity: pressed ? 0.8 : 1 },
         ]}
       >
         <ShoppingBasket size={25} color={colors.texto.inverso} />
         {units > 0 && (
           <View
             importantForAccessibility="no-hide-descendants"
-            style={[styles.count, { backgroundColor: colors.marca.acento }]}
+            style={[styles.count, { backgroundColor: colors.marca.primario }]}
           >
             <Text style={[typography.etiqueta, { color: colors.texto.inverso }]}>
               {units > 99 ? '99+' : units}
@@ -210,33 +211,20 @@ export function OrderDraftPanel({ restauranteId, onReserve }: { restauranteId: s
                 <Text style={[typography.pie, { color: colors.texto.secundario }]}>
                   {t('discovery.estimateNote')}
                 </Text>
-                <Pressable
+                <Button
                   testID="order-reserve"
-                  accessibilityRole="button"
-                  style={[styles.primary, { backgroundColor: colors.marca.primario }]}
+                  label={t('discovery.reserve')}
+                  variant="primary"
                   onPress={reserve}
-                >
-                  <Text style={[typography.etiqueta, styles.buttonText, { color: colors.texto.inverso }]}>
-                    {t('discovery.reserve')}
-                  </Text>
-                </Pressable>
+                />
               </>
             )}
-            <Pressable
+            <Button
               testID="order-table-only"
-              accessibilityRole="button"
-              style={[
-                styles.primary,
-                { backgroundColor: draft.lines.length ? colors.superficie.elevada : colors.marca.primario },
-              ]}
+              label={t('discovery.tableOnly')}
+              variant={draft.lines.length ? 'secondary' : 'primary'}
               onPress={tableOnly}
-            >
-              <Text style={[typography.etiqueta, styles.buttonText, {
-                color: draft.lines.length ? colors.texto.primario : colors.texto.inverso,
-              }]}>
-                {t('discovery.tableOnly')}
-              </Text>
-            </Pressable>
+            />
           </ScrollView>
         </View>
       </View>
@@ -301,6 +289,4 @@ const styles = StyleSheet.create({
   quantity: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   disabled: { opacity: 0.45 },
   total: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
-  primary: { minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, padding: 10 },
-  buttonText: { textAlign: 'center' },
 });

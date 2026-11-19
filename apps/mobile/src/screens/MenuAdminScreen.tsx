@@ -280,7 +280,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
                 <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{t('menuAdmin.newCategory')}</Text>
                 <Field label={t('menuAdmin.categoryName')} value={categoryName} onChangeText={setCategoryName} maxLength={80} />
                 <Field label={t('menuAdmin.order')} value={categoryOrder} onChangeText={setCategoryOrder} keyboardType="number-pad" />
-                <Action label={t('menuAdmin.createCategory')} disabled={busy} onPress={() => void createCategory()} />
+                <Action variant="primary" label={t('menuAdmin.createCategory')} disabled={busy} onPress={() => void createCategory()} />
                 {categories.map(category => (
                   <Panel key={category.id}>
                     <Field
@@ -318,7 +318,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
             ) : (
               <Panel>
                 {!selectedDishId && (
-                  <Action label={t('menuAdmin.newDish')} disabled={busy || !categories.some(category => category.activa)} onPress={startNewDish} />
+                  <Action variant="primary" label={t('menuAdmin.newDish')} disabled={busy || !categories.some(category => category.activa)} onPress={startNewDish} />
                 )}
                 {(showDishForm || !dishes.length) && (
                   <>
@@ -344,7 +344,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
                       const selected = draft.etiquetasIds.includes(tag.id);
                       return <Action key={tag.id} label={tag.nombre} selected={selected} onPress={() => setDraft(current => ({ ...current, etiquetasIds: selected ? current.etiquetasIds.filter(id => id !== tag.id) : [...current.etiquetasIds, tag.id] }))} />;
                     })}
-                    <Action label={t('menuAdmin.saveDish')} disabled={busy} onPress={() => void saveDish()} />
+                    <Action variant="primary" label={t('menuAdmin.saveDish')} disabled={busy} onPress={() => void saveDish()} />
                     {selectedDishId && (
                       <>
                         <Action label={t('menuAdmin.uploadPhoto')} disabled={busy || (selectedDish?.photos.length ?? 0) >= 10} onPress={() => void choosePhoto()} />
@@ -354,7 +354,7 @@ export function MenuAdminScreen({ onBack }: { onBack: () => void }) {
                             <View style={styles.photoActions}>
                               <Action label="↑" disabled={busy || index === 0} onPress={() => void movePhoto(index, -1)} />
                               <Action label="↓" disabled={busy || index === (selectedDish?.photos.length ?? 0) - 1} onPress={() => void movePhoto(index, 1)} />
-                              <Action label={t('menuAdmin.removePhoto')} disabled={busy} onPress={() => void run(() => adminMenuApi.removePhoto(restauranteId, selectedDish.id, photo.id), t('menuAdmin.photoRemoved'))} />
+                              <Action variant="tertiary" tone="danger" label={t('menuAdmin.removePhoto')} disabled={busy} onPress={() => void run(() => adminMenuApi.removePhoto(restauranteId, selectedDish.id, photo.id), t('menuAdmin.photoRemoved'))} />
                             </View>
                           </View>
                         ))}

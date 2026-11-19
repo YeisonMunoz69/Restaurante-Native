@@ -3,54 +3,16 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
   type TextInputProps,
 } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { FeedbackMessage, type FeedbackKind } from '../feedback/Feedback';
+import { Button } from '../ui/Button';
 
-// Mantengo etiquetas visibles, contraste del tema y objetivos táctiles de al menos 48 dp.
-export function Action({
-  label,
-  onPress,
-  disabled,
-  selected,
-  testID,
-  accessibilityLabel,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  selected?: boolean;
-  testID?: string;
-  accessibilityLabel?: string;
-}) {
-  const { colors } = useTheme();
-  return (
-    <TouchableOpacity
-      testID={testID}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled: !!disabled, selected: !!selected }}
-      disabled={disabled}
-      onPress={onPress}
-      style={[
-        styles.button,
-        disabled && styles.disabled,
-        {
-          backgroundColor: selected
-            ? colors.marca.primarioSuave
-            : colors.superficie.elevada,
-          borderColor: colors.marca.primario,
-        },
-      ]}
-    >
-      <Text style={[styles.label, { color: colors.texto.primario }]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
+// Conservo el espacio de los formularios mientras comparto la jerarquía visual de la app.
+export function Action(props: React.ComponentProps<typeof Button>) {
+  return <Button {...props} style={[styles.action, props.style]} />;
 }
 export function Field({ label, ...props }: TextInputProps & { label: string }) {
   const { colors } = useTheme();
@@ -111,16 +73,7 @@ export function Panel({ children }: { children: React.ReactNode }) {
   );
 }
 const styles = StyleSheet.create({
-  disabled: { opacity: 0.5 },
-  button: {
-    minHeight: 48,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginVertical: 4,
-  },
-  label: { fontSize: 16, fontWeight: '600' },
+  action: { marginVertical: 4 },
   input: {
     minHeight: 48,
     borderWidth: 1,

@@ -93,14 +93,14 @@ export function PaymentInstructions({
           )}
         </>
       )}
-      <Action
+      <Action variant="tertiary"
         label={t('payments.reload')}
         disabled={busy}
         onPress={() => {
           load();
         }}
       />
-      <Action
+      <Action variant="primary"
         label={t('reservations.sendWhatsApp')}
         disabled={busy}
         onPress={() => {

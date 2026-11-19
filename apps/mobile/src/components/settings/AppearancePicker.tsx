@@ -50,7 +50,9 @@ export function AppearancePicker() {
               <Text style={[typography.etiqueta, styles.label, { color: colors.texto.primario }]}>
                 {t(label)}
               </Text>
-              {checked && <Check size={18} strokeWidth={2.6} color={colors.marca.primario} accessible={false} />}
+              <View style={styles.check}>
+                {checked && <Check size={18} strokeWidth={2.6} color={colors.marca.primario} accessible={false} />}
+              </View>
             </View>
           </Pressable>
         );
@@ -71,5 +73,6 @@ const styles = StyleSheet.create({
   previewLine: { height: 3, borderRadius: 2, width: '72%' },
   previewSecondary: { width: '46%' },
   caption: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  label: { flex: 1 },
+  label: { flex: 1, textAlign: 'center' },
+  check: { width: 18 },
 });

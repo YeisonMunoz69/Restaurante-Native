@@ -66,13 +66,13 @@ export function AdminsScreen({ onBack }: { onBack: () => void }) {
         <Note>{t('admins.count', { count: data.activos, minimo: data.minimo })}</Note>
         <Panel>
           <Field label={t('admins.email')} value={correo} onChangeText={setCorreo} autoCapitalize="none" keyboardType="email-address" editable={!busy} />
-          <Action label={t('admins.grantTitle')} disabled={busy || !correo.trim()} onPress={() => change(correo, true)} />
+          <Action variant="primary" label={t('admins.grantTitle')} disabled={busy || !correo.trim()} onPress={() => change(correo, true)} />
         </Panel>
         {data.usuarios.map(account => <Panel key={account.id}>
           <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{account.nombre}</Text>
           <Note>{account.correo}</Note>
           <Note>{t(account.activo ? 'admins.active' : 'admins.inactive')}</Note>
-          <Action label={t('admins.removeTitle')} disabled={busy || !account.activo || data.activos <= data.minimo} onPress={() => change(account.correo, false)} />
+          <Action tone="danger" label={t('admins.removeTitle')} disabled={busy || !account.activo || data.activos <= data.minimo} onPress={() => change(account.correo, false)} />
         </Panel>)}
       </>}
     </KeyboardAwareScrollView>

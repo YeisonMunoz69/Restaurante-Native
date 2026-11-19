@@ -8,10 +8,12 @@ import { BUILD_ENVIRONMENT, GOOGLE_WEB_CLIENT_ID } from '../config/build-variant
 import { useAuth } from '../context/AuthContext';
 import { useConnection } from '../context/ConnectionContext';
 import { useTheme } from '../theme/ThemeContext';
+import { GoogleButtonColors } from '../theme/tokens';
 import { Field, Note } from './attention/Controls';
 import { ConnectionForm } from './ConnectionForm';
 import { OverlayModal } from './feedback/OverlayModal';
 import { KeyboardAwareScrollView } from './KeyboardAwareScrollView';
+import { Button } from './ui/Button';
 
 // Uso el símbolo multicolor del paquete oficial de Google Identity.
 const googleBrand = require('../assets/google-access-light.png');
@@ -23,7 +25,7 @@ export function GoogleAccess({ link = false }: { link?: boolean }) {
     Boolean(GOOGLE_WEB_CLIENT_ID && typeof NativeModules.EncantoBuild?.googleIdToken === 'function');
   const { t } = useTranslation();
   const { loginWithGoogle } = useAuth();
-  const { colors, isDark, typography, radii } = useTheme();
+  const { colors, isDark, typography } = useTheme();
   const { isSaving } = useConnection();
   const running = useRef(false);
   const [pendingToken, setPendingToken] = useState<string | null>(null);
@@ -80,35 +82,40 @@ export function GoogleAccess({ link = false }: { link?: boolean }) {
         <Field label={t('auth.phone')} keyboardType="phone-pad" maxLength={10} value={phone}
           editable={!busy} onChangeText={setPhone} autoComplete="tel" />
       )}
-      <Pressable
+      {pendingToken ? (
+        <Button
+          testID="google-submit"
+          variant="primary"
+          label={t('auth.googleComplete')}
+          onPress={() => void submit()}
+          disabled={disabled}
+          busy={busy}
+        />
+      ) : <Pressable
         testID="google-submit"
         accessibilityRole="button"
         accessibilityState={{ disabled, busy }}
         disabled={disabled}
         onPress={() => void submit()}
-        style={({ pressed }) => [styles.button, pendingToken ? {
-          backgroundColor: colors.marca.primario, borderRadius: radii.completo,
-        } : styles.googleButton, {
+        style={({ pressed }) => [styles.button, styles.googleButton, {
           opacity: pressed || disabled ? 0.65 : 1,
         }]}
       >
-        {busy ? <ActivityIndicator color={pendingToken ? colors.texto.inverso : '#1f1f1f'} />
-          : !pendingToken && <View accessible={false} style={styles.googleMark}>
+        {busy ? <ActivityIndicator color={GoogleButtonColors.text} />
+          : <View accessible={false} style={styles.googleMark}>
             <Image source={googleBrand} resizeMode="contain" style={styles.googleArtwork} />
           </View>}
-        <Text style={[styles.buttonText, { color: pendingToken ? colors.texto.inverso : '#1f1f1f' }]}>
-          {t(link ? 'auth.googleLink' : pendingToken ? 'auth.googleComplete' : 'auth.googleSignIn')}
+        <Text style={[styles.buttonText, { color: GoogleButtonColors.text }]}>
+          {t(link ? 'auth.googleLink' : 'auth.googleSignIn')}
         </Text>
-      </Pressable>
+      </Pressable>}
       {pendingToken && (
-        <Pressable
-          accessibilityRole="button"
+        <Button
+          variant="tertiary"
+          label={t('auth.googleChooseAnother')}
           onPress={() => { clearSignup(); setError(''); }}
           disabled={busy}
-          style={styles.back}
-        >
-          <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>{t('auth.googleChooseAnother')}</Text>
-        </Pressable>
+        />
       )}
     </View>
   );
@@ -205,10 +212,9 @@ const styles = StyleSheet.create({
   actions: { gap: 12, marginTop: 6 },
   button: { minHeight: 54, flexDirection: 'row', gap: 12, alignItems: 'center', justifyContent: 'center', padding: 12 },
   buttonText: { flexShrink: 1, fontSize: 15, lineHeight: 21, fontWeight: '600', textAlign: 'center' },
-  googleButton: { backgroundColor: '#fff', borderColor: '#747775', borderWidth: 1, borderRadius: 26 },
+  googleButton: { backgroundColor: GoogleButtonColors.background, borderColor: GoogleButtonColors.border, borderWidth: 1, borderRadius: 26 },
   googleMark: { width: 20, height: 20, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   googleArtwork: { width: 40, height: 40 },
-  back: { minHeight: 46, alignItems: 'center', justifyContent: 'center' },
   modalFrame: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   modalCard: { width: '100%', maxWidth: 460, height: '78%', maxHeight: 555, borderRadius: 24, overflow: 'hidden' },
   modalContent: { padding: 16, gap: 8 },

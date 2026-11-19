@@ -143,7 +143,7 @@ export function ProfileDetails({ photo }: { photo: LocalPhoto }) {
         </View>
         <Action label={t('settings.choosePhoto')} disabled={!photo.ready || photoBusy} onPress={() => void choosePhoto()} />
         {!!photo.uri && (
-          <Action label={t(googleUri ? 'settings.useGooglePhoto' : 'settings.removePhoto')} disabled={photoBusy} onPress={() => void choosePhoto(true)} />
+          <Action variant="tertiary" label={t(googleUri ? 'settings.useGooglePhoto' : 'settings.removePhoto')} disabled={photoBusy} onPress={() => void choosePhoto(true)} />
         )}
         {message === 'error' && <Note live tone="error">{t('settings.photoError')}</Note>}
       </View>
@@ -157,7 +157,7 @@ export function ProfileDetails({ photo }: { photo: LocalPhoto }) {
           </View>
         ))}
         {message === 'saved' && <FeedbackMessage kind="success">{t('settings.profileSaved')}</FeedbackMessage>}
-        <Action label={t('settings.editProfile')} onPress={() => { setMessage(null); setEditing(true); }} />
+        <Action variant="primary" label={t('settings.editProfile')} onPress={() => { setMessage(null); setEditing(true); }} />
       </View>
       {editing && (
         <ProfileEditor
@@ -248,7 +248,7 @@ function ProfileEditor({ nombre, telefono, ciudad, onClose, onSave }: {
             <Field label={t('settings.cityOptional')} value={draft.ciudad} maxLength={80} editable={!busy}
               onChangeText={value => setDraft({ ...draft, ciudad: value })} />
             {!!error && <Note live tone="error">{t(error)}</Note>}
-            <Action label={t('settings.saveProfile')} disabled={busy || !dirty} onPress={() => void submit()} />
+            <Action variant="primary" label={t('settings.saveProfile')} disabled={busy || !dirty} onPress={() => void submit()} />
           </KeyboardAwareScrollView>
         </View>
       </SafeAreaView>

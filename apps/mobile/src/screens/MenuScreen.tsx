@@ -33,6 +33,7 @@ import { useConnection } from '../context/ConnectionContext';
 import { MenuDishDetailModal } from '../components/menu/MenuDishDetailModal';
 import { menuApi } from '../services/menu.service';
 import { useTheme } from '../theme/ThemeContext';
+import { Button } from '../components/ui/Button';
 import { formatCivilDate, todayInBogota } from '../utils/formatters';
 
 // Avanzo fechas civiles en UTC para que el celular no cambie de día por zona horaria.
@@ -299,16 +300,13 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
             </Text>
           )}
           {dayOpen === false && nextAvailableDay && (
-            <Pressable
+            <Button
               testID="menu-next-open-date"
-              accessibilityRole="button"
+              label={t('menu.goToNextOpenDay', { date: formatCivilDate(nextAvailableDay) })}
+              variant="tertiary"
               onPress={() => loadDate(nextAvailableDay)}
               style={styles.nextOpen}
-            >
-              <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
-                {t('menu.goToNextOpenDay', { date: formatCivilDate(nextAvailableDay) })}
-              </Text>
-            </Pressable>
+            />
           )}
         </View>
       )}
@@ -357,16 +355,13 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
                 >
                   {errorStatus(error) === 404 ? t('menu.restaurantNotFound') : t('menu.requestError')}
                 </Text>
-                <Pressable
+                <Button
                   testID="menu-retry"
-                  accessibilityRole="button"
+                  label={t('common.retry')}
+                  variant="primary"
                   onPress={refresh}
-                  style={[styles.retryButton, { marginTop: spacing.m }]}
-                >
-                  <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
-                    {t('common.retry')}
-                  </Text>
-                </Pressable>
+                  style={{ marginTop: spacing.m }}
+                />
               </View>
             </ScrollView>
           ) : (
@@ -434,7 +429,7 @@ const styles = StyleSheet.create({
   dateInfo: { flex: 1 },
   dateControls: { flexDirection: 'row' },
   dateButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  nextOpen: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  nextOpen: { alignSelf: 'flex-start' },
   compactDate: {
     position: 'absolute', left: 0, right: 0, zIndex: 2,
     flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 7,
@@ -442,5 +437,4 @@ const styles = StyleSheet.create({
   statusContent: { flexGrow: 1, paddingBottom: ORDER_BUTTON_CLEARANCE },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   centerText: { textAlign: 'center' },
-  retryButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
 });

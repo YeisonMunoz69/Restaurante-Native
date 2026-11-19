@@ -249,7 +249,7 @@ export function ReservationCreateScreen({
             {isActive && <ReservationCalendar restauranteId={settings.restauranteId} value={selectedDate} min={today} max={maxDate} onChange={setSelectedDate} onAvailability={setDayAvailable} />}
             <Note>{t('reservations.maxAdvance')}</Note>
             <Field label={t('reservations.groupSize')} value={peopleText} onChangeText={setPeopleText} keyboardType="number-pad" />
-            <Action testID="reservation-find-slots" label={t('reservations.findSlots')} disabled={busy || !dayAvailable} onPress={() => void findSlots()} />
+            <Action variant="primary" testID="reservation-find-slots" label={t('reservations.findSlots')} disabled={busy || !dayAvailable} onPress={() => void findSlots()} />
           </Panel>
         )}
 
@@ -259,7 +259,7 @@ export function ReservationCreateScreen({
             {slots.map(slot => (
               <Action key={slot.horaInicio} label={`${slot.horaInicio}–${slot.horaFin} · ${t('reservations.seatsAvailable', { count: slot.aforoDisponible })}`} selected={selectedSlot?.horaInicio === slot.horaInicio} onPress={() => setSelectedSlot(slot)} />
             ))}
-            <Action testID="reservation-continue-order" label={t('reservations.chooseOrder')} disabled={!selectedSlot || busy} onPress={() => void loadDishes()} />
+            <Action variant="primary" testID="reservation-continue-order" label={t('reservations.chooseOrder')} disabled={!selectedSlot || busy} onPress={() => void loadDishes()} />
           </Panel>
         )}
 
@@ -287,7 +287,7 @@ export function ReservationCreateScreen({
             {people < 8 && orderLines.length === 0 && (
               <Action testID="reservation-continue-without-order" label={t('reservations.continueWithoutOrder')} disabled={busy} onPress={() => setStep('review')} />
             )}
-            <Action label={t('reservations.reviewRequest')} disabled={busy || (people >= 8 && orderLines.length === 0)} onPress={() => setStep('review')} />
+            <Action variant="primary" label={t('reservations.reviewRequest')} disabled={busy || (people >= 8 && orderLines.length === 0)} onPress={() => setStep('review')} />
           </Panel>
         )}
 
@@ -304,7 +304,7 @@ export function ReservationCreateScreen({
             <Note>{t('reservations.orderTotal')}: {formatCop(total)}</Note>
             <Note>{t('reservations.paymentNotice')}</Note>
             <Note>{t('reservations.cancellationPolicy')}</Note>
-            <Action testID="reservation-submit" label={t('reservations.submit')} disabled={busy} onPress={() => void create()} />
+            <Action variant="primary" testID="reservation-submit" label={t('reservations.submit')} disabled={busy} onPress={() => void create()} />
           </Panel>
         )}
 
@@ -316,11 +316,11 @@ export function ReservationCreateScreen({
             <Note>{t('reservations.total')}: {formatCop(result.reserva.total)}</Note>
             <Text selectable style={[typography.cuerpoM, { color: colors.texto.primario }]}>{result.reserva.ticket}</Text>
             <PaymentInstructions codigo={result.reserva.codigo} ticket={result.reserva.ticket} active={isActive} />
-            <Action label={t('reservations.copyCode')} onPress={() => {
+            <Action variant="tertiary" label={t('reservations.copyCode')} onPress={() => {
               Clipboard.setString(result.reserva.codigo);
               Alert.alert(t('reservations.codeCopied'), undefined, [], { kind: 'success' });
             }} />
-            <Action label={t('reservations.copyTicket')} onPress={() => {
+            <Action variant="tertiary" label={t('reservations.copyTicket')} onPress={() => {
               Clipboard.setString(result.reserva.ticket);
               Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
             }} />
