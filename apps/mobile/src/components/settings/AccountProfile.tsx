@@ -13,7 +13,8 @@ import { Action, Field, Note } from '../attention/Controls';
 import { Feedback, FeedbackMessage } from '../feedback/Feedback';
 import { OverlayModal } from '../feedback/OverlayModal';
 import { KeyboardAwareScrollView } from '../KeyboardAwareScrollView';
-import { ProfileUpdateSchema } from '@encanto/shared';
+import { ageInColombia, DEFAULT_NATIONALITY, ProfileBirthDateSchema, ProfileUpdateSchema } from '@encanto/shared';
+import { formatCivilDate } from '../../utils/formatters';
 
 // Identifico la foto local por servidor y cuenta para que no aparezca al iniciar con otra persona.
 export function useLocalProfilePhoto(owner?: string) {
@@ -92,12 +93,24 @@ export function ProfileDetails({ photo }: { photo: LocalPhoto }) {
   const nombre = profile?.nombre ?? user.nombre;
   const googleUri = profile?.fotoGoogleUrl;
   const surface = isDark ? colors.superficie.elevada : colors.superficie.fondo;
-  const detalle = [
-    { label: 'auth.name', value: nombre },
-    { label: 'auth.email', value: user.correo },
-    { label: 'settings.phoneContact', value: profile?.telefono },
-    { label: 'settings.city', value: profile?.ciudad },
-    { label: 'auth.role', value: user.rol || 'COMENSAL' },
+  const nacionalidad = profile?.nacionalidad ?? DEFAULT_NATIONALITY;
+  const birth = profile?.fechaNacimiento;
+  const age = birth ? ageInColombia(birth) : null;
+  const groups = [
+    { title: 'settings.identityGroup', rows: [
+      { label: 'auth.name', value: nombre },
+      { label: 'settings.nationality', value: nacionalidad },
+      { label: 'settings.birthDate', value: birth ? formatCivilDate(birth, { year: 'numeric', month: 'long', day: 'numeric' }) : null },
+      { label: 'settings.age', value: age === null ? null : t(age === 1 ? 'settings.ageYear' : 'settings.ageYears', { age }) },
+    ] },
+    { title: 'settings.contactGroup', rows: [
+      { label: 'auth.email', value: user.correo },
+      { label: 'settings.phoneContact', value: profile?.telefono },
+    ] },
+    { title: 'settings.locationGroup', rows: [
+      { label: 'settings.city', value: profile?.ciudad },
+      { label: 'settings.region', value: profile?.region },
+    ] },
   ];
 
   // Reduzco la imagen antes de guardar y dejo el selector nativo manejar el permiso de acceso.
@@ -147,23 +160,25 @@ export function ProfileDetails({ photo }: { photo: LocalPhoto }) {
         )}
         {message === 'error' && <Note live tone="error">{t('settings.photoError')}</Note>}
       </View>
-      <View style={[styles.card, { backgroundColor: surface }]}>
-        {detalle.map(({ label, value }) => (
-          <View key={label} style={styles.valueRow}>
-            <Text style={[typography.etiqueta, { color: colors.texto.secundario }]}>{t(label)}</Text>
-            <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>
-              {value || t('settings.profileEmpty')}
-            </Text>
-          </View>
-        ))}
-        {message === 'saved' && <FeedbackMessage kind="success">{t('settings.profileSaved')}</FeedbackMessage>}
-        <Action variant="primary" label={t('settings.editProfile')} onPress={() => { setMessage(null); setEditing(true); }} />
-      </View>
+      <Action variant="primary" label={t('settings.editProfile')} onPress={() => { setMessage(null); setEditing(true); }} />
+      {message === 'saved' && <FeedbackMessage kind="success">{t('settings.profileSaved')}</FeedbackMessage>}
+      {groups.map(({ title, rows }) => (
+        <View key={title} style={[styles.card, { backgroundColor: surface }]}>
+          <Text accessibilityRole="header" style={[typography.tituloM, { color: colors.texto.primario }]}>{t(title)}</Text>
+          {rows.map(({ label, value }) => (
+            <View key={label} style={styles.valueRow}>
+              <Text style={[typography.etiqueta, { color: colors.texto.secundario }]}>{t(label)}</Text>
+              <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>
+                {value || t('settings.profileEmpty')}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ))}
       {editing && (
         <ProfileEditor
-          nombre={nombre ?? ''}
-          telefono={profile?.telefono ?? ''}
-          ciudad={profile?.ciudad ?? ''}
+          initial={{ nombre: nombre ?? '', telefono: profile?.telefono ?? '', ciudad: profile?.ciudad ?? '',
+            region: profile?.region ?? '', nacionalidad, fechaNacimiento: birth ?? '' }}
           onClose={() => setEditing(false)}
           onSave={() => { setEditing(false); setMessage('saved'); }}
         />
@@ -173,25 +188,43 @@ export function ProfileDetails({ photo }: { photo: LocalPhoto }) {
 }
 
 // Solo cierro el editor automáticamente después de que la API confirme el guardado.
-function ProfileEditor({ nombre, telefono, ciudad, onClose, onSave }: {
-  nombre: string;
-  telefono: string;
-  ciudad: string;
+function ProfileEditor({ initial, onClose, onSave }: {
+  initial: { nombre: string; telefono: string; ciudad: string; region: string; nacionalidad: string; fechaNacimiento: string };
   onClose: () => void;
   onSave: () => void;
 }) {
   const { t } = useTranslation();
   const { updateProfile } = useAuth();
   const { colors, typography } = useTheme();
-  const [draft, setDraft] = useState({ nombre, telefono, ciudad });
+  const [draft, setDraft] = useState(initial);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const saving = useRef(false);
-  const changes = {
-    nombre: draft.nombre.trim() === nombre ? undefined : draft.nombre.trim(),
-    telefono: draft.telefono.trim() === telefono ? undefined : draft.telefono.trim(),
-    ciudad: draft.ciudad.trim() === ciudad ? undefined : draft.ciudad.trim() || null,
+  // Envío solo los campos modificados y permito borrar los campos opcionales.
+  const changed = (field: keyof typeof draft) => {
+    const value = draft[field].trim();
+    return value === initial[field] ? undefined : value;
   };
+  const changes = {
+    nombre: changed('nombre'),
+    telefono: changed('telefono'),
+    nacionalidad: changed('nacionalidad'),
+    ciudad: changed('ciudad') === '' ? null : changed('ciudad'),
+    region: changed('region') === '' ? null : changed('region'),
+    fechaNacimiento: changed('fechaNacimiento') === '' ? null : changed('fechaNacimiento'),
+  };
+  const fields = {
+    'settings.identityGroup': [
+      { key: 'nombre', label: 'auth.name', maxLength: 100 },
+      { key: 'nacionalidad', label: 'settings.nationality', maxLength: 80 },
+      { key: 'fechaNacimiento', label: 'settings.birthDateOptional', maxLength: 10 },
+    ],
+    'settings.contactGroup': [{ key: 'telefono', label: 'settings.phoneContact', maxLength: 10 }],
+    'settings.locationGroup': [
+      { key: 'ciudad', label: 'settings.cityOptional', maxLength: 80 },
+      { key: 'region', label: 'settings.regionOptional', maxLength: 80 },
+    ],
+  } as const;
   const dirty = Object.values(changes).some(value => value !== undefined);
 
   function close() {
@@ -208,6 +241,10 @@ function ProfileEditor({ nombre, telefono, ciudad, onClose, onSave }: {
 
   async function submit() {
     if (saving.current || !dirty) return;
+    if (changes.fechaNacimiento && !ProfileBirthDateSchema.safeParse(changes.fechaNacimiento).success) {
+      setError('settings.birthDateInvalid');
+      return;
+    }
     const input = ProfileUpdateSchema.safeParse(changes);
     if (!input.success) {
       setError('settings.profileInvalid');
@@ -241,12 +278,25 @@ function ProfileEditor({ nombre, telefono, ciudad, onClose, onSave }: {
                 <X color={colors.texto.primario} size={22} />
               </Pressable>
             </View>
-            <Field label={t('auth.name')} value={draft.nombre} maxLength={100} autoComplete="name" editable={!busy}
-              onChangeText={value => setDraft({ ...draft, nombre: value })} />
-            <Field label={t('settings.phoneContact')} value={draft.telefono} maxLength={10} keyboardType="phone-pad" autoComplete="tel" editable={!busy}
-              onChangeText={value => setDraft({ ...draft, telefono: value })} />
-            <Field label={t('settings.cityOptional')} value={draft.ciudad} maxLength={80} editable={!busy}
-              onChangeText={value => setDraft({ ...draft, ciudad: value })} />
+            {Object.entries(fields).map(([title, items]) => (
+              <View key={title}>
+                <Text accessibilityRole="header" style={[typography.tituloM, { color: colors.texto.primario }]}>{t(title)}</Text>
+                {items.map(({ key, label, maxLength }) => (
+                  <Field key={key} label={t(label)} value={draft[key]} maxLength={maxLength} editable={!busy}
+                    placeholder={key === 'fechaNacimiento' ? t('settings.birthDateFormat') : undefined}
+                    keyboardType={key === 'telefono' ? 'phone-pad' : key === 'fechaNacimiento' ? 'number-pad' : 'default'}
+                    autoComplete={key === 'nombre' ? 'name' : key === 'telefono' ? 'tel' : undefined}
+                    onChangeText={text => {
+                      // Inserto los separadores de la fecha solo cuando el usuario sigue escribiendo.
+                      if (key === 'fechaNacimiento') {
+                        const digits = text.replace(/\D/g, '');
+                        text = [digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8)].filter(Boolean).join('-');
+                      }
+                      setDraft(current => ({ ...current, [key]: text }));
+                    }} />
+                ))}
+              </View>
+            ))}
             {!!error && <Note live tone="error">{t(error)}</Note>}
             <Action variant="primary" label={t('settings.saveProfile')} disabled={busy || !dirty} onPress={() => void submit()} />
           </KeyboardAwareScrollView>

@@ -30,6 +30,7 @@ const sections = {
   application: { label: 'settings.appearance', icon: Sun },
   security: { label: 'auth.title', icon: ShieldCheck },
   information: { label: 'settings.information', icon: Info },
+  sessionProtection: { label: 'settings.sessionProtection', icon: ShieldCheck },
 } as const;
 type Section = keyof typeof sections;
 type AdminView = 'attention' | 'menu' | 'reservations' | 'payments' | 'admins' | 'news';
@@ -44,7 +45,10 @@ export const SettingsScreen: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const photo = useLocalProfilePhoto(user?.id);
   const insets = useSafeAreaInsets();
-  const [section, setSection] = useState<Section | null>(null);
+  const [history, setHistory] = useState<Section[]>([]);
+  const section = history[history.length - 1];
+  const openSection = (next: Section) => setHistory(current => [...current, next]);
+  const goBack = () => setHistory(current => current.slice(0, -1));
   const [adminView, setAdminView] = useState<AdminView | null>(null);
   const closeAdminView = () => setAdminView(null);
 
@@ -60,7 +64,7 @@ export const SettingsScreen: React.FC = () => {
   useEffect(() => {
     if (!isFocused || !section) return;
     const listener = BackHandler.addEventListener('hardwareBackPress', () => {
-      setSection(null);
+      setHistory(current => current.slice(0, -1));
       return true;
     });
     return () => listener.remove();
@@ -85,16 +89,21 @@ export const SettingsScreen: React.FC = () => {
       style={{ backgroundColor: isDark ? colors.superficie.fondo : colors.superficie.elevada }}
       contentContainerStyle={[styles.content, {
         paddingHorizontal: spacing.margenLateral,
-          paddingTop: insets.top + spacing.l,
+        paddingTop: insets.top + spacing.s,
       }]}
     >
       {section ? (
         <>
-          <BackButton onPress={() => setSection(null)} />
+          <BackButton onPress={goBack} />
           <TabPageHeader title={t(sections[section].label)} />
-          {section === 'profile' ? <ProfileDetails photo={photo} /> : <SettingsDetails section={section} />}
+          {section === 'profile' ? <ProfileDetails photo={photo} /> : <SettingsDetails section={section} openSection={openSection} />}
         </>
-      ) : <SettingsIndex openSection={setSection} openAdminView={setAdminView} localPhoto={photo.uri} />}
+      ) : (
+        <>
+          <TabPageHeader title={t('settings.title')} />
+          <SettingsIndex openSection={openSection} openAdminView={setAdminView} localPhoto={photo.uri} />
+        </>
+      )}
     </KeyboardAwareScrollView>
   );
 };
@@ -130,9 +139,6 @@ function SettingsIndex({ openSection, openAdminView, localPhoto }: {
 
   return (
     <View style={styles.index}>
-      <Text accessibilityRole="header" style={[styles.indexTitle, { color: colors.texto.primario }]}>
-        {t('settings.title')}
-      </Text>
       {user && (
         <View style={[styles.accountCard, { backgroundColor: colors.marca.primarioSuave }]}>
           <ProfileAvatar nombre={name} googleUri={user.perfil?.fotoGoogleUrl} localUri={localPhoto} size={54} />
@@ -229,7 +235,10 @@ function SettingsLogout() {
 }
 
 // Muestro los datos y acciones de la sección abierta, sin montar los formularios de las demás.
-function SettingsDetails({ section }: { section: Exclude<Section, 'profile'> }) {
+function SettingsDetails({ section, openSection }: {
+  section: Exclude<Section, 'profile'>;
+  openSection: (section: Section) => void;
+}) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { colors, typography, radii, isDark } = useTheme();
@@ -254,10 +263,34 @@ function SettingsDetails({ section }: { section: Exclude<Section, 'profile'> }) 
       return <AppearancePicker />;
     case 'security':
       return user && (
-        <View style={styles.list}>
+        <View style={styles.index}>
           <View style={[styles.detailRow, card]}>
             <ShieldCheck size={22} color={accent} />
-            <Text style={[typography.cuerpoM, styles.label, secondary]}>{t('auth.secureStorage')}</Text>
+            <View style={styles.label}>
+              <Text style={[typography.tituloM, primary]}>{t('settings.signedIn')}</Text>
+              <Text style={[typography.cuerpoM, secondary]}>
+                {t(user.provider === 'google' ? 'settings.googleConnected' : 'settings.passwordSession')}
+              </Text>
+            </View>
+          </View>
+          <SettingsGroup title={t('settings.manageAccount')} entries={[
+            { id: 'profile', title: t('settings.profile'), summary: t('settings.profileSummary'),
+              icon: User, onPress: () => openSection('profile') },
+            { id: 'sessionProtection', title: t('settings.sessionProtection'), summary: t('settings.protectionSummary'),
+              icon: ShieldCheck, onPress: () => openSection('sessionProtection') },
+          ]} />
+        </View>
+      );
+    case 'sessionProtection':
+      return user && (
+        <View style={styles.index}>
+          <View style={[styles.detailRow, card]}>
+            <ShieldCheck size={22} color={accent} />
+            <View style={styles.label}>
+              <Text style={[typography.tituloM, primary]}>{t('settings.sessionStorage')}</Text>
+              <Text style={[typography.cuerpoM, secondary]}>{t('auth.secureStorage')}</Text>
+              <Text style={[typography.cuerpoM, secondary]}>{t('auth.role')} · {user.rol || 'COMENSAL'}</Text>
+            </View>
           </View>
           {user.provider !== 'google' && <GoogleAccess link />}
         </View>
@@ -282,7 +315,6 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 40, width: '100%', maxWidth: 600, alignSelf: 'center', gap: 8 },
   list: { marginVertical: 4 },
   index: { gap: 21 },
-  indexTitle: { fontSize: 34, lineHeight: 41, letterSpacing: -1.1, fontWeight: '700', paddingHorizontal: 4 },
   accountCard: {
     minHeight: 76, borderRadius: 22, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 14,
   },

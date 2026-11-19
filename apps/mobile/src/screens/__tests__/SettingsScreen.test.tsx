@@ -122,7 +122,12 @@ describe('SettingsScreen authentication form', () => {
     ReactTestRenderer.act(() => { tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>); });
     const security = tree!.root.findAllByProps({ testID: 'settings-security' }).find(node => node.props.onPress)!;
     ReactTestRenderer.act(() => security.props.onPress());
+    expect(tree!.root.findAllByProps({ testID: 'google-link' })).toHaveLength(0);
+    const protection = tree!.root.findAllByProps({ testID: 'settings-sessionProtection' }).find(node => node.props.onPress)!;
+    ReactTestRenderer.act(() => protection.props.onPress());
     expect(tree!.root.findAllByProps({ testID: 'google-link' }).length).toBeGreaterThan(0);
+    ReactTestRenderer.act(() => tree!.root.findByType(BackButton).props.onPress());
+    expect(tree!.root.findAllByProps({ testID: 'settings-sessionProtection' }).length).toBeGreaterThan(0);
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
