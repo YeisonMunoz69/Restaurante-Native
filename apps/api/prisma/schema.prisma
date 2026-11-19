@@ -80,6 +80,9 @@ model User {
   googleFotoUrl     String?  @map("google_foto_url")
   nombrePerfil      String?  @map("nombre_perfil")
   ciudad            String?
+  region            String?
+  nacionalidad      String   @default("Colombia")
+  fechaNacimiento   DateTime? @db.Date @map("fecha_nacimiento")
   rol               Role     @default(COMENSAL)
   correoVerificado  Boolean  @default(false) @map("correo_verificado")
   totpSecretCifrado String?  @map("totp_secret_cifrado")

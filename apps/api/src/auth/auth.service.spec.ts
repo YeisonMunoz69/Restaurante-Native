@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from './auth.service.js';
 import { OAuth2Client } from 'google-auth-library';
-import { GoogleLoginSchema, ProfileUpdateSchema } from '@encanto/shared';
+import { ageInColombia, GoogleLoginSchema, ProfileUpdateSchema } from '@encanto/shared';
 
 describe('AuthService.logout', () => {
   const updateMany = vi.fn();
@@ -41,6 +41,7 @@ describe('AuthService Google', () => {
   const account = {
     id: 'encanto-id', correo: 'persona@example.test', activo: true, rol: 'COMENSAL', googleSub: null,
     nombre: 'Persona anterior', telefono: '3001234567', nombrePerfil: null, googleNombre: null, googleFotoUrl: null, ciudad: null,
+    region: null, nacionalidad: 'Colombia', fechaNacimiento: null,
   };
   const identity = {
     sub: 'google-id', email: account.correo, email_verified: true, name: 'María Pérez',
@@ -106,6 +107,7 @@ describe('AuthService Google', () => {
     const session = await service.googleLogin({ idToken: 't' });
     expect(session.perfil).toEqual({
       nombre: identity.name, fotoGoogleUrl: identity.picture, telefono: account.telefono, ciudad: null,
+      region: null, nacionalidad: 'Colombia', fechaNacimiento: null,
     });
     expect(sign.mock.calls.every(([payload]) => !('nombre' in payload) && !('fotoGoogleUrl' in payload))).toBe(true);
   });
@@ -125,7 +127,18 @@ describe('AuthService Google', () => {
     const input = ProfileUpdateSchema.parse({ ciudad: 'Timbío' });
     update.mockResolvedValue({ ...account, googleNombre: identity.name, ciudad: input.ciudad });
     const profile = await service.updateProfile(account.id, 'google', input);
-    expect(update.mock.calls[0][0].data).toEqual({ nombrePerfil: undefined, telefono: undefined, ciudad: 'Timbío' });
+    expect(update.mock.calls[0][0].data).toMatchObject({ nombrePerfil: undefined, telefono: undefined, ciudad: 'Timbío' });
     expect(profile.nombre).toBe(identity.name);
+  });
+
+  it('guarda la fecha civil y devuelve nacionalidad y región al actualizar el perfil', async () => {
+    const input = ProfileUpdateSchema.parse({ fechaNacimiento: '2000-11-19', nacionalidad: 'Ecuador', region: 'Cauca' });
+    update.mockResolvedValue({ ...account, ...input, fechaNacimiento: new Date('2000-11-19T00:00:00Z') });
+    await expect(service.updateProfile(account.id, 'google', input)).resolves.toMatchObject(input);
+    expect(update.mock.calls[0][0].data.fechaNacimiento).toEqual(new Date('2000-11-19T00:00:00Z'));
+    expect(ProfileUpdateSchema.safeParse({ fechaNacimiento: '2099-01-01' }).success).toBe(false);
+    expect(ProfileUpdateSchema.safeParse({ fechaNacimiento: '2001-02-29' }).success).toBe(false);
+    expect(ageInColombia('2000-11-19', new Date('2026-11-19T04:59:59Z'))).toBe(25);
+    expect(ageInColombia('2000-11-19', new Date('2026-11-19T05:00:00Z'))).toBe(26);
   });
 });

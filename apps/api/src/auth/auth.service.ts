@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 const sessionUser = {
   id: true, correo: true, rol: true, activo: true, nombre: true, telefono: true,
   googleNombre: true, googleFotoUrl: true, nombrePerfil: true, ciudad: true,
+  region: true, nacionalidad: true, fechaNacimiento: true,
 } satisfies Prisma.UserSelect;
 type SessionUser = Prisma.UserGetPayload<{ select: typeof sessionUser }>;
 type Provider = 'password' | 'google';
@@ -239,6 +240,9 @@ export class AuthService {
       nombre: user.nombrePerfil || (provider === 'google' && user.googleNombre) || user.nombre,
       telefono: user.telefono,
       ciudad: user.ciudad,
+      region: user.region,
+      nacionalidad: user.nacionalidad,
+      fechaNacimiento: user.fechaNacimiento?.toISOString().slice(0, 10) ?? null,
       fotoGoogleUrl: provider === 'google' ? user.googleFotoUrl : null,
     };
   }
@@ -251,6 +255,9 @@ export class AuthService {
           nombrePerfil: input.nombre,
           telefono: input.telefono,
           ciudad: input.ciudad === undefined ? undefined : input.ciudad || null,
+          region: input.region === undefined ? undefined : input.region || null,
+          nacionalidad: input.nacionalidad,
+          fechaNacimiento: input.fechaNacimiento ? new Date(`${input.fechaNacimiento}T00:00:00Z`) : input.fechaNacimiento,
         },
         select: sessionUser,
       });
