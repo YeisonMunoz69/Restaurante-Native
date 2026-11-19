@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { isAxiosError } from 'axios';
-import { ActivityIndicator, Image, NativeModules, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, NativeModules, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, X } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,15 +8,13 @@ import { BUILD_ENVIRONMENT, GOOGLE_WEB_CLIENT_ID } from '../config/build-variant
 import { useAuth } from '../context/AuthContext';
 import { useConnection } from '../context/ConnectionContext';
 import { useTheme } from '../theme/ThemeContext';
-import { GoogleButtonColors } from '../theme/tokens';
 import { Field, Note } from './attention/Controls';
 import { ConnectionForm } from './ConnectionForm';
 import { OverlayModal } from './feedback/OverlayModal';
 import { KeyboardAwareScrollView } from './KeyboardAwareScrollView';
 import { Button } from './ui/Button';
+import { GoogleButton } from './ui/GoogleButton';
 
-// Uso el símbolo multicolor del paquete oficial de Google Identity.
-const googleBrand = require('../assets/google-access-light.png');
 const sello = require('../../android/app/src/main/res/drawable-xxxhdpi/ic_launcher_art.png');
 
 // Mantengo el ID token solo mientras se completa el alta y lo limpio al cancelar o terminar.
@@ -95,24 +93,13 @@ export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
           disabled={disabled}
           busy={busy}
         />
-      ) : <Pressable
+      ) : <GoogleButton
         testID="google-submit"
-        accessibilityRole="button"
-        accessibilityState={{ disabled, busy }}
+        label={t(link ? 'auth.googleLink' : 'auth.googleSignIn')}
         disabled={disabled}
+        busy={busy}
         onPress={() => void submit()}
-        style={({ pressed }) => [styles.button, styles.googleButton, {
-          opacity: pressed || disabled ? 0.65 : 1,
-        }]}
-      >
-        {busy ? <ActivityIndicator color={GoogleButtonColors.text} />
-          : <View accessible={false} style={styles.googleMark}>
-            <Image source={googleBrand} resizeMode="contain" style={styles.googleArtwork} />
-          </View>}
-        <Text style={[styles.buttonText, { color: GoogleButtonColors.text }]}>
-          {t(link ? 'auth.googleLink' : 'auth.googleSignIn')}
-        </Text>
-      </Pressable>}
+      />}
       {pendingToken && (
         <Button
           variant="tertiary"
@@ -195,11 +182,6 @@ const styles = StyleSheet.create({
   brand: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   sello: { width: 64, height: 64 },
   actions: { gap: 12, marginTop: 6 },
-  button: { minHeight: 54, flexDirection: 'row', gap: 12, alignItems: 'center', justifyContent: 'center', padding: 12 },
-  buttonText: { flexShrink: 1, fontSize: 15, lineHeight: 21, fontWeight: '600', textAlign: 'center' },
-  googleButton: { backgroundColor: GoogleButtonColors.background, borderColor: GoogleButtonColors.border, borderWidth: 1, borderRadius: 26 },
-  googleMark: { width: 20, height: 20, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  googleArtwork: { width: 40, height: 40 },
   modalFrame: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   accessCard: { width: '100%', maxWidth: 420, maxHeight: '90%', borderRadius: 24, overflow: 'hidden' },
   modalCard: { width: '100%', maxWidth: 460, height: '78%', maxHeight: 555, borderRadius: 24, overflow: 'hidden' },

@@ -18,6 +18,7 @@ import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { ProfileAvatar, ProfileDetails, useLocalProfilePhoto } from '../components/settings/AccountProfile';
 import { AppearancePicker } from '../components/settings/AppearancePicker';
 import { Button } from '../components/ui/Button';
+import { GoogleButton } from '../components/ui/GoogleButton';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
@@ -77,8 +78,8 @@ export const SettingsScreen: React.FC = () => {
       <KeyboardAwareScrollView style={{ backgroundColor: colors.superficie.elevada }}
         contentContainerStyle={[styles.content, { paddingHorizontal: spacing.margenLateral, paddingTop: insets.top + spacing.s }]}>
         <TabPageHeader title={t('settings.title')} />
-        <Button testID="guest-settings-sign-in" label={t('auth.guestSignInTitle')}
-          variant="primary" onPress={() => requestSignIn('settings')} />
+        <GoogleButton testID="guest-settings-sign-in" label={t('auth.guestSignInTitle')}
+          onPress={() => requestSignIn('settings')} />
       </KeyboardAwareScrollView>
     );
   }
