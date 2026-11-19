@@ -175,9 +175,9 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 | :-------: | ---------------------------------------------------------------------------- | -------------------------- | :----: | ----------- |
 |    [~]    | Cálculo de franjas a partir del calendario, la duración y la granularidad    | RF-RES01, 02, 17           |   8    | Fabián      |
 |    [~]    | Validación de aforo en transacción serializable                              | RF-RES02, ADR-005          |   5    | Fabián      |
-|    [~]    | Flujo de reserva en cuatro pasos: fecha, franja, pedido opcional, resumen    | RF-RES03–06                |   13   | Alex        |
+|    [~]    | Reserva en dos pantallas: visita y revisión del pedido                         | RF-RES03–06                |   13   | Alex        |
 |    [~]    | Cálculo del total y generación del ticket copiable                           | RF-RES05, RF-RES18         |   5    | Fabián      |
-|    [~]    | Pantalla de solicitud enviada con instrucciones de pago y acción de WhatsApp | RF-RES07                   |   3    | Alex        |
+|    [~]    | Solicitud enviada, comprobante privado y resumen en PNG                      | RF-RES07                   |   3    | Alex        |
 |    [~]    | Bandeja de solicitudes con aprobación y rechazo con motivo                   | RF-RES09, RF-ADM08, 11, 12 |   8    | Yeison      |
 |    [~]    | Máquina de estados con validación de transiciones                            | §9.4                       |   5    | Yeison      |
 |    [~]    | Mis reservas, detalle y cancelación                                          | RF-RES11, RF-RES12         |   5    | Alex        |

@@ -1,5 +1,9 @@
 # Reservas y operación · EC-31 a EC-40
 
+**Ajuste local del 19 de noviembre.** EC-33 divide la solicitud en «Tu visita» y «Revisa y envía». EC-35 permite registrar la captura del pago externo desde la ficha actual o desde Mis reservas y generar el resumen vertical en PNG. EC-36 exige la versión vigente del comprobante para aprobar. ADMIN abre el Panel desde la barra inferior y STAFF abre su Agenda. La carga se exige para aprobar también en solicitudes de solo mesa. El total de platos no determina un anticipo. Pendiente actualizar requisitos en Drive y Word local: RN-09/10, RF-RES03–07, RF-RES09 y RF-ADM08–11.
+
+La migración `20261119220000_comprobantes_privados_reservas` crea una tabla 1:1 en PostgreSQL. Los listados llevan metadatos y la imagen se obtiene con autorización del titular o un ADMIN. La agenda de STAFF recibe los datos operativos. El límite de carga multipart es 10 MB. Si el proxy tiene un límite menor, configurar `client_max_body_size 12m;` en el virtual host de la API. Al desplegar, aplicar la migración antes de arrancar la nueva imagen de la API y probar luego con el APK actualizado.
+
 **Corte:** 16 de octubre de 2026. Integramos esta implementación en `dev` mediante PR #11, merge `0245146`, conservando sus commits y migraciones. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles, además del runtime Docker. Esta integración técnica no cierra Sprint 3 ni cambia automáticamente sus responsables o aceptación. Evidencia de VPS y límites en [el acta de cierre](Cierre_Sprint2_2026-10-16.md).
 
 ## Qué quedó implementado

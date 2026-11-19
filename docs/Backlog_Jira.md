@@ -396,18 +396,18 @@ Impedir que dos solicitudes concurrentes superen la capacidad del restaurante.
 - Un conflicto se traduce en un mensaje de negocio, no en un error tecnico
 - Existe una prueba que lanza dos solicitudes concurrentes por el ultimo cupo y verifica que solo una prospera
 
-### [~] Construir el flujo de reserva en cuatro pasos
+### [~] Construir el flujo de reserva en dos pantallas
 
 `Sprint 3` · `13 pts` · `Highest` · `movil` · `RF-RES03 a RF-RES06`
 
-Llevar al comensal desde la fecha hasta el envio de la solicitud. Subtareas sugeridas: paso 1 fecha y comensales; paso 2 franja; paso 3 pedido opcional; paso 4 resumen y envio.
+Reunimos fecha, personas y horario en «Tu visita». Luego «Revisa y envía» resume el pedido y permite ajustar platos o añadir una nota.
 
 **Criterios de aceptación**
 
 - Sin sesion, el flujo desvia al inicio de sesion y regresa conservando lo seleccionado
-- El paso 3 es opcional y ofrece Continuar sin pedido desde el primer momento
-- El paso 3 lista solo los platos habilitados para la fecha elegida
-- El paso 4 muestra el resumen, el total sin impuestos y la politica de cancelacion
+- El resumen conserva el borrador y ofrece solo mesa para grupos de menos de ocho personas.
+- El editor lista solo los platos habilitados para la fecha elegida.
+- El resumen muestra el total sin impuestos.
 - El boton final dice Enviar solicitud, no Confirmar reserva
 - El boton fisico de retroceso de Android retrocede paso a paso, sin salir del flujo
 - La interfaz no usa lenguaje ni patrones de comercio electronico: sin carrito ni checkout
@@ -435,7 +435,8 @@ Dejar claro que la reserva todavia no esta confirmada y que falta un paso humano
 
 - Se muestra el codigo de reserva, seleccionable y copiable
 - Se presentan las instrucciones de pago con monto, medios y numero del dueno
-- La accion principal abre WhatsApp con un mensaje prellenado que incluye el codigo
+- La acción principal adjunta o reemplaza un comprobante privado. El usuario también puede hacerlo desde Mis reservas.
+- El comensal puede abrir y compartir un PNG vertical con los datos y la captura.
 - Un aviso explica que la reserva queda confirmada cuando el restaurante verifique el pago
 - El icono y el titulo comunican envio, no exito
 
@@ -498,7 +499,7 @@ Que el dueno resuelva las solicitudes desde el telefono, entre servicio y servic
 
 - Las solicitudes se listan ordenadas por fecha de reserva, con comensales, pedido y total
 - Se muestra el numero de cancelaciones previas del usuario como alerta discreta
-- Aprobar cambia el estado a CONFIRMADA y notifica al comensal
+- Aprobar requiere que el ADMIN haya abierto la captura vigente, y que el servidor valide esa versión, el estado, el calendario y el aforo.
 - Rechazar exige un motivo, cambia el estado a RECHAZADA y notifica con ese motivo
 - `RECHAZADA` es terminal; el comensal debe crear una solicitud nueva para intentarlo de nuevo
 - Las solicitudes proximas a expirar se resaltan
