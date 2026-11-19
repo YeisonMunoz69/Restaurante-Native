@@ -5,6 +5,7 @@ import { useConnection } from '../../context/ConnectionContext';
 import { menuApi } from '../../services/menu.service';
 import { MenuScreen } from '../MenuScreen';
 import { MenuCarousels } from '../../components/menu/MenuCarousels';
+import { MenuCalendarModal } from '../../components/menu/MenuCalendarModal';
 import { ThemeProvider } from '../../theme/ThemeContext';
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
@@ -28,10 +29,17 @@ jest.mock('../../services/menu.service', () => ({
     dish: jest.fn(),
   },
 }));
+jest.mock('../../components/menu/MenuCalendarModal', () => ({ MenuCalendarModal: () => null }));
 
 const api = jest.mocked(menuApi);
 const restaurantId = '00000000-0000-4000-8000-000000000011';
 const dishId = '00000000-0000-4000-8000-000000000012';
+
+// Compruebo que la selección del calendario active la carga de Carta sin usar las flechas antiguas.
+async function chooseDate(tree: ReactTestRenderer.ReactTestRenderer, date: string) {
+  ReactTestRenderer.act(() => tree.root.findByProps({ testID: 'menu-open-calendar' }).props.onPress());
+  await ReactTestRenderer.act(async () => tree.root.findByType(MenuCalendarModal).props.onSelect(date));
+}
 
 const dish = {
   id: dishId,
@@ -194,11 +202,7 @@ describe('MenuScreen', () => {
       await Promise.resolve();
     });
 
-    await ReactTestRenderer.act(async () => {
-      tree!.root.findByProps({ testID: 'menu-date-next' }).props.onPress();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await chooseDate(tree!, '2031-02-24');
 
     expect(api.dishes).toHaveBeenLastCalledWith(restaurantId, '2031-02-24', 1);
     expect(api.day).toHaveBeenCalledWith(restaurantId, '2031-02-24');
@@ -269,11 +273,7 @@ describe('MenuScreen', () => {
       motivo: null,
     });
 
-    await ReactTestRenderer.act(async () => {
-      tree!.root.findByProps({ testID: 'menu-date-next' }).props.onPress();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
+    await chooseDate(tree!, '2031-02-24');
 
     expect(textValues(tree!)).not.toContain('menu.noNextOpenDay');
     ReactTestRenderer.act(() => tree!.unmount());
@@ -296,9 +296,7 @@ describe('MenuScreen', () => {
     await ReactTestRenderer.act(async () => {
       tree = ReactTestRenderer.create(<ThemeProvider><MenuScreen /></ThemeProvider>);
     });
-    await ReactTestRenderer.act(async () => {
-      tree!.root.findByProps({ testID: 'menu-date-next' }).props.onPress();
-    });
+    await chooseDate(tree!, '2031-02-24');
     expect(api.nextOpenDay).toHaveBeenLastCalledWith(restaurantId, '2031-02-24');
     expect(textValues(tree!)).toContain('menu.dayClosed');
     await ReactTestRenderer.act(async () => {

@@ -31,30 +31,35 @@ export function ReservationCalendar({
   max,
   onChange,
   onAvailability,
+  mode = 'reservation',
 }: {
   restauranteId: string;
   value: string;
   min: string;
-  max: string;
+  max?: string;
   onChange: (date: string) => void;
-  onAvailability: (available: boolean) => void;
+  onAvailability?: (available: boolean) => void;
+  mode?: 'reservation' | 'menu';
 }) {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
-  const [month, setMonth] = useState(value.slice(0, 7));
+  const [month, setMonth] = useState((value < min ? min : value).slice(0, 7));
   const [days, setDays] = useState<CalendarDayResult[]>([]);
   const [phone, setPhone] = useState('');
-  const [busy, setBusy] = useState(false),
+  const [busy, setBusy] = useState(true),
     [error, setError] = useState(false),
     [retry, setRetry] = useState(0);
   const dates = useMemo(() => monthDates(month), [month]);
+  const monthLabel = new Intl.DateTimeFormat('es-CO', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    .format(new Date(`${month}-01T00:00:00Z`))
+    .replace(/^./u, letter => letter.toLocaleUpperCase('es-CO'));
   useEffect(() => {
     let live = true;
     setBusy(true);
     setError(false);
     setDays([]);
     setPhone('');
-    onAvailability(false);
+    onAvailability?.(false);
     attentionApi
       .range(restauranteId, dates[0], dates[41])
       .then(result => {
@@ -78,13 +83,14 @@ export function ReservationCalendar({
     !!item?.abierto &&
     (item.servicios ?? ['RESTAURANTE']).includes('RESTAURANTE');
   useEffect(() => {
-    onAvailability(
-      !busy && !error && value >= min && value <= max && reservable(day),
+    onAvailability?.(
+      !busy && !error && value >= min && (!max || value <= max) && reservable(day),
     );
   }, [day, busy, error, value, min, max, onAvailability]);
   const move = (delta: number) => {
     const date = new Date(`${month}-01T00:00:00Z`);
     date.setUTCMonth(date.getUTCMonth() + delta);
+    setBusy(true);
     setMonth(dateKey(date).slice(0, 7));
   };
   return (
@@ -93,11 +99,12 @@ export function ReservationCalendar({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('discovery.previousMonth')}
+          accessibilityState={{ disabled: month <= min.slice(0, 7) }}
           disabled={month <= min.slice(0, 7)}
           onPress={() => move(-1)}
           style={styles.arrow}
         >
-          <ChevronLeft color={colors.marca.primario} size={24} />
+          <ChevronLeft color={month <= min.slice(0, 7) ? colors.estado.inactivo : colors.marca.primario} size={24} />
         </Pressable>
         <Text
           accessibilityRole="header"
@@ -107,16 +114,13 @@ export function ReservationCalendar({
             { color: colors.texto.primario },
           ]}
         >
-          {new Intl.DateTimeFormat('es-CO', {
-            month: 'long',
-            year: 'numeric',
-            timeZone: 'UTC',
-          }).format(new Date(`${month}-01T00:00:00Z`))}
+          {monthLabel}
         </Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('discovery.nextMonth')}
-          disabled={month >= max.slice(0, 7)}
+          accessibilityState={{ disabled: !!max && month >= max.slice(0, 7) }}
+          disabled={!!max && month >= max.slice(0, 7)}
           onPress={() => move(1)}
           style={styles.arrow}
         >
@@ -134,11 +138,11 @@ export function ReservationCalendar({
         ))}
       </View>
       {busy ? (
-        <ActivityIndicator accessibilityLabel={t('common.loading')} />
+        <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />
       ) : error ? (
         <>
           <Note live tone="error">
-            {t('discovery.calendarError')}
+            {t(mode === 'menu' ? 'menu.serviceCalendarError' : 'discovery.calendarError')}
           </Note>
           <Action
             label={t('common.retry')}
@@ -149,14 +153,18 @@ export function ReservationCalendar({
         <View style={styles.grid}>
           {dates.map(date => {
             const item = days.find(entry => entry.fecha === date),
+              menuDate = mode === 'menu',
+              available = reservable(item),
               outside = !date.startsWith(month),
-              disabled = outside || date < min || date > max;
+              disabled = outside || date < min || (!!max && date > max) || (menuDate && !available);
             const selected = date === value;
             return (
               <Pressable
                 key={date}
                 accessibilityRole="button"
-                accessibilityLabel={`${formatCivilDate(date)}. ${t(item?.abierto ? 'discovery.open' : 'discovery.closed')}. ${(item?.servicios ?? []).map(service => t(`discovery.service_${service}`)).join(', ')}`}
+                accessibilityLabel={menuDate
+                  ? `${formatCivilDate(date)}. ${t(available && !disabled ? 'menu.restaurantService' : 'menu.noSelectableService')}`
+                  : `${formatCivilDate(date)}. ${t(item?.abierto ? 'discovery.open' : 'discovery.closed')}. ${(item?.servicios ?? []).map(service => t(`discovery.service_${service}`)).join(', ')}`}
                 accessibilityState={{ disabled, selected }}
                 disabled={disabled}
                 testID={`calendar-date-${date}`}
@@ -164,7 +172,7 @@ export function ReservationCalendar({
                 style={[
                   styles.cell,
                   {
-                    backgroundColor: selected
+                    backgroundColor: selected || (menuDate && !disabled)
                       ? colors.marca.primarioSuave
                       : 'transparent',
                     opacity: disabled ? 0.3 : 1,
@@ -187,7 +195,7 @@ export function ReservationCalendar({
                   {Number(date.slice(8))}
                 </Text>
                 <View style={styles.dots}>
-                  {(item?.servicios ?? []).map(service => (
+                  {(menuDate ? available && !disabled ? ['RESTAURANTE'] : [] : item?.servicios ?? []).map(service => (
                     <View
                       key={service}
                       style={[
@@ -209,8 +217,10 @@ export function ReservationCalendar({
           })}
         </View>
       )}
-      <Note>{t('discovery.calendarLegend')}</Note>
-      {day && !busy && (
+      {(mode === 'reservation' || (!busy && !error)) && (
+        <Note>{t(mode === 'menu' ? 'menu.serviceCalendarLegend' : 'discovery.calendarLegend')}</Note>
+      )}
+      {mode === 'reservation' && day && !busy && (
         <>
           <Text style={[typography.tituloM, { color: colors.texto.primario }]}>
             {formatCivilDate(value)}
@@ -250,7 +260,7 @@ export function ReservationCalendar({
 }
 const styles = StyleSheet.create({
   heading: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  month: { flex: 1, textAlign: 'center', textTransform: 'capitalize' },
+  month: { flex: 1, textAlign: 'center' },
   arrow: {
     width: 48,
     height: 48,

@@ -11,6 +11,7 @@ import type { RootTabParamList } from '../navigation/BottomTabNavigator';
 import { ORDER_BUTTON_CLEARANCE, OrderDraftPanel } from '../components/menu/OrderDraftPanel';
 import { MenuCarousels } from '../components/menu/MenuCarousels';
 import { MenuDateTicker } from '../components/menu/MenuDateTicker';
+import { MenuCalendarModal } from '../components/menu/MenuCalendarModal';
 import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import {
   ActivityIndicator,
@@ -24,7 +25,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import {
   CalendarDays,
-  ChevronLeft,
   ChevronRight,
   UtensilsCrossed,
 } from 'lucide-react-native';
@@ -35,13 +35,6 @@ import { menuApi } from '../services/menu.service';
 import { useTheme } from '../theme/ThemeContext';
 import { Button } from '../components/ui/Button';
 import { formatCivilDate, todayInBogota } from '../utils/formatters';
-
-// Avanzo fechas civiles en UTC para que el celular no cambie de día por zona horaria.
-function shiftCivilDate(fecha: string, amount: number) {
-  const [year, month, day] = fecha.split('-').map(Number);
-  const next = new Date(Date.UTC(year, month - 1, day + amount));
-  return next.toISOString().slice(0, 10);
-}
 
 function errorStatus(error: unknown) {
   return (error as { response?: { status?: number } })?.response?.status;
@@ -73,9 +66,16 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   const [nextPage, setNextPage] = useState(2);
   const [totalPages, setTotalPages] = useState(0);
   const [showCompactDate, setShowCompactDate] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const openCalendar = () => setShowCalendar(true);
+  const closeCalendar = () => setShowCalendar(false);
   const headerHeight = useRef(Infinity);
   const requestNumber = useRef(0);
   const loadingMoreRef = useRef(false);
+
+  useEffect(() => {
+    if (!isFocused) setShowCalendar(false);
+  }, [isFocused]);
 
   // Cargo sede, próximo día, categorías y primera página para el entorno elegido.
   const loadInitial = useCallback(async () => {
@@ -255,7 +255,9 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
       <TabPageHeader title={t('menu.title')} />
       {fecha && restauranteId && (
         <View style={[styles.date, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
-          <View style={styles.dateRow}>
+          <Pressable testID="menu-open-calendar" accessibilityRole="button"
+            accessibilityLabel={t('menu.openServiceCalendar', { date: dateLabel })} onPress={openCalendar}
+            style={styles.dateRow}>
             <CalendarDays size={20} color={colors.marca.primario} />
             <View style={styles.dateInfo}>
               <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
@@ -268,27 +270,8 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
                 </Text>
               )}
             </View>
-            <View style={styles.dateControls}>
-              <Pressable
-                testID="menu-date-previous"
-                accessibilityRole="button"
-                accessibilityLabel={t('menu.previousDay')}
-                onPress={() => loadDate(shiftCivilDate(fecha, -1))}
-                style={styles.dateButton}
-              >
-                <ChevronLeft size={21} color={colors.marca.primario} />
-              </Pressable>
-              <Pressable
-                testID="menu-date-next"
-                accessibilityRole="button"
-                accessibilityLabel={t('menu.nextDay')}
-                onPress={() => loadDate(shiftCivilDate(fecha, 1))}
-                style={styles.dateButton}
-              >
-                <ChevronRight size={21} color={colors.marca.primario} />
-              </Pressable>
-            </View>
-          </View>
+            <ChevronRight size={21} color={colors.marca.primario} />
+          </Pressable>
           {noNextOpenDay && (
             <Text style={[typography.pie, { color: colors.texto.secundario }]}>
               {t('menu.noNextOpenDay')}
@@ -386,9 +369,11 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
           )}
 
           {showCompactDate && fecha && !loading && !error && (
-            <View
-              pointerEvents="none"
+            <Pressable
               testID="menu-compact-date"
+              accessibilityRole="button"
+              accessibilityLabel={t('menu.openServiceCalendar', { date: dateLabel })}
+              onPress={openCalendar}
               style={[styles.compactDate, {
                 top: insets.top,
                 backgroundColor: colors.superficie.elevada,
@@ -400,7 +385,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
                 active={isFocused}
                 label={[compactDate, dayOpen === false ? t('discovery.closed') : hours].filter(Boolean).join(' · ')}
               />
-            </View>
+            </Pressable>
           )}
 
           <MenuDishDetailModal
@@ -417,6 +402,10 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
         </>
       )}
       {!!restauranteId && <OrderDraftPanel restauranteId={restauranteId} onReserve={() => navigation.navigate('Reservations')} />}
+      {showCalendar && !!restauranteId && !!fecha && isFocused && (
+        <MenuCalendarModal restauranteId={restauranteId} value={fecha} onClose={closeCalendar}
+          onSelect={date => { closeCalendar(); void loadDate(date); }} />
+      )}
     </View>
   );
 };
@@ -425,10 +414,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingTop: 8, paddingBottom: 14 },
   date: { paddingVertical: 10, paddingHorizontal: 12, gap: 6 },
-  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dateRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8 },
   dateInfo: { flex: 1 },
-  dateControls: { flexDirection: 'row' },
-  dateButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   nextOpen: { alignSelf: 'flex-start' },
   compactDate: {
     position: 'absolute', left: 0, right: 0, zIndex: 2,

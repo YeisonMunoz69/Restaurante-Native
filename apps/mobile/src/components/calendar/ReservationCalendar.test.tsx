@@ -108,3 +108,29 @@ it('no inventa contacto y permite reintentar después de fallo de red', async ()
     tree.root.findAllByType(Text).map(node => node.props.children),
   ).toContain('discovery.noContact');
 });
+
+it('en Carta permite elegir solo fechas confirmadas con servicio de restaurante', async () => {
+  api.range.mockResolvedValue({
+    dias: [
+      { ...data(), fecha: '2026-10-18' },
+      { ...data(['PESCA']), fecha: '2026-10-24' },
+      data(),
+      { ...data(), fecha: '2026-10-26', abierto: false, servicios: [] },
+    ],
+  });
+  await Renderer.act(async () => {
+    tree = Renderer.create(
+      <ThemeProvider>
+        <ReservationCalendar restauranteId="r1" min="2026-10-22" value="2026-10-25" mode="menu" onChange={change} />
+      </ThemeProvider>,
+    );
+  });
+  const cell = (date: string) => tree.root.findByProps({ testID: `calendar-date-${date}` });
+  expect(cell('2026-10-18').props.disabled).toBe(true);
+  expect(cell('2026-10-24').props.disabled).toBe(true);
+  expect(cell('2026-10-26').props.disabled).toBe(true);
+  expect(cell('2026-10-25').props.disabled).toBe(false);
+  expect(tree.root.findAllByProps({ accessibilityLabel: 'discovery.previousMonth' })[0].props.disabled).toBe(true);
+  Renderer.act(() => cell('2026-10-25').props.onPress());
+  expect(change).toHaveBeenCalledWith('2026-10-25');
+});
