@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { Prisma, PrismaClient, ReservationStatus } from '@prisma/client';
 import request from 'supertest';
+import sharp from 'sharp';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { ReservationsModule } from '../src/reservations/reservations.module.js';
@@ -19,6 +20,7 @@ const categoryId = '20000000-0000-4000-8000-000000000001';
 const dinerId = '30000000-0000-4000-8000-000000000001';
 const secondDinerId = '30000000-0000-4000-8000-000000000002';
 const adminId = '30000000-0000-4000-8000-000000000003';
+const staffId = '30000000-0000-4000-8000-000000000004';
 const dishId = '40000000-0000-4000-8000-000000000001';
 // Mantengo la fecha futura para que esta integración se pueda ejecutar cualquier día.
 const fecha = dateKey(
@@ -30,12 +32,14 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
   let service: ReservationsService;
   let app: INestApplication;
   let closeFixture: (() => Promise<void>) | undefined;
+  let receiptImage: Buffer;
 
   beforeAll(async () => {
     const fixture = await createMenuPostgresFixture(databaseUrl!);
     prisma = fixture.client;
     closeFixture = fixture.close;
     service = new ReservationsService(prisma as never);
+    receiptImage = await sharp({ create: { width: 220, height: 490, channels: 3, background: '#bbd3a5' } }).png().toBuffer();
     await prisma.restaurant.create({
       data: {
         id: restaurantId,
@@ -57,13 +61,13 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
       },
     });
     await prisma.user.createMany({
-      data: [dinerId, secondDinerId, adminId].map((id, index) => ({
+      data: [dinerId, secondDinerId, adminId, staffId].map((id, index) => ({
         id,
         nombre: `Usuario ${index + 1}`,
         correo: `usuario${index + 1}@example.test`,
         telefono: '+573000000000',
         passwordHash: 'hash-de-prueba',
-        rol: index === 2 ? 'ADMIN' : 'COMENSAL',
+        rol: id === adminId ? 'ADMIN' : id === staffId ? 'STAFF' : 'COMENSAL',
       })),
     });
     await prisma.category.create({
@@ -116,10 +120,12 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     }
   });
 
-  it('recibe una solicitud sin pedido por HTTP y restringe su aprobación a ADMIN', async () => {
+  it('exige una captura privada y permite aprobar únicamente su revisión vigente como ADMIN', async () => {
     const jwt = app.get(JwtService);
     const diner = jwt.sign({ sub: dinerId, correo: 'usuario1@example.test', rol: 'COMENSAL', sid: 'qa-comensal' });
     const admin = jwt.sign({ sub: adminId, correo: 'usuario3@example.test', rol: 'ADMIN', sid: 'qa-admin' });
+    const other = jwt.sign({ sub: secondDinerId, correo: 'usuario2@example.test', rol: 'COMENSAL', sid: 'qa-otro' });
+    const staff = jwt.sign({ sub: staffId, correo: 'usuario4@example.test', rol: 'STAFF', sid: 'qa-staff' });
     const server = request(app.getHttpServer());
     const payload = { fecha, horaInicio: '10:00', numComensales: 2, lineas: [], nota: null };
 
@@ -129,9 +135,36 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     expect(body.reserva.ticket).toContain(body.reserva.codigo);
 
     const approval = `/api/v1/admin/reservas/${body.reserva.id}/aprobar`;
+    const proof = `/api/v1/reservas/mias/${body.reserva.id}/comprobante`;
+    const adminProof = `/api/v1/admin/reservas/${body.reserva.id}/comprobante`;
+    const ticket = `/api/v1/reservas/mias/${body.reserva.id}/imagen`;
+    const attach = (token: string, bytes = receiptImage) => server.put(proof)
+      .auth(token, { type: 'bearer' }).attach('foto', bytes, 'prueba.png');
     await server.patch(approval).auth(diner, { type: 'bearer' }).expect(403);
-    await server.patch(approval).auth(admin, { type: 'bearer' }).expect(200);
     await server.patch(approval).auth(admin, { type: 'bearer' }).expect(409);
+    await attach(other).expect(404);
+    await attach(diner, Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>')).expect(400);
+    const first = await attach(diner).expect(200);
+    expect(first.body.comprobante).toMatchObject({ ancho: 220, alto: 490 });
+    expect(first.body.comprobante.imagen).toBeUndefined();
+    await server.get(proof).auth(other, { type: 'bearer' }).expect(404);
+    await server.get(adminProof).auth(staff, { type: 'bearer' }).expect(403);
+    await server.get(ticket).auth(other, { type: 'bearer' }).expect(404);
+    const consulted = await server.get(adminProof).auth(admin, { type: 'bearer' }).expect(200);
+    expect(consulted.headers['cache-control']).toBe('private, no-store');
+    expect(consulted.body.id).toBe(first.body.comprobante.id);
+    const graphic = await server.get(ticket).auth(diner, { type: 'bearer' }).expect(200);
+    const exportPng = sharp(Buffer.from(graphic.body.imagen, 'base64'));
+    const graphicMeta = await exportPng.metadata();
+    expect(graphicMeta).toMatchObject({ format: 'png', width: 1240, height: graphic.body.alto });
+    expect(graphicMeta.height).toBeGreaterThan(490);
+    const sample = await exportPng.extract({ left: 620, top: graphic.body.alto - 70, width: 1, height: 1 }).raw().toBuffer();
+    expect([...sample].slice(0, 3)).toEqual([187, 211, 165]);
+    const second = await attach(diner).expect(200);
+    await server.patch(approval).auth(admin, { type: 'bearer' }).send({ comprobanteId: first.body.comprobante.id }).expect(409);
+    await server.patch(approval).auth(admin, { type: 'bearer' }).send({ comprobanteId: second.body.comprobante.id }).expect(200);
+    await server.patch(approval).auth(admin, { type: 'bearer' }).expect(409);
+    await attach(diner).expect(409);
     const row = await prisma.reservation.findUniqueOrThrow({ where: { id: body.reserva.id } });
     expect(row.estado).toBe(ReservationStatus.CONFIRMADA);
   });
@@ -230,7 +263,8 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
       nota: null,
     });
     const id = created.reserva.id;
-    await service.approve(adminId, id);
+    const proof = await service.uploadReceipt(dinerId, id, receiptImage);
+    await service.approve(adminId, id, proof.comprobante!.id);
 
     // Fijo únicamente Date para probar el límite sin adelantar los temporizadores de Prisma.
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -273,7 +307,8 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
       lineas: [],
       nota: null,
     });
-    await service.approve(adminId, created.reserva.id);
+    const proof = await service.uploadReceipt(dinerId, created.reserva.id, receiptImage);
+    await service.approve(adminId, created.reserva.id, proof.comprobante!.id);
 
     const arrived = await service.markArrival(adminId, created.reserva.id);
     const completed = await service.complete(adminId, created.reserva.id);

@@ -413,6 +413,7 @@ model Reservation {
   completadaPor User?             @relation("PersonalCierres", fields: [completadaPorId], references: [id], onDelete: SetNull)
   lines         ReservationLine[]
   notifications Notification[]
+  comprobante   ReservationReceipt?
 
   // índices frecuentes de §9.3 para consulta rápida por fecha/estado y reservas por usuario
   @@index([fecha, estado])
@@ -421,6 +422,18 @@ model Reservation {
   @@index([inasistioPorId])
   @@index([completadaPorId])
   @@map("reservas")
+}
+
+model ReservationReceipt {
+  id          String      @id @default(uuid())
+  reservaId   String      @unique @map("reserva_id")
+  imagen      Bytes
+  ancho       Int
+  alto        Int
+  subidoEn    DateTime    @default(now()) @map("subido_en")
+  reserva     Reservation @relation(fields: [reservaId], references: [id], onDelete: Cascade)
+
+  @@map("comprobantes_reserva")
 }
 
 // ------------------------------------------------------------------------------

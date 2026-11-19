@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { Prisma, ReservationStatus } from '@prisma/client';
 import { formatCurrencyCOP } from '@encanto/shared';
 import type {
@@ -26,6 +26,7 @@ import {
 } from '../calendar/calendar.service.js';
 import { canTransitionReservation } from './reservation-state.js';
 import { paymentConfig, paymentInstructions } from '../payments/payments.service.js';
+import { normalizeReservationReceipt, renderReservationTicketImage } from './reservation-receipt.js';
 
 const activeStatuses = [
   ReservationStatus.SOLICITADA,
@@ -33,6 +34,7 @@ const activeStatuses = [
   ReservationStatus.EN_CURSO,
 ];
 const reservationInclude = {
+  comprobante: { select: { id: true, ancho: true, alto: true, subidoEn: true } },
   lines: {
     include: { plato: { select: { nombre: true } } },
     orderBy: { id: 'asc' as const },
@@ -136,7 +138,7 @@ export function buildReservationTicket(row: {
   ].join('\n');
 }
 
-function serialize(row: ReservationRow): ReservationResult {
+function serialize(row: ReservationRow, showReceipt = true): ReservationResult {
   const lineas = row.lines.map((line) => {
     const precioUnitario = line.precioUnitario.toNumber();
     const subtotal = line.precioUnitario.mul(line.cantidad).toNumber();
@@ -168,6 +170,9 @@ function serialize(row: ReservationRow): ReservationResult {
     completadaEn: row.completadaEn?.toISOString() ?? null,
     lineas,
     ticket: buildReservationTicket(row),
+    ...(showReceipt && { comprobante: row.comprobante
+      ? { ...row.comprobante, subidoEn: row.comprobante.subidoEn.toISOString() }
+      : null }),
   };
 }
 
@@ -570,7 +575,7 @@ export class ReservationsService {
         include: reservationInclude,
         orderBy: [{ fecha: 'desc' }, { horaInicio: 'desc' }, { createdAt: 'desc' }],
       });
-      return rows.map(serialize);
+      return rows.map(row => serialize(row));
     });
   }
 
@@ -585,6 +590,52 @@ export class ReservationsService {
       if (!row) throw new NotFoundException('Reserva inexistente');
       return serialize(row);
     });
+  }
+
+  async uploadReceipt(userId: string, id: string, original?: Buffer) {
+    const reservation = await this.prisma.reservation.findFirst({ where: { id, usuarioId: userId }, select: { id: true } });
+    if (!reservation) throw new NotFoundException('Reserva inexistente');
+    const image = await normalizeReservationReceipt(original);
+    return this.write(async db => {
+      const restaurant = await this.restaurant(db);
+      await this.expirePending(db, restaurant.horasExpiracionSolicitud, userId, id);
+      const current = await db.reservation.findFirst({ where: { id, usuarioId: userId }, select: { estado: true } });
+      if (!current) throw new NotFoundException('Reserva inexistente');
+      if (current.estado !== ReservationStatus.SOLICITADA) {
+        throw new ConflictException('Solo se puede adjuntar un comprobante a una solicitud vigente');
+      }
+      const receipt = { id: randomUUID(), ...image, subidoEn: new Date() };
+      await db.reservationReceipt.upsert({
+        where: { reservaId: id },
+        create: { reservaId: id, ...receipt },
+        update: receipt,
+        select: { id: true },
+      });
+      return serialize(await db.reservation.findUniqueOrThrow({ where: { id }, include: reservationInclude }));
+    });
+  }
+
+  // undefined se usa únicamente en el controlador protegido por rol ADMIN.
+  async receiptImage(id: string, userId?: string) {
+    const receipt = await this.prisma.reservationReceipt.findFirst({
+      where: { reservaId: id, ...(userId && { reserva: { usuarioId: userId } }) },
+      select: { id: true, imagen: true, ancho: true, alto: true },
+    });
+    if (!receipt) throw new NotFoundException('Comprobante inexistente');
+    return { ...receipt, imagen: Buffer.from(receipt.imagen).toString('base64') };
+  }
+
+  async receiptTicket(userId: string, id: string) {
+    const row = await this.prisma.$transaction(async db => {
+      const restaurant = await this.restaurant(db);
+      await this.expirePending(db, restaurant.horasExpiracionSolicitud, userId, id);
+      return db.reservation.findFirst({
+        where: { id, usuarioId: userId },
+        include: { ...reservationInclude, comprobante: true },
+      });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead });
+    if (!row?.comprobante) throw new NotFoundException('Comprobante inexistente');
+    return renderReservationTicketImage(serialize(row), row.comprobante);
   }
 
   async cancel(userId: string, id: string) {
@@ -654,7 +705,7 @@ export class ReservationsService {
     });
   }
 
-  async approve(adminId: string, id: string) {
+  async approve(adminId: string, id: string, receiptId?: string) {
     return this.write(async (db) => {
       const restaurant = await this.restaurant(db);
       await this.expirePending(db, restaurant.horasExpiracionSolicitud, undefined, id);
@@ -665,6 +716,10 @@ export class ReservationsService {
       if (!row) throw new NotFoundException('Reserva inexistente');
       if (!canTransitionReservation(row.estado, ReservationStatus.CONFIRMADA)) {
         throw new ConflictException('Solo una solicitud vigente puede confirmarse');
+      }
+      if (!row.comprobante) throw new ConflictException('La solicitud necesita un comprobante antes de aprobarse');
+      if (row.comprobante.id !== receiptId) {
+        throw new ConflictException('El comprobante cambió. Abre la captura vigente antes de aprobar');
       }
       const date = dateKey(row.fecha);
       const { capacity, day, compatible } = await this.capacityFor(
@@ -770,7 +825,7 @@ export class ReservationsService {
         orderBy: [{ horaInicio: 'asc' }, { createdAt: 'asc' }],
       });
       return rows.map((row) => ({
-        ...serialize(row),
+        ...serialize(row, false),
         cliente: row.usuario,
         puedeMarcarInasistencia:
           row.estado === ReservationStatus.CONFIRMADA &&
@@ -803,12 +858,9 @@ export class ReservationsService {
       });
       if (changed.count !== 1)
         throw new ConflictException('La reserva cambió; vuelva a cargarla');
-      return serialize(
-        await db.reservation.findUniqueOrThrow({
-          where: { id },
-          include: reservationInclude,
-        }),
-      );
+      return serialize(await db.reservation.findUniqueOrThrow({
+        where: { id }, include: reservationInclude,
+      }), false);
     });
   }
 
@@ -846,12 +898,9 @@ export class ReservationsService {
         where: { id: row.usuarioId },
         data: { inasistencias: { increment: 1 } },
       });
-      return serialize(
-        await db.reservation.findUniqueOrThrow({
-          where: { id },
-          include: reservationInclude,
-        }),
-      );
+      return serialize(await db.reservation.findUniqueOrThrow({
+        where: { id }, include: reservationInclude,
+      }), false);
     });
   }
 
@@ -873,12 +922,9 @@ export class ReservationsService {
       });
       if (changed.count !== 1)
         throw new ConflictException('La reserva cambió; vuelva a cargarla');
-      return serialize(
-        await db.reservation.findUniqueOrThrow({
-          where: { id },
-          include: reservationInclude,
-        }),
-      );
+      return serialize(await db.reservation.findUniqueOrThrow({
+        where: { id }, include: reservationInclude,
+      }), false);
     });
   }
 }

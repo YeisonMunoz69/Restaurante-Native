@@ -3,18 +3,23 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpCode,
   Inject,
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
+  UploadedFile,
+  UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
+  ApiConsumes,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOperation,
@@ -22,7 +27,10 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  RESERVATION_RECEIPT_MAX_BYTES,
+  ReservationApproveSchema,
   ReservationCreateSchema,
   ReservationIdSchema,
   ReservationListQuerySchema,
@@ -63,7 +71,7 @@ export class ReservationsController {
   @ApiOperation({
     summary: 'Crear una solicitud pendiente y guardar precios del pedido',
     description:
-      'La solicitud ocupa aforo desde SOLICITADA. El pago se verifica fuera de la aplicación; no se confirma automáticamente.',
+      'La solicitud ocupa aforo desde SOLICITADA. Un administrador revisa la captura del pago externo y confirma manualmente.',
   })
   create(@Req() request: AuthenticatedRequest, @Body() body: unknown) {
     return this.reservations.create(
@@ -88,6 +96,25 @@ export class ReservationsController {
       request.user.sub,
       parseMenu(ReservationIdSchema, id),
     );
+  }
+
+  @Put('mias/:id/comprobante')
+  @UseInterceptors(FileInterceptor('foto', { limits: { fileSize: RESERVATION_RECEIPT_MAX_BYTES, files: 1 } }))
+  @ApiConsumes('multipart/form-data')
+  uploadReceipt(@Req() request: AuthenticatedRequest, @Param('id') id: string, @UploadedFile() file?: { buffer: Buffer }) {
+    return this.reservations.uploadReceipt(request.user.sub, parseMenu(ReservationIdSchema, id), file?.buffer);
+  }
+
+  @Get('mias/:id/comprobante')
+  @Header('Cache-Control', 'private, no-store')
+  myReceipt(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.reservations.receiptImage(parseMenu(ReservationIdSchema, id), request.user.sub);
+  }
+
+  @Get('mias/:id/imagen')
+  @Header('Cache-Control', 'private, no-store')
+  ticketImage(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.reservations.receiptTicket(request.user.sub, parseMenu(ReservationIdSchema, id));
   }
 
   @Patch('mias/:id/cancelar')
@@ -127,11 +154,19 @@ export class AdminReservationsController {
   @Roles(Role.ADMIN)
   @HttpCode(200)
   @ApiOperation({ summary: 'Confirmar una solicitud después de verificar el pago externo' })
-  approve(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+  approve(@Req() request: AuthenticatedRequest, @Param('id') id: string, @Body() body: unknown) {
     return this.reservations.approve(
       request.user.sub,
       parseMenu(ReservationIdSchema, id),
+      parseMenu(ReservationApproveSchema, body ?? {}).comprobanteId,
     );
+  }
+
+  @Get(':id/comprobante')
+  @Roles(Role.ADMIN)
+  @Header('Cache-Control', 'private, no-store')
+  reviewReceipt(@Param('id') id: string) {
+    return this.reservations.receiptImage(parseMenu(ReservationIdSchema, id));
   }
 
   @Patch(':id/rechazar')
