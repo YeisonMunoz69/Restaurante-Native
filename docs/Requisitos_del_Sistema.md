@@ -13,6 +13,8 @@
 
 **Perfil y botones (19 de noviembre):** el perfil muestra el nombre y la foto de Google, admite una foto alternativa en el dispositivo y permite completar datos de contacto. Apariencia presenta vistas previas de ambos temas y la salida queda al final de Ajustes. Aplicamos variantes primaria, secundaria y terciaria desde la paleta de la app. Pendiente actualizar requisitos en Drive y Word local para RF-INF09 (perfil y Ajustes) y RNF-09 (jerarquía de botones).
 
+**Modo invitado (19 de noviembre, EC-75):** cambiamos el acceso inicial para consultar Carta y Noticias sin sesión. Ajustes ofrece acceder por correo de Google y Añadir abre el mismo acceso desde Carta. Conservamos el tema claro para el invitado y guardamos la elección manual de cada cuenta autenticada. Pendiente actualizar requisitos en Drive y Word local: RF-AUT08 y RF-INF09, acceso invitado y apariencia por cuenta.
+
 ---
 
 ## 1. Ficha Técnica y Alcance del Sistema
@@ -58,7 +60,7 @@
 
 | Actor                       | Descripción y Nivel de Acceso                                                                                                                                                                         | Método de Autenticación                                                         |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Visitante**               | Usuario sin sesión. Solo puede ver la pantalla de acceso; no entra a carta, noticias, reservas ni otros servicios de la app.                                                                         | Debe iniciar sesión con Google                                                 |
+| **Visitante**               | Consulta Carta y Noticias y puede iniciar sesión desde Ajustes. Usa el tema claro y necesita Google para añadir platos, reservar o acceder a opciones de cuenta.                                      | Google al solicitar una acción con sesión                                     |
 | **Comensal**                | Cliente autenticado. Crea solicitudes de reserva con pedido, consulta su historial, cancela reservas vigentes, marca favoritos y configura preferencias de notificación.                              | Google; la API valida la identidad y emite la sesión propia                    |
 | **Personal (Staff)**        | Empleado autorizado. Consulta la agenda operativa del día, filtra reservas confirmadas y registra el check-in o inasistencia de comensales.                                                        | Google vinculado a una cuenta con rol `STAFF` asignado en servidor               |
 | **Dueño (Administrador)**   | Propietario autorizado. Aprueba o rechaza solicitudes, gestiona carta/disponibilidad/calendario/noticias y modifica parámetros operativos.                                                         | Google vinculado a rol `ADMIN`, más TOTP en acciones críticas                   |
@@ -105,7 +107,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-AUT05** | Recuperación de contraseña    | Pendiente de revisar en Jira: la contraseña pertenece a Google; no construimos una recuperación de contraseña propia mientras Google sea el único proveedor.        | **S** | Revisar | EP-02 |
 | **RF-AUT06** | Configuración de 2FA TOTP     | Vinculación de segundo factor mediante aplicación de autenticación (Google Authenticator) exclusiva para usuarios con rol de Dueño (`ADMIN`). |   **S**   | Sprint 5 | EP-10     |
 | **RF-AUT07** | Guardia de acciones sensibles | Exigencia de token TOTP válido al dueño antes de ejecutar acciones de alto impacto (modificar parámetros globales, borrar cuentas).           |   **S**   | Sprint 5 | EP-10     |
-| **RF-AUT08** | Acceso global con sesión      | Sin sesión solo se muestra el acceso Google. Las cinco pestañas, servicios y enlaces profundos esperan autenticación; cerrar sesión elimina los tokens locales y vuelve al acceso. La API conserva sus propias guardias. | **M** | Sprint 5 | EP-02 |
+| **RF-AUT08** | Acceso invitado y con sesión  | Sin sesión solo se muestran Carta, Noticias y Ajustes. Los enlaces de platos y noticias son públicos. Añadir a un pedido y las opciones privadas requieren Google. Cerrar sesión vuelve al modo invitado. La API conserva sus propias guardias. | **M** | Sprint 5 | EP-02 |
 | **RF-AUT09** | Advertencia de caducidad      | Diálogo modal interactivo que avisa 2 minutos antes de que expire la sesión si la aplicación se encuentra en primer plano activo.             |   **S**   | Sprint 5 | EP-02     |
 
 ### 4.2 Módulo de Carta Digital y Disponibilidad (MEN)
@@ -287,7 +289,7 @@ Para RNF-03, los textos fijos se guardan en `apps/mobile/src/i18n/locales/` y se
 | **RF-AUT05**   | Recuperación de contraseña        |         C-3         |   EP-02    |  **Revisar**    | No duplicar recuperación que ofrece Google |
 | **RF-AUT06**   | 2FA TOTP para Dueño               |       ADR-007       |   EP-10    |  **Sprint 5**   | Opcional si desborda capacidad           |
 | **RF-AUT07**   | Guardia de acciones críticas      |       ADR-007       |   EP-10    |  **Sprint 5**   | Opcional si desborda capacidad           |
-| **RF-AUT08**   | Acceso global con sesión          |         A-1         |   EP-02    |  **Sprint 5**   | Sin sesión solo queda visible el acceso |
+| **RF-AUT08**   | Acceso invitado y con sesión      |         A-1         |   EP-02    |  **Sprint 5**   | Carta y Noticias públicas; acciones privadas con Google |
 | **RF-AUT09**   | Alerta caducidad de sesión        |         G-4         |   EP-02    |  **Sprint 5**   | Refinamiento de experiencia              |
 | **RF-INF09**   | Subpantallas de Ajustes           |         G-19        |   EP-02    |  **Sprint 5**   | Categorías y navegación interna; pendiente Jira |
 | **RF-MEN01**   | Carta visual por categorías       |      A-5, F-5       |   EP-03    |  **Sprint 2**   | Núcleo del sistema (No recortable)       |

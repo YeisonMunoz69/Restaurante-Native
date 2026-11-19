@@ -169,7 +169,7 @@ Bloque completado y archivado en la carpeta `design/`.
 | G-15    | Datos de ejemplo                | Los redacta el administrador                                                                                                                                          |
 | G-16    | Copia de seguridad              | Mensual, en Supabase o en Google Drive                                                                                                                                |
 | G-17    | Cuentas de prueba               | `yeison@encanto.com` · `fabian@encanto.com` · `alex@encanto.com`                                                                                                      |
-| G-18    | Inicio de sesión                | Google será el único proveedor en la primera versión de autenticación revisada; sin sesión no se abre ninguna pestaña ni servicio. Los roles se asignan en servidor, no desde el perfil móvil. Sprint 5; pendiente Jira y revisión de RF-AUT02/RF-AUT05. |
+| G-18    | Inicio de sesión                | Google sigue como único proveedor. El 19/11 habilitamos Carta, Noticias y Ajustes de acceso para invitados en tema claro. Añadir platos, reservas y preferencias esperan una sesión. Los roles se asignan en servidor. Sprint 5, EC-75; queda la revisión de RF-AUT02/RF-AUT05. |
 | G-19    | Organización de Ajustes          | Conservamos las cinco pestañas y separamos Ajustes en Perfil, Preferencias, Aplicación, Cuenta y seguridad, e Información/ayuda, con navegación interna y retroceso visible. Sprint 5; pendiente Jira. |
 
 ---
