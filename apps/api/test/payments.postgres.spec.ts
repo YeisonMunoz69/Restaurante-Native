@@ -30,6 +30,7 @@ describe.skipIf(!url)(
     let admin: string, diner: string, staff: string;
     const adminId = randomUUID(),
       dinerId = randomUUID(),
+      staffId = randomUUID(),
       restaurantId = randomUUID();
     const values = {
       whatsapp: '+573000000001',
@@ -53,13 +54,14 @@ describe.skipIf(!url)(
         },
       });
       await fixture.client.user.createMany({
-        data: [adminId, dinerId].map((id, i) => ({
+        data: ([{ id: adminId, rol: 'ADMIN' }, { id: dinerId, rol: 'COMENSAL' },
+          { id: staffId, rol: 'STAFF' }] as const).map(({ id, rol }) => ({
           id,
           nombre: 'QA',
           correo: `${id}@example.test`,
           telefono: '',
           passwordHash: 'no-login',
-          rol: i ? 'COMENSAL' : 'ADMIN',
+          rol,
         })),
       });
       await fixture.client.timeSlot.createMany({
@@ -108,7 +110,7 @@ describe.skipIf(!url)(
         rol: 'COMENSAL',
       });
       staff = jwt.sign({
-        sub: dinerId,
+        sub: staffId,
         correo: 'staff@example.test',
         sid: 'qa',
         rol: 'STAFF',

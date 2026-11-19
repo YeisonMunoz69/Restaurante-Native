@@ -85,4 +85,11 @@ describe('JwtAuthGuard', () => {
     db.user.findUnique.mockResolvedValue({ rol: Role.ADMIN, activo: true });
     await expect(guard.canActivate(contexto())).resolves.toBe(true);
   });
+
+  it('rechaza el JWT STAFF anterior cuando el rol vigente pasa a comensal', async () => {
+    request.headers = { authorization: 'Bearer staff-anterior' };
+    vi.mocked(jwtService.verifyAsync).mockResolvedValue({ ...usuario, rol: Role.STAFF });
+    db.user.findUnique.mockResolvedValue({ rol: Role.COMENSAL, activo: true });
+    await expect(guard.canActivate(contexto())).rejects.toThrow(UnauthorizedException);
+  });
 });
