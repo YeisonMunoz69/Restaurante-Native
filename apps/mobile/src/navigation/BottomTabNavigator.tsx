@@ -10,12 +10,15 @@ import { ReservationsScreen } from '../screens/ReservationsScreen';
 import { NewsScreen } from '../screens/NewsScreen';
 import { UpcomingScreen } from '../screens/UpcomingScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { OperationsScreen } from '../screens/OperationsScreen';
 import {
   UtensilsCrossed,
   CalendarDays,
   Newspaper,
   Sparkles,
   Settings,
+  Crown,
+  ClipboardCheck,
 } from 'lucide-react-native';
 
 export type RootTabParamList = {
@@ -23,6 +26,7 @@ export type RootTabParamList = {
   Reservations: undefined;
   News: { id?: string } | undefined;
   Upcoming: undefined;
+  Operations: undefined;
   Settings: { returnTo?: 'Reservations' } | undefined;
 };
 
@@ -35,6 +39,8 @@ export const BottomTabNavigator: React.FC = () => {
   const { user } = useAuth();
   const online = useOnline();
   const canUsePrivateTabs = !!user && online;
+  const isAdmin = user?.rol === 'ADMIN';
+  const hasOperations = canUsePrivateTabs && (isAdmin || user?.rol === 'STAFF');
 
   return (
     <Tab.Navigator
@@ -83,14 +89,23 @@ export const BottomTabNavigator: React.FC = () => {
         name="Upcoming"
         component={UpcomingScreen}
         options={{
-          tabBarLabel: t('tabs.upcoming'),
+          tabBarLabel: t(hasOperations ? 'tabs.upcomingShort' : 'tabs.upcoming'),
+          tabBarAccessibilityLabel: t('tabs.upcoming'),
           tabBarIcon: ({ color, size }: { color: string; size: number }) => (
             <Sparkles color={color} size={size} />
           ),
         }}
       />}
 
-      {/* 5. Ajustes */}
+      {hasOperations && <Tab.Screen name="Operations" component={OperationsScreen}
+        options={{
+          tabBarLabel: t(isAdmin ? 'tabs.adminPanel' : 'tabs.staffAgenda'),
+          tabBarIcon: ({ color, size }) => isAdmin
+            ? <Crown color={color} size={size} />
+            : <ClipboardCheck color={color} size={size} />,
+        }} />}
+
+      {/* Ajustes */}
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}

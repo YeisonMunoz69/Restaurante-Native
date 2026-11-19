@@ -6,7 +6,7 @@ import { ThemeProvider } from '../theme/ThemeContext';
 import { DarkColors, LightColors } from '../theme/tokens';
 import { pillTintOpacity } from '../components/navigation/SlidingPillTabBar';
 
-let mockUser: { id: string } | null = null;
+let mockUser: { id: string; rol?: string } | null = null;
 let mockOnline = true;
 jest.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: mockUser }) }));
 jest.mock('../context/ConnectivityContext', () => ({ useOnline: () => mockOnline }));
@@ -29,6 +29,11 @@ it('muestra tres destinos públicos y registra las pestañas privadas solo con s
   mockUser = { id: 'comensal' };
   await Renderer.act(async () => tree.update(content()));
   expect(routes()).toEqual(['Menu', 'Reservations', 'News', 'Upcoming', 'Settings']);
+  for (const rol of ['ADMIN', 'STAFF']) {
+    mockUser = { id: 'equipo', rol };
+    await Renderer.act(async () => tree.update(content()));
+    expect(routes()).toEqual(['Menu', 'Reservations', 'News', 'Upcoming', 'Operations', 'Settings']);
+  }
   mockOnline = false;
   await Renderer.act(async () => tree.update(content()));
   expect(routes()).toEqual(['Menu', 'News', 'Settings']);
