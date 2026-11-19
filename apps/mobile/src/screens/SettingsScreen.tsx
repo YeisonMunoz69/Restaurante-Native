@@ -14,6 +14,7 @@ import { GoogleAccess } from '../components/GoogleAccess';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { BackButton } from '../components/navigation/BackButton';
 import { TabPageHeader } from '../components/navigation/TabPageHeader';
+import { ProfileAvatar, ProfileDetails, useLocalProfilePhoto } from '../components/settings/AccountProfile';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
@@ -39,6 +40,7 @@ export const SettingsScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors, isDark, spacing } = useTheme();
   const { user, isAuthenticated } = useAuth();
+  const photo = useLocalProfilePhoto(user?.id);
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<Section | null>(null);
   const [adminView, setAdminView] = useState<AdminView | null>(null);
@@ -88,9 +90,9 @@ export const SettingsScreen: React.FC = () => {
         <>
           <BackButton onPress={() => setSection(null)} />
           <TabPageHeader title={t(sections[section].label)} />
-          <SettingsDetails section={section} />
+          {section === 'profile' ? <ProfileDetails photo={photo} /> : <SettingsDetails section={section} />}
         </>
-      ) : <SettingsIndex openSection={setSection} openAdminView={setAdminView} />}
+      ) : <SettingsIndex openSection={setSection} openAdminView={setAdminView} localPhoto={photo.uri} />}
     </KeyboardAwareScrollView>
   );
 };
@@ -104,9 +106,10 @@ type SettingsEntry = {
 };
 
 // En el índice muestro el estado actual y dejo los controles en su subpantalla.
-function SettingsIndex({ openSection, openAdminView }: {
+function SettingsIndex({ openSection, openAdminView, localPhoto }: {
   openSection: (section: Section) => void;
   openAdminView: (view: AdminView) => void;
+  localPhoto: string | null;
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -130,9 +133,7 @@ function SettingsIndex({ openSection, openAdminView }: {
       </Text>
       {user && (
         <View style={[styles.accountCard, { backgroundColor: colors.marca.primarioSuave }]}>
-          <View style={[styles.accountIcon, { backgroundColor: colors.marca.primario }]}>
-            <User size={24} strokeWidth={1.9} color={colors.texto.inverso} accessible={false} />
-          </View>
+          <ProfileAvatar nombre={name} googleUri={user.perfil?.fotoGoogleUrl} localUri={localPhoto} size={54} />
           <View style={styles.label}>
             <Text style={[typography.tituloM, { color: colors.texto.primario }]}>
               {name || t('settings.signedIn')}
@@ -209,7 +210,7 @@ function SettingsGroup({ title, entries }: { title: string; entries: SettingsEnt
 }
 
 // Muestro los datos y acciones de la sección abierta, sin montar los formularios de las demás.
-function SettingsDetails({ section }: { section: Section }) {
+function SettingsDetails({ section }: { section: Exclude<Section, 'profile'> }) {
   const { t } = useTranslation();
   const { user, isLoading, logout } = useAuth();
   const { colors, typography, radii, isDark, setThemeMode } = useTheme();
@@ -220,19 +221,6 @@ function SettingsDetails({ section }: { section: Section }) {
   const card = { backgroundColor: detailSurface, borderRadius: radii.l };
 
   switch (section) {
-    case 'profile':
-      return user && (
-        <View style={[styles.panel, card]}>
-          <View style={styles.detailRow}>
-            <User color={accent} size={22} />
-            <View style={styles.label}>
-              <Text style={[typography.etiqueta, secondary]}>{t('auth.email')}</Text>
-              <Text style={[typography.cuerpoL, primary]}>{user.correo}</Text>
-            </View>
-          </View>
-          <Text style={[typography.cuerpoM, secondary]}>{t('auth.role')} · {user.rol || 'COMENSAL'}</Text>
-        </View>
-      );
     case 'preferences':
       return (
         <View style={[styles.detailRow, card]}>
@@ -314,7 +302,6 @@ const styles = StyleSheet.create({
   accountCard: {
     minHeight: 76, borderRadius: 22, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 14,
   },
-  accountIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   group: { gap: 8 },
   groupTitle: { paddingHorizontal: 4, letterSpacing: 0.7, textTransform: 'uppercase' },
   groupCard: { borderRadius: 22, overflow: 'hidden' },
@@ -326,7 +313,6 @@ const styles = StyleSheet.create({
   rowIcon: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   rowTitle: { fontWeight: '600' },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 12 },
-  panel: { paddingHorizontal: 8, paddingBottom: 12 },
   label: { flex: 1 },
   logout: { marginTop: 16, justifyContent: 'center' },
 });

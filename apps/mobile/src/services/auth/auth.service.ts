@@ -7,7 +7,7 @@ import {
   getRefreshToken,
   clearTokens,
 } from './token-storage';
-import type { GoogleLoginDto, LoginDto, RegisterDto } from '@encanto/shared';
+import type { AccountProfile, GoogleLoginDto, LoginDto, ProfileUpdateDto, RegisterDto } from '@encanto/shared';
 import { BUILD_ENVIRONMENT } from '../../config/build-variant';
 
 // estructura del usuario autenticado en la aplicacion movil
@@ -15,6 +15,7 @@ export interface AuthUser {
   id: string;
   correo: string;
   nombre?: string;
+  perfil?: AccountProfile;
   rol?: string;
   provider?: 'google' | 'password';
 }
@@ -23,6 +24,8 @@ export interface AuthSession {
   user: AuthUser;
   accessToken: string;
 }
+
+type SessionResponse = { accessToken: string; refreshToken?: string; perfil?: AccountProfile };
 
 // funcion auxiliar para decodificar el payload del token JWT sin dependencias externas
 const decodeJwtPayload = (token: string): any => {
@@ -63,7 +66,7 @@ const decodeJwtPayload = (token: string): any => {
 };
 
 // inicio de sesion con correo y contrasena
-async function acceptSession({ accessToken, refreshToken }: { accessToken: string; refreshToken?: string }, correo = ''): Promise<AuthSession> {
+async function acceptSession({ accessToken, refreshToken, perfil }: SessionResponse, correo = ''): Promise<AuthSession> {
   const payload = decodeJwtPayload(accessToken);
   if (!payload?.sub) throw new Error('INVALID_SESSION');
   // guardo el access token estrictamente en memoria (RAM)
@@ -78,6 +81,8 @@ async function acceptSession({ accessToken, refreshToken }: { accessToken: strin
   const user: AuthUser = {
     id: payload.sub,
     correo: payload.correo || correo,
+    nombre: perfil?.nombre,
+    perfil,
     rol: payload?.rol || 'COMENSAL',
     provider: payload?.provider === 'google' ? 'google' : 'password',
   };
@@ -98,6 +103,12 @@ export async function googleSession(input: GoogleLoginDto, link = false) {
   if (destination.protocol !== 'https:' && !viaLocalTransport) throw new Error('GOOGLE_INSECURE_CONNECTION');
   const { data } = await apiClient.post(link ? API_CONFIG.endpoints.googleLink : API_CONFIG.endpoints.google, input);
   return acceptSession(data);
+}
+
+// Actualizo el perfil con la sesión actual; la API decide quién es su dueño.
+export async function saveAccountProfile(input: ProfileUpdateDto) {
+  const { data } = await apiClient.patch<AccountProfile>(API_CONFIG.endpoints.me, input);
+  return data;
 }
 
 // registro de nuevo usuario

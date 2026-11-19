@@ -39,7 +39,7 @@ describe('SettingsScreen authentication form', () => {
       login,
       register,
       logout,
-      checkSession: jest.fn(), loginWithGoogle: jest.fn(),
+      checkSession: jest.fn(), loginWithGoogle: jest.fn(), updateProfile: jest.fn(),
     });
   });
 
@@ -47,7 +47,7 @@ describe('SettingsScreen authentication form', () => {
     mockParams = { returnTo: 'Reservations' };
     jest.mocked(useAuth).mockReturnValue({
       user: { id: 'test', correo: 'prueba@example.test', rol: 'COMENSAL' },
-      isAuthenticated: true, isLoading: false, login, register, logout, checkSession: jest.fn(), loginWithGoogle: jest.fn(),
+      isAuthenticated: true, isLoading: false, login, register, logout, checkSession: jest.fn(), loginWithGoogle: jest.fn(), updateProfile: jest.fn(),
     });
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => { tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>); });
@@ -67,7 +67,7 @@ describe('SettingsScreen authentication form', () => {
         login,
         register,
         logout,
-        checkSession: jest.fn(), loginWithGoogle: jest.fn(),
+        checkSession: jest.fn(), loginWithGoogle: jest.fn(), updateProfile: jest.fn(),
       });
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {
@@ -93,7 +93,7 @@ describe('SettingsScreen authentication form', () => {
           login,
           register,
           logout,
-          checkSession: jest.fn(), loginWithGoogle: jest.fn(),
+          checkSession: jest.fn(), loginWithGoogle: jest.fn(), updateProfile: jest.fn(),
         });
       let tree: ReactTestRenderer.ReactTestRenderer;
       ReactTestRenderer.act(() => {
@@ -116,7 +116,7 @@ describe('SettingsScreen authentication form', () => {
     jest.mocked(useAuth).mockReturnValue({
       user: { id: 'test', correo: 'prueba@example.test', rol: 'ADMIN', provider: 'password' },
       isAuthenticated: true, isLoading: false, login, register, logout,
-      loginWithGoogle: jest.fn(), checkSession: jest.fn(),
+      loginWithGoogle: jest.fn(), updateProfile: jest.fn(), checkSession: jest.fn(),
     });
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => { tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>); });
@@ -130,7 +130,7 @@ describe('SettingsScreen authentication form', () => {
     jest.mocked(useAuth).mockReturnValue({
       user: { id: 'test', correo: 'prueba@example.test', rol: 'COMENSAL', provider: 'google' },
       isAuthenticated: true, isLoading: false, login, register, logout,
-      loginWithGoogle: jest.fn(), checkSession: jest.fn(),
+      loginWithGoogle: jest.fn(), updateProfile: jest.fn(), checkSession: jest.fn(),
     });
     let tree!: ReactTestRenderer.ReactTestRenderer;
     const shows = (label: string) => tree.root.findAllByType(Text).some(node => node.props.children === label);

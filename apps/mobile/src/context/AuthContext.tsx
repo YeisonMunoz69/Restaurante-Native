@@ -5,10 +5,11 @@ import {
   logout as apiLogout,
   restoreSession as apiRestoreSession,
   googleSession,
+  saveAccountProfile,
   AuthUser,
 } from '../services/auth/auth.service';
 import { onSessionExpired } from '../services/api/api-client';
-import type { LoginDto, RegisterDto, GoogleLoginDto } from '@encanto/shared';
+import type { AccountProfile, LoginDto, RegisterDto, GoogleLoginDto, ProfileUpdateDto } from '@encanto/shared';
 
 interface AuthContextData {
   user: AuthUser | null;
@@ -17,6 +18,7 @@ interface AuthContextData {
   login: (credentials: LoginDto) => Promise<void>;
   register: (data: RegisterDto) => Promise<void>;
   loginWithGoogle: (data: GoogleLoginDto, link?: boolean) => Promise<void>;
+  updateProfile: (data: ProfileUpdateDto) => Promise<AccountProfile>;
   logout: () => Promise<void>;
   checkSession: () => Promise<void>;
 }
@@ -80,6 +82,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Actualizo el nombre visible al guardar y descarto respuestas de una cuenta que ya salió.
+  const updateProfile = async (input: ProfileUpdateDto) => {
+    if (!user) throw new Error('INVALID_SESSION');
+    const owner = user.id;
+    const perfil = await saveAccountProfile(input);
+    setUser(current => current?.id === owner ? { ...current, perfil, nombre: perfil.nombre } : current);
+    return perfil;
+  };
+
   useEffect(() => {
     // verificamos si hay sesion previa al montar el proveedor
     checkSession();
@@ -104,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login: handleLogin,
         register: handleRegister,
         loginWithGoogle: async (data, link) => setUser((await googleSession(data, link)).user),
+        updateProfile,
         logout: handleLogout,
         checkSession,
       }}

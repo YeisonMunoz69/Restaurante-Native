@@ -27,7 +27,7 @@ const admin = {
   user: { id: 'admin-id', correo: 'admin@example.test', rol: 'ADMIN' },
   isAuthenticated: true,
   isLoading: false,
-  login: jest.fn(), register: jest.fn(), logout: jest.fn(), checkSession: jest.fn(), loginWithGoogle: jest.fn(),
+  login: jest.fn(), register: jest.fn(), logout: jest.fn(), checkSession: jest.fn(), loginWithGoogle: jest.fn(), updateProfile: jest.fn(),
 };
 const baseReservation = {
   id: 'reservation-id',

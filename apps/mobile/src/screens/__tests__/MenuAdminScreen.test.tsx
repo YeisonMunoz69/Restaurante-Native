@@ -41,7 +41,7 @@ describe('MenuAdminScreen', () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      checkSession: jest.fn(), loginWithGoogle: jest.fn(),
+      checkSession: jest.fn(), loginWithGoogle: jest.fn(), updateProfile: jest.fn(),
     });
     jest.mocked(useConnection).mockReturnValue({
       settings: { environment: 'dev', localUrl: '', restauranteId: restaurantId },
@@ -92,7 +92,7 @@ describe('MenuAdminScreen', () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      checkSession: jest.fn(), loginWithGoogle: jest.fn(),
+      checkSession: jest.fn(), loginWithGoogle: jest.fn(), updateProfile: jest.fn(),
     });
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {
