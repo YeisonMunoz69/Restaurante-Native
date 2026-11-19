@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Modal,
   ScrollView,
   StyleSheet,
   Switch,
@@ -29,6 +28,7 @@ import { Action, Field, Note, Panel } from './Controls';
 import { useTheme } from '../../theme/ThemeContext';
 import { todayInBogota } from '../../utils/formatters';
 import { Feedback as Alert } from '../feedback/Feedback';
+import { OverlayModal } from '../feedback/OverlayModal';
 
 export const commercialToday = todayInBogota;
 type Pending = {
@@ -155,25 +155,24 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
         }}
       />
       {!!message && <Note live>{message}</Note>}
-      <Modal
+      <OverlayModal
         visible={!!pending}
-        animationType="fade"
         onRequestClose={() => {
           if (!busy) setPending(null);
         }}
       >
         {pending && (
-          <ScrollView
-            style={{ backgroundColor: colors.superficie.fondo }}
-            contentContainerStyle={[
-              styles.confirmation,
-              {
-                paddingTop: insets.top + 16,
-                paddingBottom: insets.bottom + 16,
-              },
-            ]}
+          <View
+            style={[styles.confirmationFrame, {
+              paddingTop: insets.top + 16,
+              paddingBottom: insets.bottom + 16,
+            }]}
           >
-            <Panel>
+            <ScrollView
+              accessibilityViewIsModal
+              style={[styles.confirmationCard, { backgroundColor: colors.superficie.fondo }]}
+              contentContainerStyle={styles.confirmation}
+            >
               <Note live>
                 {t('attention.closureWarning', {
                   count: pending.warning.reservasAfectadas,
@@ -202,10 +201,10 @@ export function CalendarPanel({ restauranteId }: { restauranteId: string }) {
                 disabled={busy}
                 onPress={() => setPending(null)}
               />
-            </Panel>
-          </ScrollView>
+            </ScrollView>
+          </View>
         )}
-      </Modal>
+      </OverlayModal>
       <Panel>
         <Note>{t('attention.weeklyRules')}</Note>
         <View style={styles.weekdays}>
@@ -432,4 +431,6 @@ const styles = StyleSheet.create({
   weekdays: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   weekday: { width: '47%' },
   confirmation: { padding: 16 },
+  confirmationFrame: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16 },
+  confirmationCard: { width: '100%', maxWidth: 440, maxHeight: '90%', flexGrow: 0, borderRadius: 24 },
 });

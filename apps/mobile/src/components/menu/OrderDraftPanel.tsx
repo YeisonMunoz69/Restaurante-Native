@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Minus, Plus, ShoppingBasket, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { useOrderDraft } from '../../context/OrderDraftContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { formatCivilDate, formatCop } from '../../utils/formatters';
 import { Feedback } from '../feedback/Feedback';
+import { OverlayModal } from '../feedback/OverlayModal';
 
 export const ORDER_BUTTON_CLEARANCE = 80;
 
@@ -74,13 +75,7 @@ export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
 
   // Aíslo el diálogo de la carta y las pestañas, también al navegar con lector de pantalla.
   return (
-    <Modal
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      navigationBarTranslucent
-      onRequestClose={close}
-    >
+    <OverlayModal onRequestClose={close}>
       <View testID="order-sheet" style={[styles.overlay, {
         paddingTop: insets.top + 16,
         paddingBottom: insets.bottom + 16,
@@ -226,7 +221,7 @@ export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </OverlayModal>
   );
 }
 
@@ -243,7 +238,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16,
   },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.62)' },
+  backdrop: { ...StyleSheet.absoluteFill },
   sheet: { maxHeight: '90%', width: '100%', maxWidth: 420, borderRadius: 24, overflow: 'hidden' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

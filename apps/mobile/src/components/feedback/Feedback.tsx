@@ -9,7 +9,6 @@ import {
   findNodeHandle,
   Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -22,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Check, Info, TriangleAlert, XCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../theme/ThemeContext';
+import { OverlayModal } from './OverlayModal';
 
 export type FeedbackKind = 'info' | 'success' | 'warning' | 'error';
 export interface FeedbackAction {
@@ -147,11 +147,9 @@ export function FeedbackHost({ scope }: { scope?: string }) {
     if (action || request.actions.length <= 1) select(action);
   };
   return (
-    <Modal
+    <OverlayModal
       testID="feedback-modal"
-      transparent
       visible
-      statusBarTranslucent
       animationType={reduceMotion ? 'none' : 'fade'}
       onRequestClose={cancel}
       onShow={() => {
@@ -246,7 +244,7 @@ export function FeedbackHost({ scope }: { scope?: string }) {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </Modal>
+    </OverlayModal>
   );
 }
 // Uso la misma familia visual para avisos dentro de formularios, sin tapar su contenido.
@@ -304,7 +302,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   bannerText: { flex: 1, fontSize: 16, lineHeight: 24 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.64)' },
+  overlay: { flex: 1 },
   placement: {
     flex: 1,
     padding: 24,
