@@ -2,30 +2,23 @@ import { ReservationStatus as Status } from '@prisma/client';
 import { describe, expect, it } from 'vitest';
 import { canTransitionReservation } from './reservation-state.js';
 
-describe('canTransitionReservation', () => {
-  it('permite solicitar, aprobar, rechazar, expirar y cancelar en los estados acordados', () => {
-    expect(canTransitionReservation(Status.SOLICITADA, Status.CONFIRMADA)).toBe(true);
-    expect(canTransitionReservation(Status.SOLICITADA, Status.RECHAZADA)).toBe(true);
-    expect(canTransitionReservation(Status.SOLICITADA, Status.EXPIRADA)).toBe(true);
-    expect(canTransitionReservation(Status.SOLICITADA, Status.CANCELADA)).toBe(true);
-    expect(canTransitionReservation(Status.CONFIRMADA, Status.EN_CURSO)).toBe(true);
-    expect(canTransitionReservation(Status.CONFIRMADA, Status.CANCELADA)).toBe(true);
-    expect(canTransitionReservation(Status.CONFIRMADA, Status.NO_ASISTIO)).toBe(true);
-    expect(canTransitionReservation(Status.EN_CURSO, Status.COMPLETADA)).toBe(true);
-  });
+// Compruebo el diagrama acordado para todos los pares, incluso si origen y destino son iguales.
+const allowed = new Set([
+  'SOLICITADA:CONFIRMADA',
+  'SOLICITADA:RECHAZADA',
+  'SOLICITADA:EXPIRADA',
+  'SOLICITADA:CANCELADA',
+  'CONFIRMADA:CANCELADA',
+  'CONFIRMADA:EN_CURSO',
+  'CONFIRMADA:NO_ASISTIO',
+  'EN_CURSO:COMPLETADA',
+]);
 
-  it('mantiene rechazo, expiración y cancelación como estados terminales', () => {
-    for (const status of [
-      Status.RECHAZADA,
-      Status.EXPIRADA,
-      Status.CANCELADA,
-      Status.COMPLETADA,
-      Status.NO_ASISTIO,
-      Status.COMPLETADA,
-    ]) {
-      expect(canTransitionReservation(status, Status.CONFIRMADA)).toBe(false);
-      expect(canTransitionReservation(status, Status.EN_CURSO)).toBe(false);
-      expect(canTransitionReservation(status, Status.NO_ASISTIO)).toBe(false);
-    }
+describe('canTransitionReservation', () => {
+  const states = Object.values(Status);
+  const pairs = states.flatMap((from) => states.map((to) => [from, to] as const));
+
+  it.each(pairs)('valida %s → %s según el diagrama', (from, to) => {
+    expect(canTransitionReservation(from, to)).toBe(allowed.has(`${from}:${to}`));
   });
 });

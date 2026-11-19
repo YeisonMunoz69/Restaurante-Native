@@ -1,5 +1,13 @@
+import 'reflect-metadata';
+import type { INestApplication } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { Test } from '@nestjs/testing';
 import { Prisma, PrismaClient, ReservationStatus } from '@prisma/client';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import request from 'supertest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PrismaService } from '../src/prisma/prisma.service.js';
+import { ReservationsModule } from '../src/reservations/reservations.module.js';
 import { ReservationsService } from '../src/reservations/reservations.service.js';
 import { createMenuPostgresFixture } from './menu-postgres.fixture.js';
 import { calendarDate, dateKey, todayInBogota } from '../src/calendar/calendar.service.js';
@@ -20,6 +28,7 @@ const fecha = dateKey(
 describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
   let prisma: PrismaClient;
   let service: ReservationsService;
+  let app: INestApplication;
   let closeFixture: (() => Promise<void>) | undefined;
 
   beforeAll(async () => {
@@ -81,6 +90,18 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
         activo: true,
       })),
     });
+    // Uso controladores y guardias reales con JWT y base exclusivos de esta prueba.
+    const module = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true }), ReservationsModule],
+    })
+      .overrideProvider(PrismaService)
+      .useValue(prisma)
+      .overrideProvider(ConfigService)
+      .useValue({ get: (key: string) => key === 'JWT_ACCESS_SECRET' ? 'jwt-exclusivo-qa-reservas' : undefined })
+      .compile();
+    app = module.createNestApplication();
+    app.setGlobalPrefix('api/v1');
+    await app.init();
   }, 60000);
 
   beforeEach(async () => {
@@ -88,7 +109,31 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
   });
 
   afterAll(async () => {
-    await closeFixture?.();
+    try {
+      await app?.close();
+    } finally {
+      await closeFixture?.();
+    }
+  });
+
+  it('recibe una solicitud sin pedido por HTTP y restringe su aprobación a ADMIN', async () => {
+    const jwt = app.get(JwtService);
+    const diner = jwt.sign({ sub: dinerId, correo: 'usuario1@example.test', rol: 'COMENSAL', sid: 'qa-comensal' });
+    const admin = jwt.sign({ sub: adminId, correo: 'usuario3@example.test', rol: 'ADMIN', sid: 'qa-admin' });
+    const server = request(app.getHttpServer());
+    const payload = { fecha, horaInicio: '10:00', numComensales: 2, lineas: [], nota: null };
+
+    await server.post('/api/v1/reservas').send(payload).expect(401);
+    const { body } = await server.post('/api/v1/reservas').auth(diner, { type: 'bearer' }).send(payload).expect(201);
+    expect(body.reserva).toMatchObject({ estado: 'SOLICITADA', total: 0, lineas: [] });
+    expect(body.reserva.ticket).toContain(body.reserva.codigo);
+
+    const approval = `/api/v1/admin/reservas/${body.reserva.id}/aprobar`;
+    await server.patch(approval).auth(diner, { type: 'bearer' }).expect(403);
+    await server.patch(approval).auth(admin, { type: 'bearer' }).expect(200);
+    await server.patch(approval).auth(admin, { type: 'bearer' }).expect(409);
+    const row = await prisma.reservation.findUniqueOrThrow({ where: { id: body.reserva.id } });
+    expect(row.estado).toBe(ReservationStatus.CONFIRMADA);
   });
 
   it('genera solo franjas a una hora o más y deja libre el tramo ocupado', async () => {
@@ -125,10 +170,13 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     ]);
 
     expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
-    expect(results.filter((result) => result.status === 'rejected')).toHaveLength(1);
-    const rows = await prisma.reservation.findMany();
+    const rejected = results.filter((result) => result.status === 'rejected');
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0].reason.getStatus()).toBe(409);
+    const rows = await prisma.reservation.findMany({ include: { lines: true } });
     expect(rows).toHaveLength(1);
     expect(rows[0].numComensales).toBeLessThanOrEqual(8);
+    expect(await prisma.reservationLine.count()).toBe(rows[0].lines.length);
   });
 
   it('guarda el precio del pedido, y rechaza grupos de ocho sin pedido', async () => {
@@ -173,18 +221,32 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     );
   });
 
-  it('permite cancelar una reserva confirmada con más de una hora de anticipación', async () => {
-    const atSixty = await service.create(dinerId, {
+  it.each([60, 59])('aplica el límite de cancelación con %i minutos restantes', async (remaining) => {
+    const created = await service.create(dinerId, {
       fecha,
       horaInicio: '10:00',
       numComensales: 4,
       lineas: [],
       nota: null,
     });
-    await service.approve(adminId, atSixty.reserva.id);
-    await expect(service.cancel(dinerId, atSixty.reserva.id)).resolves.toMatchObject({
-      estado: ReservationStatus.CANCELADA,
-    });
+    const id = created.reserva.id;
+    await service.approve(adminId, id);
+
+    // Fijo únicamente Date para probar el límite sin adelantar los temporizadores de Prisma.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(Date.parse(`${fecha}T10:00:00-05:00`) - remaining * 60_000));
+    try {
+      const cancellation = service.cancel(dinerId, id);
+      if (remaining === 60) {
+        await expect(cancellation).resolves.toMatchObject({ estado: ReservationStatus.CANCELADA });
+      } else {
+        await expect(cancellation).rejects.toThrow('hasta 60 minutos antes');
+        const row = await prisma.reservation.findUniqueOrThrow({ where: { id } });
+        expect(row.estado).toBe(ReservationStatus.CONFIRMADA);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('incrementa el contador cuando el comensal cancela una solicitud', async () => {
