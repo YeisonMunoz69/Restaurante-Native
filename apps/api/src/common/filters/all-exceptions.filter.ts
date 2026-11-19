@@ -17,10 +17,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     // Extraigo el mensaje (si es HttpException puede tener una respuesta personalizada)
-    let message = 'Internal server error';
+    let message: unknown = 'Internal server error';
+    let code: string | undefined;
     if (exception instanceof HttpException) {
       const response = exception.getResponse();
-      message = typeof response === 'string' ? response : (response as any).message || response;
+      if (typeof response === 'string') {
+        message = response;
+      } else {
+        message = 'message' in response ? response.message || response : response;
+        // Conservo el código público para que el móvil pueda completar el acceso.
+        if ('code' in response && typeof response.code === 'string') code = response.code;
+      }
     } else if (exception instanceof Error) {
       // En desarrollo podría mostrar el error real, pero genéricamente lo dejo así
       message = exception.message;
@@ -30,6 +37,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const responseBody = {
       statusCode: httpStatus,
       message,
+      ...(code === undefined ? {} : { code }),
       timestamp: new Date().toISOString(),
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
     };
