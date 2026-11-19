@@ -61,6 +61,7 @@ export const MenuScreen: React.FC = () => {
   const [noNextOpenDay, setNoNextOpenDay] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreFailed, setLoadMoreFailed] = useState(false);
   const [error, setError] = useState<unknown | null>(null);
   const [selectedDishId, setSelectedDishId] = useState<string | null>(null);
   const [nextPage, setNextPage] = useState(2);
@@ -81,6 +82,8 @@ export const MenuScreen: React.FC = () => {
     setNoNextOpenDay(false);
     setError(null);
     loadingMoreRef.current = false;
+    setLoadingMore(false);
+    setLoadMoreFailed(false);
 
     if (!restauranteId) {
       setLoading(false);
@@ -142,6 +145,8 @@ export const MenuScreen: React.FC = () => {
       setError(null);
       setLoading(true);
       loadingMoreRef.current = false;
+      setLoadingMore(false);
+      setLoadMoreFailed(false);
       try {
         const [page, day] = await Promise.all([
           menuApi.dishes(restauranteId, nextDate, 1),
@@ -192,6 +197,7 @@ export const MenuScreen: React.FC = () => {
     const currentRequest = requestNumber.current;
     loadingMoreRef.current = true;
     setLoadingMore(true);
+    setLoadMoreFailed(false);
     try {
       const page = await menuApi.dishes(restauranteId, fecha, nextPage);
       if (currentRequest !== requestNumber.current) return;
@@ -202,11 +208,14 @@ export const MenuScreen: React.FC = () => {
       });
       setNextPage(page.paginacion.pagina + 1);
       setTotalPages(page.paginacion.totalPaginas);
-    } catch (requestError) {
-      if (currentRequest === requestNumber.current) setError(requestError);
+    } catch {
+      // Si falla una página adicional, conservo los platos que ya cargaron.
+      if (currentRequest === requestNumber.current) setLoadMoreFailed(true);
     } finally {
-      loadingMoreRef.current = false;
-      if (currentRequest === requestNumber.current) setLoadingMore(false);
+      if (currentRequest === requestNumber.current) {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      }
     }
   }, [restauranteId, fecha, loading, error, nextPage, totalPages]);
 
@@ -436,7 +445,17 @@ export const MenuScreen: React.FC = () => {
               </Pressable>
             </View>
           ) : (
-            <MenuCarousels sections={sections} fecha={fecha ?? todayInBogota()} open={dayOpen === true} loadingMore={loadingMore} hasMore={nextPage <= totalPages} onMore={() => void loadMore()} onRefresh={refresh} onDetail={setSelectedDishId} />
+            <MenuCarousels
+              sections={sections}
+              fecha={fecha ?? todayInBogota()}
+              open={dayOpen === true}
+              loadingMore={loadingMore}
+              loadMoreFailed={loadMoreFailed}
+              hasMore={nextPage <= totalPages}
+              onMore={() => void loadMore()}
+              onRefresh={refresh}
+              onDetail={setSelectedDishId}
+            />
           )}
 
           <MenuDishDetailModal

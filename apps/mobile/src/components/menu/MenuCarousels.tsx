@@ -26,6 +26,7 @@ export function MenuCarousels({
   fecha,
   open,
   loadingMore,
+  loadMoreFailed = false,
   hasMore,
   onMore,
   onRefresh,
@@ -35,6 +36,7 @@ export function MenuCarousels({
   fecha: string;
   open: boolean;
   loadingMore: boolean;
+  loadMoreFailed?: boolean;
   hasMore: boolean;
   onMore: () => void;
   onRefresh: () => void;
@@ -83,7 +85,7 @@ export function MenuCarousels({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.row}
             onEndReached={() => {
-              if (hasMore && !loadingMore) onMore();
+              if (hasMore && !loadingMore && !loadMoreFailed) onMore();
             }}
             onEndReachedThreshold={0.4}
             initialNumToRender={3}
@@ -206,11 +208,12 @@ export function MenuCarousels({
           )}
           {hasMore && (
             <Action
-              label={t('discovery.loadMore')}
+              label={t(loadMoreFailed ? 'common.retry' : 'discovery.loadMore')}
               disabled={loadingMore}
               onPress={onMore}
             />
           )}
+          {loadMoreFailed && <Note live>{t('discovery.loadMoreFailed')}</Note>}
           {max > 0 && (
             <View style={styles.pager}>
               <View style={styles.pagerAction}>

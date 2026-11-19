@@ -4,6 +4,7 @@ import { Text } from 'react-native';
 import { useConnection } from '../../context/ConnectionContext';
 import { menuApi } from '../../services/menu.service';
 import { MenuScreen } from '../MenuScreen';
+import { MenuCarousels } from '../../components/menu/MenuCarousels';
 import { ThemeProvider } from '../../theme/ThemeContext';
 jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: jest.fn() }) }));
 
@@ -181,6 +182,34 @@ describe('MenuScreen', () => {
     expect(textValues(tree!)).toContain('menu.selectedDate');
     expect(textValues(tree!)).not.toContain('menu.nextOpenDay');
     ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('conserva la carta y vuelve a pedir la misma página cuando falla la paginación', async () => {
+    const firstPage = {
+      restauranteId: restaurantId,
+      fecha: '2031-02-23',
+      data: [dish],
+      paginacion: { pagina: 1, tamanoPagina: 20, total: 2, totalPaginas: 2 },
+    };
+    api.dishes.mockResolvedValueOnce(firstPage).mockRejectedValueOnce(new Error('offline'));
+    api.dishes.mockResolvedValueOnce({
+      ...firstPage,
+      data: [{ ...dish, id: 'segundo-plato', nombre: 'Segundo plato' }],
+      paginacion: { ...firstPage.paginacion, pagina: 2 },
+    });
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(<ThemeProvider><MenuScreen /></ThemeProvider>);
+    });
+    const carousel = () => tree.root.findByType(MenuCarousels);
+    await ReactTestRenderer.act(async () => carousel().props.onMore());
+    expect(carousel().props.loadMoreFailed).toBe(true);
+    expect(textValues(tree)).toContain('Sopa de prueba');
+    await ReactTestRenderer.act(async () => carousel().props.onMore());
+    expect(api.dishes).toHaveBeenLastCalledWith(restaurantId, '2031-02-23', 2);
+    expect(carousel().props.loadMoreFailed).toBe(false);
+    expect(carousel().props.sections[0].data).toHaveLength(2);
+    ReactTestRenderer.act(() => tree.unmount());
   });
 
   it('clears the no-open-day notice after choosing an open date', async () => {
