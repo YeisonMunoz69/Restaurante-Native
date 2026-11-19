@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { Switch, Text } from 'react-native';
+import { Text } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { SettingsScreen } from '../SettingsScreen';
@@ -128,24 +128,25 @@ describe('SettingsScreen authentication form', () => {
 
   it('muestra la sesión de Google y actualiza el resumen de apariencia al volver', async () => {
     jest.mocked(useAuth).mockReturnValue({
-      user: { id: 'test', correo: 'prueba@example.test', rol: 'COMENSAL', provider: 'google' },
+      user: { id: 'test', correo: 'prueba@example.test', nombre: 'Lucía Campos', rol: 'COMENSAL', provider: 'google' },
       isAuthenticated: true, isLoading: false, login, register, logout,
       loginWithGoogle: jest.fn(), updateProfile: jest.fn(), checkSession: jest.fn(),
     });
     let tree!: ReactTestRenderer.ReactTestRenderer;
     const shows = (label: string) => tree.root.findAllByType(Text).some(node => node.props.children === label);
+    const entry = (id: string) => tree.root.findAllByProps({ testID: id }).find(node => node.props.onPress);
     await ReactTestRenderer.act(async () => {
       tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>);
     });
-    expect(tree.root.findAllByType(Switch)).toHaveLength(0);
+    expect(shows('Lucía Campos')).toBe(true);
     expect(shows('settings.googleConnected')).toBe(true);
     expect(shows('settings.themeLight')).toBe(true);
-    const application = tree.root.findAllByProps({ testID: 'settings-application' }).find(node => node.props.onPress)!;
-    ReactTestRenderer.act(() => application.props.onPress());
-    await ReactTestRenderer.act(async () => tree.root.findByType(Switch).props.onValueChange(true));
-    expect(tree.root.findByType(Switch).props.value).toBe(true);
+    ReactTestRenderer.act(() => entry('settings-application')!.props.onPress());
+    expect(entry('appearance-light')!.props.accessibilityState.checked).toBe(true);
+    await ReactTestRenderer.act(async () => entry('appearance-dark')!.props.onPress());
+    expect(entry('appearance-dark')!.props.accessibilityState.checked).toBe(true);
     ReactTestRenderer.act(() => tree.root.findByType(BackButton).props.onPress());
-    expect(tree.root.findAllByType(Switch)).toHaveLength(0);
+    expect(entry('appearance-dark')).toBeUndefined();
     expect(shows('settings.themeDark')).toBe(true);
     expect(shows('settings.themeLight')).toBe(false);
     ReactTestRenderer.act(() => tree.unmount());

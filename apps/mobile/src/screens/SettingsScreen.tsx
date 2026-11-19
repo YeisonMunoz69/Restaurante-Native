@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
-import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   CalendarDays, ChevronRight, ClipboardList, Globe, Info, LogOut, MapPin, Moon,
@@ -15,6 +15,7 @@ import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { BackButton } from '../components/navigation/BackButton';
 import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { ProfileAvatar, ProfileDetails, useLocalProfilePhoto } from '../components/settings/AccountProfile';
+import { AppearancePicker } from '../components/settings/AppearancePicker';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
@@ -213,7 +214,7 @@ function SettingsGroup({ title, entries }: { title: string; entries: SettingsEnt
 function SettingsDetails({ section }: { section: Exclude<Section, 'profile'> }) {
   const { t } = useTranslation();
   const { user, isLoading, logout } = useAuth();
-  const { colors, typography, radii, isDark, setThemeMode } = useTheme();
+  const { colors, typography, radii, isDark } = useTheme();
   const primary = { color: colors.texto.primario };
   const secondary = { color: colors.texto.secundario };
   const accent = colors.marca.primario;
@@ -231,27 +232,8 @@ function SettingsDetails({ section }: { section: Exclude<Section, 'profile'> }) 
           </View>
         </View>
       );
-    case 'application': {
-      const ThemeIcon = isDark ? Moon : Sun;
-      return (
-        <View style={[styles.detailRow, card]}>
-          <ThemeIcon size={22} color={accent} />
-          <View style={styles.label}>
-            <Text style={[typography.cuerpoL, primary]}>{t('settings.appearance')}</Text>
-            <Text style={[typography.cuerpoM, secondary]}>
-              {t(isDark ? 'settings.themeDark' : 'settings.themeLight')}
-            </Text>
-          </View>
-          <Switch
-            accessibilityLabel={t('settings.themeDark')}
-            value={isDark}
-            onValueChange={value => setThemeMode(value ? 'dark' : 'light')}
-            trackColor={{ false: colors.superficie.borde, true: accent }}
-            thumbColor={colors.texto.inverso}
-          />
-        </View>
-      );
-    }
+    case 'application':
+      return <AppearancePicker />;
     case 'security':
       return user && (
         <View style={styles.list}>
