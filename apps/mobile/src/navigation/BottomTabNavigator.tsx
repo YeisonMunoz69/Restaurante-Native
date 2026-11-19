@@ -27,6 +27,7 @@ export type RootTabParamList = {
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
+export const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 64 : 80;
 
 // navegador principal con cinco destinos y boton central de noticias elevado
 export const BottomTabNavigator: React.FC = () => {
@@ -46,7 +47,7 @@ export const BottomTabNavigator: React.FC = () => {
           backgroundColor: colors.superficie.fondo,
           borderTopColor: colors.superficie.borde,
           // Reservo el espacio de los botones o gestos del sistema sin tapar las pestañas.
-          height: (Platform.OS === 'android' ? 64 : 80) + insets.bottom,
+          height: TAB_BAR_HEIGHT + insets.bottom,
           paddingBottom: 8 + insets.bottom,
           paddingTop: 6,
           elevation: 8, // sombra en Android

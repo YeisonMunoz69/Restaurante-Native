@@ -13,7 +13,7 @@
 
 **Perfil y botones (19 de noviembre):** el perfil muestra el nombre y la foto de Google, admite una foto alternativa en el dispositivo y permite completar datos de contacto. Apariencia presenta vistas previas de ambos temas y la salida queda al final de Ajustes. Aplicamos variantes primaria, secundaria y terciaria desde la paleta de la app. Pendiente actualizar requisitos en Drive y Word local para RF-INF09 (perfil y Ajustes) y RNF-09 (jerarquía de botones).
 
-**Modo invitado (19 de noviembre, EC-75):** cambiamos el acceso inicial para consultar Carta y Noticias sin sesión. Ajustes ofrece acceder por correo de Google y Añadir abre el mismo acceso desde Carta. Conservamos el tema claro para el invitado y guardamos la elección manual de cada cuenta autenticada. Pendiente actualizar requisitos en Drive y Word local: RF-AUT08 y RF-INF09, acceso invitado y apariencia por cuenta.
+**Modo invitado (19 de noviembre, EC-75):** cambiamos el acceso inicial para consultar Carta y Noticias sin sesión. Ajustes muestra «Accede con Google» y Añadir abre el mismo acceso desde Carta. Después de tres minutos continuos en primer plano, mostramos un aviso de acceso que se puede cerrar y desaparece a los quince segundos. Conservamos el tema claro para el invitado y guardamos la elección manual de cada cuenta autenticada. Pendiente actualizar requisitos en Drive y Word local: RF-AUT08 y RF-INF09, acceso invitado, recordatorio y apariencia por cuenta.
 
 ---
 

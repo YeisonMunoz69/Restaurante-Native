@@ -10,7 +10,7 @@ import './src/i18n'; // cargamos la configuracion de internacionalizacion
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FeedbackHost } from './src/components/feedback/Feedback';
-import { BottomTabNavigator } from './src/navigation/BottomTabNavigator';
+import { BottomTabNavigator, TAB_BAR_HEIGHT } from './src/navigation/BottomTabNavigator';
 import { WEB_LINKING } from './src/navigation/app-links';
 import { GuestAccessProvider } from './src/context/GuestAccessContext';
 import { ConnectionProvider } from './src/context/ConnectionContext';
@@ -55,7 +55,7 @@ const AppContent: React.FC = () => {
       {!user && isLoading ? (
         <ActivityIndicator color={colors.marca.primario} style={{ flex: 1, backgroundColor: colors.superficie.fondo }} />
       ) : (
-        <GuestAccessProvider authenticated={!!user}>
+        <GuestAccessProvider authenticated={!!user} reminderOffset={TAB_BAR_HEIGHT}>
           <NavigationContainer theme={navTheme} linking={WEB_LINKING}>
             <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
               <BottomTabNavigator />

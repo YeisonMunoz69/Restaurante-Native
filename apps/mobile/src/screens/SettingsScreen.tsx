@@ -77,7 +77,7 @@ export const SettingsScreen: React.FC = () => {
       <KeyboardAwareScrollView style={{ backgroundColor: colors.superficie.elevada }}
         contentContainerStyle={[styles.content, { paddingHorizontal: spacing.margenLateral, paddingTop: insets.top + spacing.s }]}>
         <TabPageHeader title={t('settings.title')} />
-        <Button testID="guest-settings-sign-in" label={t('settings.guestSignIn')}
+        <Button testID="guest-settings-sign-in" label={t('auth.guestSignInTitle')}
           variant="primary" onPress={() => requestSignIn('settings')} />
       </KeyboardAwareScrollView>
     );
