@@ -225,6 +225,7 @@
     "loadError": "No pudimos cargar las noticias.",
     "offline": "Mostramos la última copia guardada. Las fotos y los enlaces pueden requerir conexión.",
     "read": "Leer noticia",
+    "notFound": "Esta noticia ya no está disponible.",
     "readTitle": "Leer {{title}}",
     "share": "Compartir noticia",
     "actionError": "No pudimos abrir esa opción."

@@ -1,0 +1,15 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name=".MainActivity">
+            <!-- La variante Local no compite por el dominio aprobado. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="${encantoWebHost}" />
+                <data android:pathPrefix="/plato/" />
+                <data android:pathPrefix="/noticia/" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

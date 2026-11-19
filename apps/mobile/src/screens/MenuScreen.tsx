@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, type RouteProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RootTabParamList } from '../navigation/BottomTabNavigator';
 import { OrderDraftPanel } from '../components/menu/OrderDraftPanel';
@@ -44,7 +44,7 @@ function errorStatus(error: unknown) {
 
 type MenuSection = { id: string; title: string; data: MenuDish[] };
 
-export const MenuScreen: React.FC = () => {
+export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> }> = ({ route }) => {
   const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
@@ -459,11 +459,15 @@ export const MenuScreen: React.FC = () => {
           )}
 
           <MenuDishDetailModal
-            visible={selectedDishId !== null}
+            visible={selectedDishId !== null || !!route?.params?.slug}
             dishId={selectedDishId}
+            slug={route?.params?.slug}
             restauranteId={restauranteId}
-            fecha={fecha ?? todayInBogota()}
-            onClose={() => setSelectedDishId(null)}
+            fecha={route?.params?.slug ? route.params.fecha ?? todayInBogota() : fecha ?? todayInBogota()}
+            onClose={() => {
+              setSelectedDishId(null);
+              if (route?.params?.slug) navigation.setParams({ slug: undefined, fecha: undefined });
+            }}
           />
         </>
       )}

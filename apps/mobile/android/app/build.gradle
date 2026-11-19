@@ -122,6 +122,10 @@ android {
         vps {
             dimension "environment"
             buildConfigField "String", "BACKEND_ENV", '"dev"'
+            def web = new java.net.URI(System.getenv("ENCANTO_WEB_URL") ?: "")
+            def validOrigin = web.scheme == "https" && web.host && web.port == -1 &&
+                !web.userInfo && !web.query && !web.fragment && (!web.path || web.path == "/")
+            manifestPlaceholders.encantoWebHost = validOrigin ? web.host : "app-links.invalid"
         }
     }
     signingConfigs {

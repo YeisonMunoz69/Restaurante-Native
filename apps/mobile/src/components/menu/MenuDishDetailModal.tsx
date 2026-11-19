@@ -26,12 +26,14 @@ export function MenuDishDetailModal({
   restauranteId,
   fecha,
   dishId,
+  slug,
   onClose,
 }: {
   visible: boolean;
   restauranteId: string;
   fecha: string;
   dishId: string | null;
+  slug?: string;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
@@ -44,14 +46,16 @@ export function MenuDishDetailModal({
   const shareUrl = dish?.disponible ? dishLink(dish.slug, fecha) : null;
 
   useEffect(() => {
-    if (!visible || !dishId || !restauranteId) return;
+    if (!visible || (!dishId && !slug) || !restauranteId) return;
     let current = true;
     setDish(null);
     setError(false);
     setLoading(true);
 
-    menuApi
-      .dish(restauranteId, fecha, dishId)
+    const request = slug
+      ? menuApi.dishBySlug(restauranteId, fecha, slug)
+      : menuApi.dish(restauranteId, fecha, dishId!);
+    request
       .then(result => {
         if (current) setDish(result);
       })
@@ -65,7 +69,7 @@ export function MenuDishDetailModal({
     return () => {
       current = false;
     };
-  }, [visible, restauranteId, fecha, dishId, attempt]);
+  }, [visible, restauranteId, fecha, dishId, slug, attempt]);
 
   return (
     <Modal

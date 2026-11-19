@@ -18,9 +18,9 @@ import {
 } from 'lucide-react-native';
 
 export type RootTabParamList = {
-  Menu: undefined;
+  Menu: { slug?: string; fecha?: string } | undefined;
   Reservations: undefined;
-  News: undefined;
+  News: { id?: string } | undefined;
   Upcoming: undefined;
   Settings: { returnTo?: 'Reservations' } | undefined;
 };

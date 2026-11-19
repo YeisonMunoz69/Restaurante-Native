@@ -65,6 +65,11 @@ export const menuApi = {
       })
     ).data.plato,
 
+  dishBySlug: async (restauranteId: string, fecha: string, slug: string) =>
+    (await apiClient.get<MenuDishResult>('/menu/platos/slug/' + encodeURIComponent(slug), {
+      params: { restauranteId, fecha },
+    })).data.plato,
+
   tags: async (restauranteId: string, pagina = 1) =>
     (
       await apiClient.get<MenuPage<MenuTag>>('/menu/etiquetas', {

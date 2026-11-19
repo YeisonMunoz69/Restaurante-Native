@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Linking, Modal, ScrollView, Share, StyleSheet, Text } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, type RouteProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type NewsPost } from '@encanto/shared';
@@ -12,15 +13,22 @@ import { connectionUrl } from '../config/connection';
 import { useTheme } from '../theme/ThemeContext';
 import { newsImageUrl, readNews } from '../services/news.service';
 import { newsLink } from '../config/web-links';
+import type { RootTabParamList } from '../navigation/BottomTabNavigator';
 
 // Reinicio la vista cuando cambia el destino para no mezclar publicaciones entre entornos.
-export function NewsScreen() {
+export function NewsScreen({ route, navigation }: {
+  route?: RouteProp<RootTabParamList, 'News'>;
+  navigation?: BottomTabNavigationProp<RootTabParamList, 'News'>;
+}) {
   const { settings } = useConnection();
   const base = connectionUrl(settings);
-  return <NewsFeed key={base + '/' + settings.restauranteId} base={base} restaurant={settings.restauranteId} />;
+  return <NewsFeed key={base + '/' + settings.restauranteId} base={base} restaurant={settings.restauranteId}
+    linkedId={route?.params?.id} clearLink={() => navigation?.setParams({ id: undefined })} />;
 }
 
-function NewsFeed({ base, restaurant }: { base: string; restaurant: string }) {
+function NewsFeed({ base, restaurant, linkedId, clearLink }: {
+  base: string; restaurant: string; linkedId?: string; clearLink: () => void;
+}) {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
   const [posts, setPosts] = useState<NewsPost[]>([]);
@@ -28,7 +36,11 @@ function NewsFeed({ base, restaurant }: { base: string; restaurant: string }) {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = posts.find(post => post.id === selectedId);
+  const selected = posts.find(post => post.id === (linkedId ?? selectedId));
+  const closeDetail = () => {
+    setSelectedId(null);
+    if (linkedId) clearLink();
+  };
 
   // Actualizo al abrir la pestaña y cancelo la lectura si cambia la conexión.
   useFocusEffect(useCallback(() => {
@@ -71,6 +83,12 @@ function NewsFeed({ base, restaurant }: { base: string; restaurant: string }) {
             <Text accessibilityRole="header" style={[typography.display, { color: colors.texto.primario }]}>{t('news.title')}</Text>
             <Note>{t('news.subtitle')}</Note>
             {cached && <Note live tone="warning">{t('news.offline')}</Note>}
+            {linkedId && status === 'ready' && !selected && (
+              <>
+                <Note live tone="warning">{t('news.notFound')}</Note>
+                <Action label={t('common.back')} onPress={closeDetail} />
+              </>
+            )}
             {status === 'error' && (
               <>
                 <Note live tone="error">{t('news.loadError')}</Note>
@@ -91,15 +109,18 @@ function NewsFeed({ base, restaurant }: { base: string; restaurant: string }) {
             <Text accessibilityRole="header" style={[typography.tituloM, { color: colors.texto.primario }]}>{item.titulo}</Text>
             <Note>{new Date(item.publicadaEn).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' })}</Note>
             <Text numberOfLines={3} style={[typography.cuerpoM, { color: colors.texto.secundario }]}>{item.cuerpo}</Text>
-            <Action label={t('news.read')} accessibilityLabel={t('news.readTitle', { title: item.titulo })} onPress={() => setSelectedId(item.id)} />
+            <Action label={t('news.read')} accessibilityLabel={t('news.readTitle', { title: item.titulo })} onPress={() => {
+              if (linkedId) clearLink();
+              setSelectedId(item.id);
+            }} />
           </Panel>
         )}
       />
       {selected && (
-        <Modal visible animationType="slide" onRequestClose={() => setSelectedId(null)}>
+        <Modal visible animationType="slide" onRequestClose={closeDetail}>
           <SafeAreaView style={[styles.screen, { backgroundColor: colors.superficie.fondo }]}>
             <ScrollView contentContainerStyle={styles.content}>
-              <BackButton onPress={() => setSelectedId(null)} />
+              <BackButton onPress={closeDetail} />
               <Text accessibilityRole="header" style={[typography.tituloL, { color: colors.texto.primario }]}>{selected.titulo}</Text>
               {renderImage(selected)}
               <Note>{selected.cuerpo}</Note>

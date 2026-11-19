@@ -11,6 +11,7 @@ import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FeedbackHost } from './src/components/feedback/Feedback';
 import { BottomTabNavigator } from './src/navigation/BottomTabNavigator';
+import { WEB_LINKING } from './src/navigation/app-links';
 import { ConnectionProvider } from './src/context/ConnectionContext';
 import { useConnection } from './src/context/ConnectionContext';
 import { OrderDraftProvider } from './src/context/OrderDraftContext';
@@ -47,7 +48,7 @@ const AppContent: React.FC = () => {
       };
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} linking={WEB_LINKING}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
         <BottomTabNavigator />
