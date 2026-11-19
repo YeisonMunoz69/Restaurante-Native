@@ -6,6 +6,7 @@ import { ThemeProvider } from '../theme/ThemeContext';
 
 let mockUser: { id: string } | null = null;
 jest.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: mockUser }) }));
+jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 jest.mock('@react-navigation/bottom-tabs', () => {
   const React = require('react');
   const { Text } = require('react-native');
