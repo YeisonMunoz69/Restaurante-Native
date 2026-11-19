@@ -11,6 +11,8 @@
 
 **Avance local del 19 de noviembre (EC-75, En curso):** probamos en el Samsung S21 el alta por Google, la restauración de sesión y el cierre. Agrupamos el índice de Ajustes en Tu cuenta, Tu experiencia y Más, con acceso a Perfil, Cuenta y seguridad, Apariencia, Preferencias e Información y ayuda. El índice resume el estado de la sesión, el tema y el idioma. La app abre en claro en una instalación nueva y recuerda la apariencia elegida. Todavía pedimos el teléfono en el alta; RF-AUT01 prevé solicitarlo al reservar. Quedan pendientes esa transición, la validación con los tres ADMIN reales, EC-58 y la integración en dev. Pendiente actualizar requisitos en Drive y Word local: RF-AUT01/02/03/05/08 y Ajustes.
 
+**Perfil y botones (19 de noviembre):** el perfil muestra el nombre y la foto de Google, admite una foto alternativa en el dispositivo y permite completar datos de contacto. Apariencia presenta vistas previas de ambos temas y la salida queda al final de Ajustes. Aplicamos variantes primaria, secundaria y terciaria desde la paleta de la app. Pendiente actualizar requisitos en Drive y Word local para RF-INF09 (perfil y Ajustes) y RNF-09 (jerarquía de botones).
+
 ---
 
 ## 1. Ficha Técnica y Alcance del Sistema
@@ -187,7 +189,7 @@ _\*Sujeto a capacidad disponible de Sprint 5._
 | **RF-INF06** | Pantalla Próximamente        | Tarjetas informativas con estética de marca anunciando la pista de motos y la zona de pesca deportiva.                                        |   **S**   | Sprint 4 | EP-07     |
 | **RF-INF07** | Registro de tokens push      | Registro y actualización del token de Firebase Cloud Messaging asociado al dispositivo del usuario.                                           |   **M**   | Sprint 5 | EP-09     |
 | **RF-INF08** | Preferencias de notificación | Pantalla en perfil para que el comensal active o silencie notificaciones de noticias o recordatorios.                                         |   **S**   | Sprint 5 | EP-09     |
-| **RF-INF09** | Subpantallas de Ajustes       | Organizar Ajustes en Perfil, Preferencias, Aplicación, Cuenta y seguridad, e Información/ayuda; conservar el retorno visible y los cinco destinos principales. | **S** | Sprint 5 | EP-02 |
+| **RF-INF09** | Subpantallas de Ajustes       | Organizar Ajustes en Perfil, Preferencias, Apariencia, Cuenta y seguridad e Información y ayuda, con retorno visible y cinco destinos principales. Mostrar nombre y foto de Google, permitir editar nombre, teléfono y ciudad opcional, y guardar una foto alternativa por cuenta en el dispositivo. Mostrar vistas previas para elegir tema y ubicar Cerrar sesión al final del índice. | **S** | Sprint 5 | EP-02 |
 
 ---
 
