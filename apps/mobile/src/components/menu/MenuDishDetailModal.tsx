@@ -9,7 +9,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
+import { ChevronLeft, CircleCheck, Share2, UtensilsCrossed } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MenuDish } from '@encanto/shared';
@@ -18,7 +20,6 @@ import { menuApi } from '../../services/menu.service';
 import { menuGallery } from './menu-photo';
 import { formatCop } from '../../utils/formatters';
 import { dishLink } from '../../config/web-links';
-import { Action } from '../attention/Controls';
 import { Feedback } from '../feedback/Feedback';
 
 export function MenuDishDetailModal({
@@ -39,17 +40,24 @@ export function MenuDishDetailModal({
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [dish, setDish] = useState<MenuDish | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [photoIndex, setPhotoIndex] = useState(0);
   const shareUrl = dish?.disponible ? dishLink(dish.slug, fecha) : null;
   const photos = dish ? menuGallery(dish) : [];
+  const galleryWidth = Math.min(520, width - spacing.margenLateral * 2);
+  const photoHeight = Math.min(360, Math.round(galleryWidth * 0.85));
+  const description = dish?.descripcion?.trim() || dish?.descripcionBreve?.trim();
 
+  // Vuelvo a la primera foto cuando cambia el plato y descarto respuestas de una ficha cerrada.
   useEffect(() => {
     if (!visible || (!dishId && !slug) || !restauranteId) return;
     let current = true;
     setDish(null);
+    setPhotoIndex(0);
     setError(false);
     setLoading(true);
 
@@ -83,63 +91,47 @@ export function MenuDishDetailModal({
         testID="menu-detail-modal"
         style={[styles.container, { backgroundColor: colors.superficie.fondo }]}
       >
-        <View
-          style={[
-            styles.topBar,
-            {
-              paddingHorizontal: spacing.margenLateral,
-              paddingTop: insets.top + spacing.l,
-              paddingBottom: spacing.m,
-            },
-          ]}
-        >
+        <View style={[styles.topBar, {
+          paddingHorizontal: spacing.margenLateral,
+          paddingTop: insets.top + spacing.xs,
+        }]}>
           <TouchableOpacity
             testID="menu-detail-close"
             accessibilityRole="button"
             accessibilityLabel={t('common.back')}
             onPress={onClose}
-            style={[
-              styles.backButton,
-              {
-                borderColor: colors.superficie.borde,
-                borderRadius: radii.m,
-                backgroundColor: colors.superficie.elevada,
-              },
-            ]}
+            style={styles.backButton}
           >
-            <Text
-              style={[typography.etiqueta, { color: colors.texto.primario }]}
-            >
+            <ChevronLeft size={22} color={colors.texto.primario} />
+            <Text style={[typography.etiqueta, { color: colors.texto.primario }]}>
               {t('common.back')}
             </Text>
           </TouchableOpacity>
+          {shareUrl && dish && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t('menu.shareDish')}
+              style={styles.iconButton}
+              onPress={() => {
+                void Share.share({ message: t('menu.shareMessage', { name: dish.nombre, url: shareUrl }) })
+                  .catch(() => Feedback.alert(t('news.actionError'), undefined, [], { kind: 'error' }));
+              }}
+            >
+              <Share2 size={21} color={colors.texto.primario} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {loading ? (
-          <View
-            style={[styles.centered, { paddingBottom: insets.bottom + 24 }]}
-          >
-            <ActivityIndicator
-              testID="menu-detail-loading"
-              color={colors.marca.primario}
-            />
-            <Text
-              style={[
-                typography.cuerpoM,
-                { color: colors.texto.secundario, marginTop: spacing.m },
-              ]}
-            >
+          <View style={styles.centered}>
+            <ActivityIndicator testID="menu-detail-loading" color={colors.marca.primario} />
+            <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
               {t('menu.loadingDetail')}
             </Text>
           </View>
         ) : error ? (
-          <View
-            style={[styles.centered, { paddingBottom: insets.bottom + 24 }]}
-          >
-            <Text
-              testID="menu-detail-error"
-              style={[typography.cuerpoM, { color: colors.estado.error }]}
-            >
+          <View style={styles.centered}>
+            <Text testID="menu-detail-error" style={[typography.cuerpoM, { color: colors.estado.error }]}>
               {t('menu.detailError')}
             </Text>
             <TouchableOpacity
@@ -148,194 +140,108 @@ export function MenuDishDetailModal({
               onPress={() => setAttempt(value => value + 1)}
               style={styles.retryButton}
             >
-              <Text
-                style={[typography.etiqueta, { color: colors.marca.primario }]}
-              >
+              <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
                 {t('common.retry')}
               </Text>
             </TouchableOpacity>
           </View>
         ) : dish ? (
-          <ScrollView
-            contentContainerStyle={{
-              paddingHorizontal: spacing.margenLateral,
-              paddingBottom: insets.bottom + spacing.xxl,
-            }}
-          >
-            <Text
-              style={[
-                typography.display,
-                { color: colors.texto.primario, marginBottom: spacing.s },
-              ]}
-            >
-              {dish.nombre}
-            </Text>
-            <Text style={[typography.tituloM, { color: colors.marca.acento }]}>
-              {formatCop(dish.precio)}
-            </Text>
-            <Text
-              style={[
-                typography.cuerpoM,
-                { color: colors.texto.secundario, marginTop: spacing.m },
-              ]}
-            >
-              {dish.descripcionBreve || dish.descripcion}
-            </Text>
-            {dish.descripcionBreve && (
-              <Text
-                style={[
-                  typography.cuerpoM,
-                  { color: colors.texto.primario, marginTop: spacing.m },
-                ]}
-              >
-                {dish.descripcion}
-              </Text>
-            )}
-
-            <View
-              style={[
-                styles.availability,
-                {
-                  backgroundColor: dish.disponible
-                    ? colors.marca.primarioSuave
-                    : colors.superficie.elevada,
-                  borderRadius: radii.s,
-                  marginTop: spacing.l,
-                  padding: spacing.s,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  typography.etiqueta,
-                  {
-                    color: dish.disponible
-                      ? colors.marca.primario
-                      : colors.texto.secundario,
-                  },
-                ]}
-              >
-                {t(
-                  dish.disponible
-                    ? 'menu.badgeAvailable'
-                    : 'menu.badgeUnavailable',
-                )}
-              </Text>
-            </View>
-
-            {shareUrl && (
-              <Action label={t('menu.shareDish')} onPress={() => {
-                void Share.share({ message: t('menu.shareMessage', { name: dish.nombre, url: shareUrl }) })
-                  .catch(() => Feedback.alert(t('news.actionError'), undefined, [], { kind: 'error' }));
-              }} />
-            )}
-
-            <Text
-              style={[
-                typography.tituloM,
-                { color: colors.texto.primario, marginTop: spacing.xl },
-              ]}
-            >
-              {t('menu.photos')}
-            </Text>
-            {photos.length ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingVertical: spacing.m }}
-              >
-                {photos.map((photo, index) => (
-                    <View
-                      key={photo.id}
-                      style={[
-                        styles.photoCard,
-                        {
-                          backgroundColor: colors.superficie.elevada,
-                          borderColor: colors.superficie.borde,
-                          borderRadius: radii.m,
-                          marginRight: spacing.m,
-                        },
-                      ]}
-                    >
+          <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xxl }}>
+            <View style={[styles.detail, { width: galleryWidth, gap: spacing.l }]}>
+              <View style={{ gap: spacing.s }}>
+                <Text accessibilityRole="header" style={[typography.tituloL, { color: colors.texto.primario }]}>
+                  {dish.nombre}
+                </Text>
+                <View style={styles.summary}>
+                  <Text style={[typography.precio, { color: colors.marca.acento }]}>
+                    {formatCop(dish.precio)}
+                  </Text>
+                  <View style={[styles.availability, {
+                    backgroundColor: dish.disponible ? colors.marca.primarioSuave : colors.superficie.elevada,
+                    borderRadius: radii.completo,
+                  }]}>
+                    {dish.disponible && <CircleCheck size={15} color={colors.marca.primario} />}
+                    <Text style={[typography.pie, styles.badgeText, {
+                      color: dish.disponible ? colors.marca.primario : colors.texto.secundario,
+                    }]}>
+                      {t(dish.disponible ? 'menu.badgeAvailable' : 'menu.badgeUnavailable')}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              {photos.length ? (
+                <View>
+                  {/* Doy a cada foto el ancho de la galería para centrarla y conservar el encuadre. */}
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    accessibilityLabel={t('menu.photos')}
+                    onMomentumScrollEnd={({ nativeEvent }) => {
+                      const index = Math.round(nativeEvent.contentOffset.x / galleryWidth);
+                      setPhotoIndex(Math.max(0, Math.min(photos.length - 1, index)));
+                    }}
+                    style={{ borderRadius: radii.l, backgroundColor: colors.superficie.elevada }}
+                  >
+                    {photos.map((photo, index) => (
                       <Image
-                        accessibilityLabel={t('menu.photoLabel', {
-                          number: index + 1,
-                        })}
+                        key={photo.id}
+                        accessibilityLabel={t('menu.photoLabel', { number: index + 1 })}
                         source={photo.source}
                         resizeMode="contain"
-                        style={styles.photo}
+                        style={{ width: galleryWidth, height: photoHeight }}
                       />
-                      <Text
-                        style={[
-                          typography.pie,
-                          {
-                            color: colors.texto.secundario,
-                            padding: spacing.s,
-                          },
-                        ]}
-                      >
-                        {t('menu.photoPosition', {
-                          number: index + 1,
-                          total: photos.length,
-                        })}
-                      </Text>
-                    </View>
-                ))}
-              </ScrollView>
-            ) : (
-              <Text
-                style={[
-                  typography.cuerpoM,
-                  { color: colors.texto.secundario, marginTop: spacing.s },
-                ]}
-              >
-                {t('menu.noPhotos')}
-              </Text>
-            )}
-
-            {dish.alergenos && (
-              <View style={{ marginTop: spacing.l }}>
-                <Text
-                  style={[
-                    typography.etiqueta,
-                    { color: colors.texto.primario },
-                  ]}
-                >
-                  {t('menu.allergens')}
-                </Text>
-                <Text
-                  style={[
-                    typography.cuerpoM,
-                    { color: colors.texto.secundario, marginTop: spacing.xs },
-                  ]}
-                >
-                  {dish.alergenos}
-                </Text>
-              </View>
-            )}
-            {!!dish.etiquetas.length && (
-              <View style={styles.tags}>
-                {dish.etiquetas.map(tag => (
-                  <View
-                    key={tag.id}
-                    style={[
-                      styles.tag,
-                      {
-                        backgroundColor: colors.superficie.elevada,
-                        borderColor: colors.superficie.borde,
-                        borderRadius: radii.s,
-                      },
-                    ]}
-                  >
+                    ))}
+                  </ScrollView>
+                  {photos.length > 1 && (
                     <Text
-                      style={[typography.pie, { color: colors.texto.primario }]}
+                      accessibilityLiveRegion="polite"
+                      style={[typography.pie, styles.photoPosition, { color: colors.texto.secundario }]}
+                    >
+                      {t('menu.photoPosition', { number: photoIndex + 1, total: photos.length })}
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                <View style={[styles.noPhotos, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
+                  <UtensilsCrossed size={25} color={colors.texto.secundario} />
+                  <Text style={[typography.pie, { color: colors.texto.secundario, textAlign: 'center' }]}>
+                    {t('menu.noPhotos')}
+                  </Text>
+                </View>
+              )}
+              {!!description && (
+                <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
+                  {description}
+                </Text>
+              )}
+              {!!dish.alergenos && (
+                <View style={{ gap: spacing.xs }}>
+                  <Text accessibilityRole="header" style={[typography.etiqueta, { color: colors.texto.primario }]}>
+                    {t('menu.allergens')}
+                  </Text>
+                  <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
+                    {dish.alergenos}
+                  </Text>
+                </View>
+              )}
+              {!!dish.etiquetas.length && (
+                <View style={styles.tags}>
+                  {dish.etiquetas.map(tag => (
+                    <Text
+                      key={tag.id}
+                      style={[typography.pie, styles.tag, {
+                        color: colors.texto.primario,
+                        backgroundColor: colors.superficie.elevada,
+                        borderRadius: radii.completo,
+                      }]}
                     >
                       {tag.nombre}
                     </Text>
-                  </View>
-                ))}
-              </View>
-            )}
+                  ))}
+                </View>
+              )}
+            </View>
           </ScrollView>
         ) : null}
       </View>
@@ -345,30 +251,22 @@ export function MenuDishDetailModal({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  topBar: { alignItems: 'flex-start' },
-  backButton: {
-    minHeight: 48,
-    justifyContent: 'center',
-    borderWidth: 1,
-    paddingHorizontal: 16,
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
   },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
+  backButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 5 },
+  iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  detail: { alignSelf: 'center' },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   retryButton: { minHeight: 48, justifyContent: 'center', padding: 12 },
-  availability: { alignSelf: 'flex-start' },
-  // Dejo crecer la tarjeta para que el contador no quede recortado debajo de la imagen 4:3.
-  photoCard: { width: 280, overflow: 'hidden', borderWidth: 1 },
-  photo: { width: '100%', aspectRatio: 4 / 3 },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 16 },
-  tag: {
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
+  summary: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10 },
+  availability: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 10, paddingVertical: 5, maxWidth: '100%',
   },
+  badgeText: { flexShrink: 1 },
+  photoPosition: { textAlign: 'center', marginTop: 8 },
+  noPhotos: { alignItems: 'center', justifyContent: 'center', padding: 24, gap: 10 },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tag: { paddingHorizontal: 10, paddingVertical: 6 },
 });
