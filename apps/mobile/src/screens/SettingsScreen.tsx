@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Switch,
-  ActivityIndicator,
-} from 'react-native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
+import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { AppWindow, ChevronRight, Globe, Info, LogOut, MapPin, Moon, ShieldCheck, SlidersHorizontal, Sun, User } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { GoogleAccess } from '../components/GoogleAccess';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
+import { BackButton } from '../components/navigation/BackButton';
 import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { Action } from '../components/attention/Controls';
 import { AttentionScreen } from './AttentionScreen';
@@ -21,29 +17,29 @@ import { AdminReservationsScreen } from './AdminReservationsScreen';
 import { PaymentSettingsScreen } from './PaymentSettingsScreen';
 import { AdminsScreen } from './AdminsScreen';
 import { AdminNewsScreen } from './AdminNewsScreen';
-import {
-  Moon,
-  Sun,
-  Globe,
-  MapPin,
-  Info,
-  ShieldCheck,
-  User,
-  LogOut,
-} from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// pantalla de ajustes con gestion de tema, idioma y estado de autenticacion segura
+const sections = {
+  profile: { label: 'settings.profile', icon: User },
+  preferences: { label: 'settings.preferences', icon: SlidersHorizontal },
+  application: { label: 'settings.application', icon: AppWindow },
+  security: { label: 'auth.title', icon: ShieldCheck },
+  information: { label: 'settings.information', icon: Info },
+} as const;
+type Section = keyof typeof sections;
+type AdminView = 'attention' | 'menu' | 'reservations' | 'payments' | 'admins' | 'news';
+
+// Reúno las opciones en Ajustes y conservo los accesos administrativos según el rol.
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const isFocused = useIsFocused();
   const { t } = useTranslation();
-  const { isDark, setThemeMode, colors, typography, spacing, radii } =
-    useTheme();
-  const { user, isAuthenticated, isLoading, logout } =
-    useAuth();
+  const { colors, typography, spacing } = useTheme();
+  const { user, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
-  const [adminView, setAdminView] = useState<'attention' | 'menu' | 'reservations' | 'payments' | 'admins' | 'news' | null>(null);
+  const [section, setSection] = useState<Section | null>(null);
+  const [adminView, setAdminView] = useState<AdminView | null>(null);
+  const closeAdminView = () => setAdminView(null);
 
   // Regreso al formulario que quedó montado en Reservas después de autenticar.
   useEffect(() => {
@@ -53,387 +49,194 @@ export const SettingsScreen: React.FC = () => {
     }
   }, [isAuthenticated, navigation, route.params?.returnTo]);
 
+  // Solo intercepto Atrás si el usuario está leyendo una subpantalla de esta pestaña.
+  useEffect(() => {
+    if (!isFocused || !section) return;
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => {
+      setSection(null);
+      return true;
+    });
+    return () => listener.remove();
+  }, [isFocused, section]);
+
   if (adminView === 'attention' && user?.rol === 'ADMIN')
-    return <AttentionScreen onBack={() => setAdminView(null)} />;
+    return <AttentionScreen onBack={closeAdminView} />;
   if (adminView === 'admins' && user?.rol === 'ADMIN')
-    return <AdminsScreen onBack={() => setAdminView(null)} />;
+    return <AdminsScreen onBack={closeAdminView} />;
   if (adminView === 'payments' && user?.rol === 'ADMIN')
-    return <PaymentSettingsScreen onBack={() => setAdminView(null)} />;
+    return <PaymentSettingsScreen onBack={closeAdminView} />;
   if (adminView === 'menu' && user?.rol === 'ADMIN')
-    return <MenuAdminScreen onBack={() => setAdminView(null)} />;
+    return <MenuAdminScreen onBack={closeAdminView} />;
   if (adminView === 'news' && user?.rol === 'ADMIN')
-    return <AdminNewsScreen onBack={() => setAdminView(null)} />;
+    return <AdminNewsScreen onBack={closeAdminView} />;
   if (adminView === 'reservations' && (user?.rol === 'ADMIN' || user?.rol === 'STAFF'))
-    return <AdminReservationsScreen onBack={() => setAdminView(null)} />;
+    return <AdminReservationsScreen onBack={closeAdminView} />;
+
   return (
     <KeyboardAwareScrollView
-      style={[styles.contenedor, { backgroundColor: colors.superficie.fondo }]}
-      contentContainerStyle={[
-        styles.scrollContent,
-        {
-          padding: spacing.margenLateral,
-          paddingTop: insets.top + spacing.s,
-        },
-      ]}
+      key={section ?? 'index'}
+      style={{ backgroundColor: colors.superficie.fondo }}
+      contentContainerStyle={[styles.content, {
+        paddingHorizontal: spacing.margenLateral,
+        paddingTop: insets.top + spacing.s,
+      }]}
     >
-      <TabPageHeader title={t('settings.title')} />
-
-      {user?.rol === 'ADMIN' && (
-        <View>
-          <Action label={t('menuAdmin.title')} onPress={() => setAdminView('menu')} />
-          <Action label={t('newsAdmin.title')} onPress={() => setAdminView('news')} />
-          <Action label={t('payments.title')} onPress={() => setAdminView('payments')} />
-          <Action label={t('admins.title')} onPress={() => setAdminView('admins')} />
-          <Action label={t('reservations.adminTitle')} onPress={() => setAdminView('reservations')} />
-          <Action
-            label={t('attention.title')}
-            onPress={() => setAdminView('attention')}
-          />
-        </View>
-      )}
-      {user?.rol === 'STAFF' && (
-        <Action label={t('reservations.agenda')} onPress={() => setAdminView('reservations')} />
-      )}
-
-      {/* Presento el estado de cuenta y el formulario de autenticacion. */}
-      <View
-        style={[
-          styles.seccion,
-          {
-            backgroundColor: colors.superficie.elevada,
-            borderColor: colors.superficie.borde,
-            borderRadius: radii.l,
-            padding: spacing.l,
-            marginTop: spacing.l,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            typography.etiqueta,
-            {
-              color: colors.texto.secundario,
-              textTransform: 'uppercase',
-              marginBottom: spacing.m,
-            },
-          ]}
-        >
-          {t('auth.title')}
-        </Text>
-
-        {isAuthenticated && user ? (
-          <View>
-            <View style={styles.filaUsuario}>
-              <View
-                style={[
-                  styles.avatarContenedor,
-                  {
-                    backgroundColor: colors.marca.primario + '20',
-                    borderRadius: radii.completo,
-                    padding: spacing.s,
-                  },
-                ]}
-              >
-                <User size={24} color={colors.marca.primario} />
-              </View>
-
-              <View style={{ marginLeft: spacing.m, flex: 1 }}>
-                <Text
-                  style={[typography.tituloM, { color: colors.texto.primario }]}
+      {section ? (
+        <>
+          <BackButton onPress={() => setSection(null)} />
+          <TabPageHeader title={t(sections[section].label)} />
+          <SettingsDetails section={section} />
+        </>
+      ) : (
+        <>
+          <TabPageHeader title={t('settings.title')} />
+          <View style={styles.list}>
+            {(Object.keys(sections) as Section[]).map(key => {
+              const { label, icon: Icon } = sections[key];
+              return (
+                <Pressable
+                  key={key}
+                  testID={`settings-${key}`}
+                  accessibilityRole="button"
+                  onPress={() => setSection(key)}
+                  style={({ pressed }) => [styles.row, {
+                    borderBottomColor: colors.superficie.borde,
+                    backgroundColor: pressed ? colors.superficie.elevada : colors.superficie.fondo,
+                  }]}
                 >
-                  {user.correo}
-                </Text>
-                <View
-                  style={[
-                    styles.badgeRol,
-                    {
-                      backgroundColor: colors.marca.acento + '30',
-                      borderRadius: radii.s,
-                      marginTop: 4,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      typography.pie,
-                      { color: colors.marca.acento, fontWeight: 'bold' },
-                    ]}
-                  >
-                    {user.rol || 'COMENSAL'}
+                  <Icon size={21} color={colors.marca.primario} accessible={false} />
+                  <Text style={[typography.cuerpoL, styles.label, { color: colors.texto.primario }]}>
+                    {t(label)}
                   </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Informo que las credenciales quedan en el almacenamiento seguro. */}
-            <View
-              style={[
-                styles.alertaSegura,
-                {
-                  backgroundColor: colors.superficie.fondo,
-                  borderColor: colors.superficie.borde,
-                  borderRadius: radii.m,
-                  padding: spacing.m,
-                  marginTop: spacing.m,
-                },
-              ]}
-            >
-              <ShieldCheck size={18} color={colors.marca.primario} />
-              <Text
-                style={[
-                  typography.pie,
-                  {
-                    color: colors.texto.secundario,
-                    marginLeft: spacing.s,
-                    flex: 1,
-                  },
-                ]}
-              >
-                {t('auth.secureStorage')}
-              </Text>
-            </View>
-
-            {user.provider !== 'google' && <GoogleAccess link />}
-
-            {/* boton de cerrar sesion */}
-            <TouchableOpacity
-              onPress={logout}
-              disabled={isLoading}
-              style={[
-                styles.botonAccion,
-                {
-                  backgroundColor: colors.estado.error + '15',
-                  borderColor: colors.estado.error + '40',
-                  borderRadius: radii.m,
-                  marginTop: spacing.m,
-                  padding: spacing.m,
-                },
-              ]}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color={colors.estado.error} />
-              ) : (
-                <>
-                  <LogOut size={18} color={colors.estado.error} />
-                  <Text
-                    style={[
-                      typography.etiqueta,
-                      {
-                        color: colors.estado.error,
-                        marginLeft: spacing.s,
-                      },
-                    ]}
-                  >
-                    {t('auth.logout')}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
+                  <ChevronRight size={18} color={colors.texto.secundario} accessible={false} />
+                </Pressable>
+              );
+            })}
           </View>
-        ) : null}
-      </View>
+          {user?.rol === 'ADMIN' && (
+            <View>
+              <Action label={t('menuAdmin.title')} onPress={() => setAdminView('menu')} />
+              <Action label={t('newsAdmin.title')} onPress={() => setAdminView('news')} />
+              <Action label={t('payments.title')} onPress={() => setAdminView('payments')} />
+              <Action label={t('admins.title')} onPress={() => setAdminView('admins')} />
+              <Action label={t('reservations.adminTitle')} onPress={() => setAdminView('reservations')} />
+              <Action label={t('attention.title')} onPress={() => setAdminView('attention')} />
+            </View>
+          )}
+          {user?.rol === 'STAFF' && (
+            <Action label={t('reservations.agenda')} onPress={() => setAdminView('reservations')} />
+          )}
+        </>
+      )}
+    </KeyboardAwareScrollView>
+  );
+};
 
-      {/* seccion de apariencia */}
-      <View
-        style={[
-          styles.seccion,
-          {
-            backgroundColor: colors.superficie.elevada,
-            borderColor: colors.superficie.borde,
-            borderRadius: radii.l,
-            padding: spacing.l,
-            marginTop: spacing.l,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            typography.etiqueta,
-            {
-              color: colors.texto.secundario,
-              textTransform: 'uppercase',
-              marginBottom: spacing.m,
-            },
-          ]}
-        >
-          {t('settings.appearance')}
-        </Text>
+// Muestro los datos y acciones de la sección abierta, sin montar los formularios de las demás.
+function SettingsDetails({ section }: { section: Section }) {
+  const { t } = useTranslation();
+  const { user, isLoading, logout } = useAuth();
+  const { colors, typography, radii, isDark, setThemeMode } = useTheme();
+  const primary = { color: colors.texto.primario };
+  const secondary = { color: colors.texto.secundario };
+  const accent = colors.marca.primario;
 
-        <View style={styles.filaOpcion}>
-          <View style={styles.filaIzquierda}>
-            {isDark ? (
-              <Moon size={22} color={colors.marca.primario} />
-            ) : (
-              <Sun size={22} color={colors.marca.primario} />
-            )}
-            <Text
-              style={[
-                typography.cuerpoL,
-                { color: colors.texto.primario, marginLeft: spacing.m },
-              ]}
-            >
-              {isDark ? t('settings.themeDark') : t('settings.themeLight')}
+  switch (section) {
+    case 'profile':
+      return user && (
+        <View style={[styles.panel, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
+          <View style={styles.detailRow}>
+            <User color={accent} size={22} />
+            <View style={styles.label}>
+              <Text style={[typography.etiqueta, secondary]}>{t('auth.email')}</Text>
+              <Text style={[typography.cuerpoL, primary]}>{user.correo}</Text>
+            </View>
+          </View>
+          <Text style={[typography.cuerpoM, secondary]}>{t('auth.role')} · {user.rol || 'COMENSAL'}</Text>
+        </View>
+      );
+    case 'preferences':
+      return (
+        <View style={styles.detailRow}>
+          <Globe size={22} color={accent} />
+          <View style={styles.label}>
+            <Text style={[typography.cuerpoL, primary]}>{t('settings.language')}</Text>
+            <Text style={[typography.cuerpoM, secondary]}>{t('settings.langSpanish')}</Text>
+          </View>
+        </View>
+      );
+    case 'application': {
+      const ThemeIcon = isDark ? Moon : Sun;
+      return (
+        <View style={styles.detailRow}>
+          <ThemeIcon size={22} color={accent} />
+          <View style={styles.label}>
+            <Text style={[typography.cuerpoL, primary]}>{t('settings.appearance')}</Text>
+            <Text style={[typography.cuerpoM, secondary]}>
+              {t(isDark ? 'settings.themeDark' : 'settings.themeLight')}
             </Text>
           </View>
           <Switch
             accessibilityLabel={t('settings.themeDark')}
             value={isDark}
             onValueChange={value => setThemeMode(value ? 'dark' : 'light')}
-            trackColor={{
-              false: colors.superficie.borde,
-              true: colors.marca.primario,
-            }}
+            trackColor={{ false: colors.superficie.borde, true: accent }}
             thumbColor={colors.texto.inverso}
           />
         </View>
-      </View>
-
-      {/* seccion de idioma */}
-      <View
-        style={[
-          styles.seccion,
-          {
-            backgroundColor: colors.superficie.elevada,
-            borderColor: colors.superficie.borde,
-            borderRadius: radii.l,
-            padding: spacing.l,
-            marginTop: spacing.l,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            typography.etiqueta,
-            {
-              color: colors.texto.secundario,
-              textTransform: 'uppercase',
-              marginBottom: spacing.m,
-            },
-          ]}
-        >
-          {t('settings.language')}
-        </Text>
-
-        <View style={styles.filaOpcion}>
-          <View style={styles.filaIzquierda}>
-            <Globe size={22} color={colors.marca.primario} />
-            <Text
-              style={[
-                typography.cuerpoL,
-                { color: colors.texto.primario, marginLeft: spacing.m },
-              ]}
-            >
-              {t('settings.langSpanish')}
-            </Text>
+      );
+    }
+    case 'security':
+      return user && (
+        <View style={styles.list}>
+          <View style={styles.detailRow}>
+            <ShieldCheck size={22} color={accent} />
+            <Text style={[typography.cuerpoM, styles.label, secondary]}>{t('auth.secureStorage')}</Text>
+          </View>
+          {user.provider !== 'google' && <GoogleAccess link />}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('auth.logout')}
+            accessibilityState={{ disabled: isLoading, busy: isLoading }}
+            disabled={isLoading}
+            onPress={logout}
+            style={({ pressed }) => [styles.detailRow, styles.logout, {
+              backgroundColor: colors.estado.error + (pressed ? '20' : '12'),
+              borderRadius: radii.l,
+            }]}
+          >
+            {isLoading
+              ? <ActivityIndicator color={colors.estado.error} />
+              : <LogOut size={19} color={colors.estado.error} />}
+            <Text style={[typography.etiqueta, { color: colors.estado.error }]}>{t('auth.logout')}</Text>
+          </Pressable>
+        </View>
+      );
+    case 'information':
+      return (
+        <View style={styles.list}>
+          <View style={styles.detailRow}>
+            <MapPin size={22} color={accent} />
+            <Text style={[typography.cuerpoL, styles.label, primary]}>{t('settings.location')}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Info size={22} color={accent} />
+            <Text style={[typography.cuerpoM, styles.label, secondary]}>{t('settings.version')}</Text>
           </View>
         </View>
-      </View>
-
-      {/* informacion y contacto */}
-      <View
-        style={[
-          styles.seccion,
-          {
-            backgroundColor: colors.superficie.elevada,
-            borderColor: colors.superficie.borde,
-            borderRadius: radii.l,
-            padding: spacing.l,
-            marginTop: spacing.l,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            typography.etiqueta,
-            {
-              color: colors.texto.secundario,
-              textTransform: 'uppercase',
-              marginBottom: spacing.m,
-            },
-          ]}
-        >
-          {t('settings.contact')}
-        </Text>
-
-        <View style={styles.filaOpcion}>
-          <View style={styles.filaIzquierda}>
-            <MapPin size={22} color={colors.marca.primario} />
-            <Text
-              style={[
-                typography.cuerpoM,
-                {
-                  color: colors.texto.primario,
-                  marginLeft: spacing.m,
-                  flex: 1,
-                },
-              ]}
-            >
-              {t('settings.location')}
-            </Text>
-          </View>
-        </View>
-
-        <View style={[styles.filaOpcion, { marginTop: spacing.m }]}>
-          <View style={styles.filaIzquierda}>
-            <Info size={22} color={colors.texto.secundario} />
-            <Text
-              style={[
-                typography.pie,
-                { color: colors.texto.secundario, marginLeft: spacing.m },
-              ]}
-            >
-              {t('settings.version')}
-            </Text>
-          </View>
-        </View>
-      </View>
-    </KeyboardAwareScrollView>
-  );
-};
+      );
+  }
+}
 
 const styles = StyleSheet.create({
-  contenedor: {
-    flex: 1,
+  content: { paddingBottom: 40, width: '100%', maxWidth: 600, alignSelf: 'center', gap: 8 },
+  list: { marginVertical: 4 },
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 58,
+    padding: 12, borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  scrollContent: {
-    paddingBottom: 40,
-    width: '100%',
-    maxWidth: 760,
-    alignSelf: 'center',
-  },
-  seccion: {
-    borderWidth: 1,
-  },
-  filaOpcion: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  filaIzquierda: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  filaUsuario: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarContenedor: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeRol: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  alertaSegura: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  botonAccion: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 12 },
+  panel: { paddingHorizontal: 8, paddingBottom: 12 },
+  label: { flex: 1 },
+  logout: { marginTop: 16, justifyContent: 'center' },
 });

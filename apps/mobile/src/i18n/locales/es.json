@@ -267,6 +267,10 @@
   },
   "settings": {
     "title": "Ajustes",
+    "profile": "Perfil",
+    "preferences": "Preferencias",
+    "application": "Aplicación",
+    "information": "Información y ayuda",
     "appearance": "Apariencia",
     "themeLight": "Modo claro",
     "themeDark": "Modo oscuro",
@@ -275,7 +279,7 @@
     "langSpanish": "Español",
     "contact": "Contacto y ubicación",
     "location": "Vereda Las Huacas, Timbío, Cauca",
-    "version": "Versión 1.0.0 (Sprint 1)"
+    "version": "Versión 1.0.0"
   },
   "auth": {
     "googleWelcome": "El Encanto Campestre",
@@ -296,7 +300,7 @@
     "googleConnectionError": "No pudimos conectar con El Encanto. Revisa tu conexión e inténtalo de nuevo.",
     "googleVerifyError": "No pudimos verificar tu cuenta. Vuelve a seleccionarla en Google.",
     "googleLinkError": "No pudimos vincular la cuenta. Confirma que elegiste el mismo correo.",
-    "title": "Cuenta y Seguridad",
+    "title": "Cuenta y seguridad",
     "secureStorage": "Tokens protegidos en el almacenamiento seguro del dispositivo",
     "connectedAs": "Conectado como",
     "role": "Rol",

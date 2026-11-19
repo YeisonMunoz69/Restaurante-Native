@@ -1,10 +1,12 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
+import { Switch } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { SettingsScreen } from '../SettingsScreen';
 import { Action } from '../../components/attention/Controls';
 import { ConnectionForm } from '../../components/ConnectionForm';
+import { BackButton } from '../../components/navigation/BackButton';
 
 // Reemplazo traducciones por sus claves para validar la pantalla sin inicializar i18next.
 jest.mock('react-i18next', () => ({
@@ -17,6 +19,7 @@ const mockNavigate = jest.fn();
 const mockSetParams = jest.fn();
 let mockParams: { returnTo?: string } | undefined;
 jest.mock('@react-navigation/native', () => ({
+  useIsFocused: () => true,
   useNavigation: () => ({ navigate: mockNavigate, setParams: mockSetParams }),
   useRoute: () => ({ params: mockParams }),
 }));
@@ -118,7 +121,24 @@ describe('SettingsScreen authentication form', () => {
     });
     let tree: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => { tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>); });
+    const security = tree!.root.findAllByProps({ testID: 'settings-security' }).find(node => node.props.onPress)!;
+    ReactTestRenderer.act(() => security.props.onPress());
     expect(tree!.root.findAllByProps({ testID: 'google-link' }).length).toBeGreaterThan(0);
     ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('abre Apariencia desde Aplicación y vuelve al índice de Ajustes', async () => {
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(<ThemeProvider><SettingsScreen /></ThemeProvider>);
+    });
+    expect(tree.root.findAllByType(Switch)).toHaveLength(0);
+    const application = tree.root.findAllByProps({ testID: 'settings-application' }).find(node => node.props.onPress)!;
+    ReactTestRenderer.act(() => application.props.onPress());
+    await ReactTestRenderer.act(async () => tree.root.findByType(Switch).props.onValueChange(true));
+    expect(tree.root.findByType(Switch).props.value).toBe(true);
+    ReactTestRenderer.act(() => tree.root.findByType(BackButton).props.onPress());
+    expect(tree.root.findAllByType(Switch)).toHaveLength(0);
+    ReactTestRenderer.act(() => tree.unmount());
   });
 });
