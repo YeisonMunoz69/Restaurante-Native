@@ -16,6 +16,7 @@ import { GuestAccessProvider } from './src/context/GuestAccessContext';
 import { ConnectionProvider } from './src/context/ConnectionContext';
 import { useConnection } from './src/context/ConnectionContext';
 import { OrderDraftProvider } from './src/context/OrderDraftContext';
+import { connectionUrl } from './src/config/connection';
 
 // componente interno que conecta el tema de React Navigation con nuestro ThemeContext
 const AppContent: React.FC = () => {
@@ -67,15 +68,24 @@ const AppContent: React.FC = () => {
   );
 };
 
+// Aplico el claro fijo al invitado y guardo preferencias por cuenta y servidor.
+function ThemedApp() {
+  const { user } = useAuth();
+  const { settings } = useConnection();
+  return (
+    <ThemeProvider accountKey={user ? `${connectionUrl(settings)}/${user.id}` : null}>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
 // componente raiz con los proveedores de area segura, tema dinamico y autenticacion segura
 const App: React.FC = () => {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <ConnectionProvider><AuthProvider>
-          <AppContent />
-        </AuthProvider></ConnectionProvider>
-      </ThemeProvider>
+      <ConnectionProvider><AuthProvider>
+        <ThemedApp />
+      </AuthProvider></ConnectionProvider>
     </SafeAreaProvider>
   );
 };
