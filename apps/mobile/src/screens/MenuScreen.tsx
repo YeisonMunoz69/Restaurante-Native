@@ -138,7 +138,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   }, [loadInitial]);
 
   const loadDate = useCallback(
-    async (nextDate: string) => {
+    async (nextDate: string, reloadCategories = false) => {
       if (!restauranteId) return;
       const currentRequest = ++requestNumber.current;
       setShowCompactDate(false);
@@ -156,11 +156,13 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
       setLoadingMore(false);
       setLoadMoreFailed(false);
       try {
-        const [page, day] = await Promise.all([
+        const [page, day, refreshedCategories] = await Promise.all([
           menuApi.dishes(restauranteId, nextDate, 1),
           menuApi.day(restauranteId, nextDate),
+          reloadCategories ? menuApi.categories(restauranteId) : undefined,
         ]);
         if (currentRequest !== requestNumber.current) return;
+        if (refreshedCategories) setCategories(refreshedCategories);
         setDayOpen(day.abierto);
         setDayHours(day.horarios.map(hours => `${hours.horaApertura}–${hours.horaCierre}`));
         setDishes(page.data);
@@ -185,7 +187,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
 
   const refresh = useCallback(() => {
     if (fecha) {
-      loadDate(fecha);
+      loadDate(fecha, true);
     } else {
       loadInitial();
     }

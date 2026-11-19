@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -15,15 +15,16 @@ import {
   type LayoutChangeEvent,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Plus, UtensilsCrossed } from 'lucide-react-native';
+import { ChevronDown, Plus, RefreshCw, UtensilsCrossed } from 'lucide-react-native';
 import type { MenuDish } from '@encanto/shared';
 import { useTheme } from '../../theme/ThemeContext';
 import { useOrderDraft } from '../../context/OrderDraftContext';
 import { formatCop } from '../../utils/formatters';
 import { menuGallery } from './menu-photo';
-import { Action, Note } from '../attention/Controls';
+import { Note } from '../attention/Controls';
 
 type Section = { id: string; title: string; data: MenuDish[] };
+const DOUBLE_TAP_MS = 400;
 // Permito elegir cualquier categoría desde arriba y conservo los carruseles horizontales.
 export function MenuCarousels({
   header,
@@ -57,6 +58,7 @@ export function MenuCarousels({
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
   const [categoryId, setCategoryId] = useState<string | null>(null);
+  const pendingTap = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { width } = useWindowDimensions();
   const draft = useOrderDraft();
   const selectedIndex = sections.findIndex(section => section.id === categoryId);
@@ -72,6 +74,31 @@ export function MenuCarousels({
     // Las páginas llegan agrupadas por categoría. Busco hasta alcanzar la elegida.
     if (awaitingCategory && !loadingMore && !loadMoreFailed) onMore();
   }, [awaitingCategory, loadingMore, loadMoreFailed, onMore]);
+
+  useEffect(() => () => {
+    if (pendingTap.current !== null) {
+      clearTimeout(pendingTap.current);
+      pendingTap.current = null;
+    }
+  }, [fecha, categoryId, onMore]);
+
+  // Espero el segundo toque antes de pedir otra página; si llega, recargo desde la primera.
+  const pressLoad = () => {
+    if (!canLoadMore) {
+      onRefresh();
+      return;
+    }
+    if (pendingTap.current !== null) {
+      clearTimeout(pendingTap.current);
+      pendingTap.current = null;
+      onRefresh();
+      return;
+    }
+    pendingTap.current = setTimeout(() => {
+      pendingTap.current = null;
+      if (!loadingMore) onMore();
+    }, DOUBLE_TAP_MS);
+  };
   const cardWidth = Math.min(300, Math.max(210, width - 64));
   // Mantengo el encuadre 4:3 aunque las fotos incluidas traigan dimensiones propias.
   const photoHeight = (cardWidth * 3) / 4;
@@ -143,7 +170,7 @@ export function MenuCarousels({
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.row}
               onEndReached={() => {
-                if (section.id === sections[lastLoadedIndex]?.id && canLoadMore && !loadingMore && !loadMoreFailed) onMore();
+                if (selectedCategory && canLoadMore && !loadingMore && !loadMoreFailed) onMore();
               }}
               onEndReachedThreshold={0.4}
               initialNumToRender={3}
@@ -263,7 +290,7 @@ export function MenuCarousels({
         );
       }}
       ListEmptyComponent={
-        awaitingCategory ? null : (
+        awaitingCategory ? undefined : (
           <Note>
             <Text testID="menu-empty">{t('menu.emptyState')}</Text>
           </Note>
@@ -271,21 +298,42 @@ export function MenuCarousels({
       }
       ListFooterComponent={
         <View style={styles.footer}>
-          {loadingMore && (
+          {awaitingCategory && !loadMoreFailed ? (
             <ActivityIndicator
               testID="menu-loading-more"
               accessibilityLabel={t('common.loading')}
               color={colors.marca.primario}
             />
+          ) : (
+            <Pressable
+              testID="menu-load-control"
+              accessibilityRole="button"
+              accessibilityState={{ busy: loadingMore }}
+              accessibilityHint={canLoadMore ? t('menu.doubleTapReload') : undefined}
+              accessibilityActions={canLoadMore ? [{ name: 'refresh', label: t('menu.reloadMenu') }] : undefined}
+              onAccessibilityAction={event => {
+                if (event.nativeEvent.actionName === 'refresh') onRefresh();
+              }}
+              onPress={pressLoad}
+              style={({ pressed }) => [styles.loadControl, { opacity: pressed ? 0.6 : 1 }]}
+            >
+              {loadingMore ? (
+                <ActivityIndicator testID="menu-loading-more" color={colors.marca.primario} />
+              ) : canLoadMore && !loadMoreFailed ? (
+                <ChevronDown size={17} color={colors.marca.primario} />
+              ) : (
+                <RefreshCw size={16} color={colors.marca.primario} />
+              )}
+              <Text style={[typography.etiqueta, { color: colors.marca.primario }]}>
+                {t(canLoadMore ? (loadMoreFailed ? 'common.retry' : 'discovery.loadMore') : 'menu.reloadMenu')}
+              </Text>
+            </Pressable>
           )}
-          {canLoadMore && (!awaitingCategory || loadMoreFailed) && (
-            <Action
-              label={t(loadMoreFailed ? 'common.retry' : 'discovery.loadMore')}
-              disabled={loadingMore}
-              onPress={onMore}
-            />
+          {loadMoreFailed && (
+            <Text accessibilityRole="alert" style={[typography.pie, styles.footerMessage, { color: colors.texto.secundario }]}>
+              {t('discovery.loadMoreFailed')}
+            </Text>
           )}
-          {loadMoreFailed && <Note live>{t('discovery.loadMoreFailed')}</Note>}
         </View>
       }
     />
@@ -306,5 +354,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start', marginTop: 'auto', marginHorizontal: 14, marginBottom: 12,
     minHeight: 44, borderRadius: 24, paddingHorizontal: 18, paddingVertical: 6,
   },
-  footer: { padding: 16 },
+  footer: { alignItems: 'center', paddingHorizontal: 16, paddingBottom: 8 },
+  loadControl: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    minHeight: 48, paddingHorizontal: 16,
+  },
+  footerMessage: { textAlign: 'center' },
 });

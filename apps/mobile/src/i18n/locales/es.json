@@ -10,6 +10,8 @@
     "title": "Carta Campestre",
     "subtitle": "Platos preparados con sazón tradicional caucana",
     "allCategories": "Todas",
+    "reloadMenu": "Actualizar carta",
+    "doubleTapReload": "Dos pulsaciones rápidas recargan la carta completa.",
     "nextOpenDay": "Próximo día de atención",
     "selectedDate": "Fecha de la carta",
     "goToNextOpenDay": "Ver carta del próximo día abierto: {{date}}",

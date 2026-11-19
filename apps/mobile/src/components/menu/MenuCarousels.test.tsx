@@ -100,3 +100,42 @@ it('busca una categoría de páginas posteriores sin anunciar que está vacía',
   expect(tree.root.findAllByType(Text).map(node => node.props.children)).toContain('Plato de la última categoría');
   Renderer.act(() => tree.unmount());
 });
+
+it('diferencia un toque de carga y dos toques de recarga', async () => {
+  const onMore = jest.fn();
+  const onRefresh = jest.fn();
+  let tree!: Renderer.ReactTestRenderer;
+  await Renderer.act(async () => {
+    tree = Renderer.create(
+      <ThemeProvider>
+        <MenuCarousels
+          sections={sections}
+          fecha="2026-10-25"
+          open
+          loadingMore={false}
+          hasMore
+          onMore={onMore}
+          onRefresh={onRefresh}
+          onDetail={jest.fn()}
+        />
+      </ThemeProvider>,
+    );
+  });
+  const press = () => tree.root.findByProps({ testID: 'menu-load-control' }).props.onPress();
+  jest.useFakeTimers();
+  try {
+    Renderer.act(press);
+    expect(onMore).not.toHaveBeenCalled();
+    Renderer.act(() => { jest.advanceTimersByTime(450); });
+    expect(onMore).toHaveBeenCalledTimes(1);
+    expect(onRefresh).not.toHaveBeenCalled();
+
+    Renderer.act(() => { press(); press(); });
+    Renderer.act(() => { jest.advanceTimersByTime(450); });
+    expect(onMore).toHaveBeenCalledTimes(1);
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  } finally {
+    Renderer.act(() => tree.unmount());
+    jest.useRealTimers();
+  }
+});
