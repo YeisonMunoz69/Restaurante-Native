@@ -513,6 +513,7 @@ model NewsPost {
   titulo       String
   cuerpo       String
   imagenPath   String?  @map("imagen_path")
+  imagenWebp   Bytes?   @map("imagen_webp")
   enlaces      Json?
   fijada       Boolean  @default(false)
   publicada    Boolean  @default(true)

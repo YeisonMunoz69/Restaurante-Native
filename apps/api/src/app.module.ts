@@ -11,6 +11,7 @@ import { MenuAdminModule } from './menu-admin/menu-admin.module.js';
 import { ReservationsModule } from './reservations/reservations.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { AdminsModule } from './admins/admins.module.js';
+import { NewsModule } from './news/news.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AdminsModule } from './admins/admins.module.js';
     ReservationsModule,
     PaymentsModule,
     AdminsModule,
+    NewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

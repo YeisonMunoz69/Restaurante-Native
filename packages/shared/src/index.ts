@@ -24,3 +24,6 @@ export * from './schemas/reservation.schema';
 
 // Compartimos datos de cobro externo editables por el dueño, sin procesar pagos.
 export * from './schemas/payment.schema';
+
+// Comparto validación y lectura de las publicaciones del restaurante.
+export * from './schemas/news.schema';
