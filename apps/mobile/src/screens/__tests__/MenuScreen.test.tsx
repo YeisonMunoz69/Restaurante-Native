@@ -6,7 +6,10 @@ import { menuApi } from '../../services/menu.service';
 import { MenuScreen } from '../MenuScreen';
 import { MenuCarousels } from '../../components/menu/MenuCarousels';
 import { ThemeProvider } from '../../theme/ThemeContext';
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: jest.fn() }) }));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn() }),
+  useIsFocused: () => true,
+}));
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),

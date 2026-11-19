@@ -5,11 +5,12 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useNavigation, type RouteProp } from '@react-navigation/native';
+import { useIsFocused, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RootTabParamList } from '../navigation/BottomTabNavigator';
 import { ORDER_BUTTON_CLEARANCE, OrderDraftPanel } from '../components/menu/OrderDraftPanel';
 import { MenuCarousels } from '../components/menu/MenuCarousels';
+import { MenuDateTicker } from '../components/menu/MenuDateTicker';
 import {
   ActivityIndicator,
   ScrollView,
@@ -48,6 +49,7 @@ type MenuSection = { id: string; title: string; data: MenuDish[] };
 
 export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> }> = ({ route }) => {
   const navigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
+  const isFocused = useIsFocused();
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
   const insets = useSafeAreaInsets();
@@ -403,9 +405,10 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
               }]}
             >
               <CalendarDays size={14} color={colors.marca.primario} />
-              <Text style={[typography.pie, styles.dateInfo, { color: colors.texto.primario }]}>
-                {[compactDate, dayOpen === false ? t('discovery.closed') : hours].filter(Boolean).join(' · ')}
-              </Text>
+              <MenuDateTicker
+                active={isFocused}
+                label={[compactDate, dayOpen === false ? t('discovery.closed') : hours].filter(Boolean).join(' · ')}
+              />
             </View>
           )}
 
