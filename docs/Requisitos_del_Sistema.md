@@ -15,6 +15,8 @@
 
 **Modo invitado (19 de noviembre, EC-75):** cambiamos el acceso inicial para consultar Carta y Noticias sin sesión. Ajustes muestra «Accede con Google» y Añadir abre el mismo acceso desde Carta. Después de tres minutos continuos en primer plano, mostramos un aviso de acceso que se puede cerrar y desaparece a los quince segundos. Conservamos el tema claro para el invitado y guardamos la elección manual de cada cuenta autenticada. Pendiente actualizar requisitos en Drive y Word local: RF-AUT08 y RF-INF09, acceso invitado, recordatorio y apariencia por cuenta.
 
+**Carta sin conexión y navegación (Sprint 5, EC-60 y EC-75):** incluimos la carta original de 44 platos con ocho fotos propias. La consulta sin red está disponible desde la primera apertura y muestra la copia completa más reciente cuando ya se ha guardado por sede y servidor. Los precios se muestran como referencia. Calendario, carrito, reservas, Noticias y acciones de cuenta requieren internet. Ajustes reutiliza el botón oficial del flujo de acceso y el indicador de las pestañas deriva su fondo del acento del tema y respeta la reducción de movimiento. Verificamos en el Samsung S21 la primera apertura sin red, la reapertura con una copia guardada y el botón de Google en Ajustes. Pendiente actualizar requisitos en Drive y Word local: RF-MEN08 para la primera apertura, la copia local y las fotos incluidas, además de RF-AUT08 y RF-INF09 para el botón compartido y la navegación.
+
 ---
 
 ## 1. Ficha Técnica y Alcance del Sistema
@@ -121,7 +123,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-MEN05** | Filtros de catálogo           | Filtrado combinado por categoría, etiquetas dietarias (vegetariano, libre de gluten) y rango de precios.                                |   **S**   | Sprint 5 | EP-03     |
 | **RF-MEN06** | Distintivo de no disponible   | Indicador visual atenuado con etiqueta "No disponible para esta fecha" cuando el plato esté desactivado para el día seleccionado.       |   **M**   | Sprint 2 | EP-03     |
 | **RF-MEN07** | Platos favoritos              | Marcado local/remoto de platos preferidos para acceso rápido desde el perfil del comensal.                                              |   **S**   | Sprint 5 | EP-03     |
-| **RF-MEN08** | Lectura de carta sin conexión | Almacenamiento local mediante MMKV de la última carta consultada para permitir exploración en zonas rurales sin cobertura de datos.     |   **S**   | Sprint 5 | EP-03     |
+| **RF-MEN08** | Lectura de carta sin conexión | Carta original y fotos propias incluidas en la instalación. Guardamos la última carta completa por sede y servidor en AsyncStorage para consulta de fichas sin conectividad. |   **S**   | Sprint 5 | EP-03     |
 
 ### 4.3 Módulo de Motor de Reservas y Pedidos (RES)
 
@@ -299,7 +301,7 @@ Para RNF-03, los textos fijos se guardan en `apps/mobile/src/i18n/locales/` y se
 | **RF-MEN05**   | Filtros dietarios y precios       |          —          |   EP-03    |  **Sprint 5**   | Diferible a versión de estabilización    |
 | **RF-MEN06**   | Indicador no disponible por fecha |    B-12, ADR-010    |   EP-03    |  **Sprint 2**   | Núcleo del modelo de carta               |
 | **RF-MEN07**   | Gestión de favoritos              |          —          |   EP-03    |  **Sprint 5**   | Diferible a versión de estabilización    |
-| **RF-MEN08**   | Caché sin conexión (MMKV)         |        C-17         |   EP-03    |  **Sprint 5**   | Diferible a versión de estabilización    |
+| **RF-MEN08**   | Carta incluida y caché sin conexión |        C-17         |   EP-03    |  **Sprint 5**   | Solo lectura en primera apertura y visitas posteriores |
 | **RF-RES01**   | Selección de fecha hábil          |        B-12         |   EP-05    |  **Sprint 3**   | Núcleo del motor de reservas             |
 | **RF-RES02**   | Cálculo y validación aforo franja |    B-2, ADR-005     |   EP-05    |  **Sprint 3**   | Núcleo transaccional (No recortable)     |
 | **RF-RES03**   | Cantidad de personas y límites    |      B-1, B-8       |   EP-05    |  **Sprint 3**   | Núcleo del motor de reservas             |

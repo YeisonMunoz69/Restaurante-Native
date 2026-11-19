@@ -239,7 +239,7 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 |    [ ]    | Segundo factor TOTP y guardia de acciones sensibles                      | RF-AUT06, RF-AUT07 |   8    | Fabián      |
 |    [ ]    | Verificación de correo y recuperación de contraseña con Resend           | RF-AUT02, RF-AUT05 |   5    | Alex        |
 |    [ ]    | Búsqueda, filtros y favoritos                                            | RF-MEN04, 05, 07   |   8    | Yeison      |
-|    [ ]    | Caché de carta sin conexión con MMKV                                     | RF-MEN08           |   3    | Yeison      |
+|    [ ]    | Carta incluida y copia local de solo lectura por sede (EC-60)             | RF-MEN08           |   3    | Yeison      |
 |    [ ]    | Adición de platos a reserva aprobada                                     | RF-RES15           |   5    | Yeison      |
 |    [ ]    | Estados vacíos, de carga (esqueleto) y de error en toda la aplicación    | RNF-09             |   5    | Yeison      |
 | **Total** |                                                                          |                    | **63** |             |

@@ -189,8 +189,9 @@ describe('MenuScreen', () => {
     });
     expect(textValues(tree)).toContain('Porción de arroz, ensalada y papa criolla.');
     expect(textValues(tree)).toContain('menu.offlinePrice');
-    expect(tree.root.findAllByType(Image).some(image => typeof image.props.source === 'number' ||
-      typeof image.props.source === 'string')).toBe(true);
+    const detailPhoto = tree.root.findAllByType(Image).find(image => image.props.accessibilityLabel === 'menu.photoLabel' &&
+      image.props.resizeMode === 'contain');
+    expect(detailPhoto?.props.source).toEqual(require('../../assets/carta/costilla-ahumada-01.webp'));
     expect(api.categories).not.toHaveBeenCalled();
     expect(api.dishes).not.toHaveBeenCalled();
     expect(api.dish).not.toHaveBeenCalled();

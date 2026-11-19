@@ -288,13 +288,13 @@ Facilitar encontrar un plato en una carta larga.
 
 `Sprint 5` · `3 pts` · `Medium` · `movil` · `RF-MEN08, C-17`
 
-Que la aplicacion sirva en zona rural con senal debil.
+Que la aplicación sirva en zona rural con señal débil. [EC-60](https://yjmunoz.atlassian.net/browse/EC-60) queda en curso mientras verificamos la entrega en dev.
 
 **Criterios de aceptación**
 
-- La ultima carta consultada se guarda en MMKV
-- Sin conexion se muestra lo guardado con aviso de posible desactualizacion
-- La estrategia es solo lectura: no se encolan escrituras
+- La primera apertura como invitado permite consultar categorías, fichas y fotos propias incluidas en la instalación.
+- La última carta completa consultada se guarda en AsyncStorage por sede y servidor.
+- Sin conexión se muestran los datos de referencia y la consulta funciona en solo lectura. Los pedidos, reservas y acciones de cuenta requieren internet.
 
 ---
 
