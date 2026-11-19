@@ -12,6 +12,8 @@ El 15 de octubre acordamos que podemos ajustar tareas durante el proceso, dejand
 
 **Decisión y avance del 22 de octubre:** Yeison confirmó que el dueño debe poder cambiar contacto y medios de pago desde su panel, con texto manual. Lo implementamos en PR #15, sin merge: datos persistidos, acceso ADMIN y consulta vigente del comensal. Registramos el alcance directamente en EC-35. También adelantamos el componente propio de diálogos/avisos de RNF-09/10; no damos por completada toda la auditoría de accesibilidad ni todos los estados de carga. Evidencia y pendientes en [Pagos_Dinamicos_y_QA_2026-10-22.md](Pagos_Dinamicos_y_QA_2026-10-22.md).
 
+**Avance del 19 de noviembre:** validamos el acceso con Google en el Samsung S21 contra la API local con PostgreSQL de prueba. Recuperamos el código `GOOGLE_PHONE_REQUIRED` que la app necesitaba para continuar el alta y agrupamos Ajustes en subpantallas. La apariencia inicial es clara y la preferencia se conserva al reiniciar. Seguimos en EC-75 con el traslado de la captura del teléfono al flujo de reserva, la prueba con los tres ADMIN y la integración en dev. [Registramos el avance en los requisitos](Requisitos_del_Sistema.md).
+
 ---
 
 ## Ficha
