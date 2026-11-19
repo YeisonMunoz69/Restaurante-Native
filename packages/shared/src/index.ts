@@ -27,3 +27,5 @@ export * from './schemas/payment.schema';
 
 // Comparto validación y lectura de las publicaciones del restaurante.
 export * from './schemas/news.schema';
+
+export * from './data/carta-original';

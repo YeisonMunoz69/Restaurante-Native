@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, StatusBar } from 'react-native';
+import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   NavigationContainer,
@@ -17,11 +17,12 @@ import { ConnectionProvider } from './src/context/ConnectionContext';
 import { useConnection } from './src/context/ConnectionContext';
 import { OrderDraftProvider } from './src/context/OrderDraftContext';
 import { connectionUrl } from './src/config/connection';
+import { ConnectivityProvider } from './src/context/ConnectivityContext';
 
 // componente interno que conecta el tema de React Navigation con nuestro ThemeContext
 const AppContent: React.FC = () => {
   const { isDark, colors } = useTheme();
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
   const { settings } = useConnection();
 
   // adaptamos el tema de navegacion para que coincida con nuestros tokens
@@ -52,17 +53,13 @@ const AppContent: React.FC = () => {
   return (
     <>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      {!user && isLoading ? (
-        <ActivityIndicator color={colors.marca.primario} style={{ flex: 1, backgroundColor: colors.superficie.fondo }} />
-      ) : (
-        <GuestAccessProvider authenticated={!!user} reminderOffset={TAB_BAR_HEIGHT}>
-          <NavigationContainer theme={navTheme} linking={WEB_LINKING}>
-            <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
-              <BottomTabNavigator />
-            </OrderDraftProvider>
-          </NavigationContainer>
-        </GuestAccessProvider>
-      )}
+      <GuestAccessProvider authenticated={!!user} reminderOffset={TAB_BAR_HEIGHT}>
+        <NavigationContainer theme={navTheme} linking={WEB_LINKING}>
+          <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
+            <BottomTabNavigator />
+          </OrderDraftProvider>
+        </NavigationContainer>
+      </GuestAccessProvider>
       <FeedbackHost scope={user?.id} />
     </>
   );
@@ -83,9 +80,11 @@ function ThemedApp() {
 const App: React.FC = () => {
   return (
     <SafeAreaProvider>
-      <ConnectionProvider><AuthProvider>
-        <ThemedApp />
-      </AuthProvider></ConnectionProvider>
+      <ConnectivityProvider>
+        <ConnectionProvider><AuthProvider>
+          <ThemedApp />
+        </AuthProvider></ConnectionProvider>
+      </ConnectivityProvider>
     </SafeAreaProvider>
   );
 };

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useOnline } from '../context/ConnectivityContext';
 import { MenuScreen } from '../screens/MenuScreen';
 import { ReservationsScreen } from '../screens/ReservationsScreen';
 import { NewsScreen } from '../screens/NewsScreen';
@@ -34,6 +35,8 @@ export const BottomTabNavigator: React.FC = () => {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
   const { user } = useAuth();
+  const online = useOnline();
+  const canUsePrivateTabs = !!user && online;
   const insets = useSafeAreaInsets();
 
   return (
@@ -71,7 +74,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
 
       {/* 2. Reservas */}
-      {user && <Tab.Screen
+      {canUsePrivateTabs && <Tab.Screen
         name="Reservations"
         component={ReservationsScreen}
         options={{
@@ -115,7 +118,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
 
       {/* 4. Proximamente */}
-      {user && <Tab.Screen
+      {canUsePrivateTabs && <Tab.Screen
         name="Upcoming"
         component={UpcomingScreen}
         options={{

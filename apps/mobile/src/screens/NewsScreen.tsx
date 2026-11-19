@@ -10,6 +10,7 @@ import { BackButton } from '../components/navigation/BackButton';
 import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { Feedback } from '../components/feedback/Feedback';
 import { useConnection } from '../context/ConnectionContext';
+import { useOnline } from '../context/ConnectivityContext';
 import { connectionUrl } from '../config/connection';
 import { useTheme } from '../theme/ThemeContext';
 import { newsImageUrl, readNews } from '../services/news.service';
@@ -22,7 +23,18 @@ export function NewsScreen({ route, navigation }: {
   navigation?: BottomTabNavigationProp<RootTabParamList, 'News'>;
 }) {
   const { settings } = useConnection();
+  const online = useOnline();
+  const { t } = useTranslation();
+  const { colors, typography } = useTheme();
   const base = connectionUrl(settings);
+  if (!online) {
+    return (
+      <SafeAreaView edges={['top']} style={[styles.screen, styles.content, { backgroundColor: colors.superficie.fondo }]}>
+        <TabPageHeader title={t('news.title')} />
+        <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>{t('common.internetRequired')}</Text>
+      </SafeAreaView>
+    );
+  }
   return <NewsFeed key={base + '/' + settings.restauranteId} base={base} restaurant={settings.restauranteId}
     linkedId={route?.params?.id} clearLink={() => navigation?.setParams({ id: undefined })} />;
 }

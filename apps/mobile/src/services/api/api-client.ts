@@ -169,10 +169,12 @@ apiClient.interceptors.response.use(
 
       return apiClient(originalRequest);
     } catch (refreshError) {
-      // si el refresh token expiro o fue revocado en backend, limpiamos todo y avisamos a la app
-      console.warn('Fallo la renovacion automatica del token:', refreshError);
-      await clearTokens();
-      notifySessionExpired();
+      // Conservo el refresh token si se cayó la conexión durante la renovación.
+      const status = axios.isAxiosError(refreshError) ? refreshError.response?.status : undefined;
+      if (status === 401 || status === 403) {
+        await clearTokens();
+        notifySessionExpired();
+      }
       processQueue(refreshError, null);
       return Promise.reject(refreshError);
     } finally {

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { GoogleAccess } from '../components/GoogleAccess';
 import { useTheme } from '../theme/ThemeContext';
+import { useOnline } from './ConnectivityContext';
 
 type Entry = 'cart' | 'settings';
 const GuestAccessContext = createContext<((entry: Entry) => void)>(() => {});
@@ -20,9 +21,10 @@ export function GuestAccessProvider({ authenticated, children, reminderOffset = 
   const [entry, setEntry] = useState<Entry | null>(null);
   const [foreground, setForeground] = useState(() => (AppState.currentState ?? 'active') === 'active');
   const [reminder, setReminder] = useState(false);
+  const online = useOnline();
   useEffect(() => {
-    if (authenticated) setEntry(null);
-  }, [authenticated]);
+    if (authenticated || !online) setEntry(null);
+  }, [authenticated, online]);
 
   useEffect(() => {
     const listener = AppState.addEventListener('change', state => setForeground(state === 'active'));
@@ -32,7 +34,7 @@ export function GuestAccessProvider({ authenticated, children, reminderOffset = 
   // Reinicio la cuenta cuando el invitado vuelve a la app o cierra el acceso.
   useEffect(() => {
     setReminder(false);
-    if (authenticated || entry || !foreground) return;
+    if (authenticated || entry || !foreground || !online) return;
     let hide: ReturnType<typeof setTimeout> | undefined;
     const interval = setInterval(() => {
       setReminder(true);
@@ -42,16 +44,16 @@ export function GuestAccessProvider({ authenticated, children, reminderOffset = 
       clearInterval(interval);
       if (hide !== undefined) clearTimeout(hide);
     };
-  }, [authenticated, entry, foreground]);
+  }, [authenticated, entry, foreground, online]);
 
   return (
     <GuestAccessContext.Provider value={setEntry}>
       {children}
-      {reminder && !authenticated && !entry && foreground && (
+      {reminder && !authenticated && !entry && foreground && online && (
         <GuestReminder bottomOffset={reminderOffset} onOpen={() => setEntry('settings')}
           onDismiss={() => setReminder(false)} />
       )}
-      {!authenticated && entry && <GoogleAccess entry={entry} onClose={() => setEntry(null)} />}
+      {!authenticated && entry && online && <GoogleAccess entry={entry} onClose={() => setEntry(null)} />}
     </GuestAccessContext.Provider>
   );
 }

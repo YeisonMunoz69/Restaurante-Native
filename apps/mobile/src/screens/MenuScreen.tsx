@@ -8,6 +8,7 @@ import React, {
 import { useIsFocused, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { RootTabParamList } from '../navigation/BottomTabNavigator';
+import { isAxiosError } from 'axios';
 import { ORDER_BUTTON_CLEARANCE, OrderDraftPanel } from '../components/menu/OrderDraftPanel';
 import { MenuCarousels } from '../components/menu/MenuCarousels';
 import { MenuDateTicker } from '../components/menu/MenuDateTicker';
@@ -30,10 +31,13 @@ import {
 } from 'lucide-react-native';
 import type { MenuCategory, MenuDish } from '@encanto/shared';
 import { useConnection } from '../context/ConnectionContext';
+import { connectionUrl } from '../config/connection';
+import { useOnline } from '../context/ConnectivityContext';
 import { useAuth } from '../context/AuthContext';
 import { useGuestAccess } from '../context/GuestAccessContext';
 import { MenuDishDetailModal } from '../components/menu/MenuDishDetailModal';
 import { menuApi } from '../services/menu.service';
+import { bundledMenu, offlineMenuKey, readOfflineMenu, saveOfflineMenu } from '../services/offline-menu';
 import { useTheme } from '../theme/ThemeContext';
 import { Button } from '../components/ui/Button';
 import { formatCivilDate, todayInBogota } from '../utils/formatters';
@@ -54,6 +58,10 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   const { user } = useAuth();
   const requestSignIn = useGuestAccess();
   const restauranteId = settings.restauranteId;
+  const online = useOnline();
+  const cacheKey = offlineMenuKey(connectionUrl(settings), restauranteId);
+  const [cached, setCached] = useState<{ key: string; menu: typeof bundledMenu }>();
+  const [loadedKey, setLoadedKey] = useState<string>();
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [dishes, setDishes] = useState<MenuDish[]>([]);
   const [fecha, setFecha] = useState<string | null>(null);
@@ -76,14 +84,36 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   const headerHeight = useRef(Infinity);
   const requestNumber = useRef(0);
   const loadingMoreRef = useRef(false);
+  const readOnly = !online || (isAxiosError(error) &&
+    (!error.response || error.response.status >= 500));
+  const cachedMenu = cached?.key === cacheKey ? cached.menu : null;
 
   useEffect(() => {
-    if (!isFocused) setShowCalendar(false);
-  }, [isFocused]);
+    if (!isFocused || readOnly) setShowCalendar(false);
+  }, [isFocused, readOnly]);
+
+  useEffect(() => {
+    let current = true;
+    void readOfflineMenu(cacheKey).then(menu => {
+      if (current && menu) setCached(previous => previous?.key === cacheKey ? previous : { key: cacheKey, menu });
+    });
+    return () => { current = false; };
+  }, [cacheKey]);
+
+  useEffect(() => {
+    // Solo reemplazo la copia cuando terminó la paginación de esta sede y esta fecha.
+    if (!online || loadedKey !== cacheKey || !fecha || dayOpen !== true || loading || error ||
+      loadingMore || loadMoreFailed || nextPage <= totalPages || !dishes.length) return;
+    const menu = { categories, dishes };
+    setCached({ key: cacheKey, menu });
+    void saveOfflineMenu(cacheKey, menu).catch(() => undefined);
+  }, [online, cacheKey, loadedKey, fecha, dayOpen, loading, error, loadingMore, loadMoreFailed,
+    nextPage, totalPages, categories, dishes]);
 
   // Cargo sede, próximo día, categorías y primera página para el entorno elegido.
   const loadInitial = useCallback(async () => {
     const currentRequest = ++requestNumber.current;
+    setLoadedKey(undefined);
     setShowCompactDate(false);
     setCategories([]);
     setDishes([]);
@@ -127,25 +157,26 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
       setDishes(firstPage.data);
       setNextPage(firstPage.paginacion.pagina + 1);
       setTotalPages(firstPage.paginacion.totalPaginas);
+      setLoadedKey(cacheKey);
     } catch (requestError) {
       if (currentRequest === requestNumber.current) setError(requestError);
     } finally {
       if (currentRequest === requestNumber.current) setLoading(false);
     }
-  }, [restauranteId]);
+  }, [restauranteId, cacheKey]);
 
   // Ignoro una respuesta vieja si el usuario cambia de sede o sale de la pantalla.
   useEffect(() => {
-    loadInitial().catch(() => undefined);
+    if (online) void loadInitial();
     return () => {
       requestNumber.current += 1;
       loadingMoreRef.current = false;
     };
-  }, [loadInitial]);
+  }, [loadInitial, online]);
 
   const loadDate = useCallback(
     async (nextDate: string, reloadCategories = false) => {
-      if (!restauranteId) return;
+      if (!online || !restauranteId) return;
       const currentRequest = ++requestNumber.current;
       setShowCompactDate(false);
       setFecha(nextDate);
@@ -188,7 +219,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
         if (currentRequest === requestNumber.current) setLoading(false);
       }
     },
-    [restauranteId],
+    [online, restauranteId],
   );
 
   const refresh = useCallback(() => {
@@ -201,7 +232,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
 
   const loadMore = useCallback(async () => {
     if (
-      !restauranteId ||
+      !online || !restauranteId ||
       !fecha ||
       loading ||
       error ||
@@ -233,16 +264,25 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
         setLoadingMore(false);
       }
     }
-  }, [restauranteId, fecha, loading, error, nextPage, totalPages]);
+  }, [online, restauranteId, fecha, loading, error, nextPage, totalPages]);
+
+  const displayed = readOnly ? cachedMenu ?? bundledMenu : undefined;
+  const activeCategories = displayed?.categories ?? categories;
+  const activeDishes = displayed?.dishes ?? dishes;
+  const selectedSlug = route?.params?.slug;
+  const offlineDish = readOnly
+    ? activeDishes.find(dish => selectedSlug ? dish.slug === selectedSlug : dish.id === selectedDishId) ??
+      dishes.find(dish => selectedSlug ? dish.slug === selectedSlug : dish.id === selectedDishId) ?? null
+    : bundledMenu.dishes.find(dish => dish.id === selectedDishId);
 
   const sections = useMemo<MenuSection[]>(
     () =>
-      categories.map(category => ({
+      activeCategories.map(category => ({
         id: category.id,
         title: category.nombre,
-        data: dishes.filter(dish => dish.categoria.id === category.id),
+        data: activeDishes.filter(dish => dish.categoria.id === category.id),
       })),
-    [categories, dishes],
+    [activeCategories, activeDishes],
   );
 
 
@@ -257,7 +297,19 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
       style={[styles.header, { paddingHorizontal: spacing.margenLateral }]}
     >
       <TabPageHeader title={t('menu.title')} />
-      {fecha && restauranteId && (
+      {readOnly && (
+        <View style={[styles.date, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
+          <Text accessibilityRole="header" style={[typography.etiqueta, { color: colors.texto.primario }]}>
+            {t('menu.offlineTitle')}
+          </Text>
+          <Text style={[typography.pie, { color: colors.texto.secundario }]}>
+            {t(cachedMenu ? 'menu.offlineSaved' : 'menu.offlineBundled')}
+          </Text>
+          {online && <Button testID="menu-retry" label={t('common.retry')} variant="tertiary"
+            onPress={() => void loadInitial()} style={styles.nextOpen} />}
+        </View>
+      )}
+      {!readOnly && fecha && restauranteId && (
         <View style={[styles.date, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
           <Pressable testID="menu-open-calendar" accessibilityRole="button"
             accessibilityLabel={t('menu.openServiceCalendar', { date: dateLabel })} onPress={openCalendar}
@@ -305,7 +357,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
       testID="menu-screen"
       style={[styles.container, { backgroundColor: colors.superficie.fondo, paddingTop: insets.top }]}
     >
-      {!restauranteId ? (
+      {!restauranteId && !readOnly ? (
         <>
           {header}
           <View style={styles.centered}>
@@ -322,7 +374,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
         </>
       ) : (
         <>
-          {loading && dishes.length === 0 ? (
+          {!readOnly && loading && dishes.length === 0 ? (
             <ScrollView contentContainerStyle={styles.statusContent}>
               {header}
               <View style={styles.centered}>
@@ -332,7 +384,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
                 </Text>
               </View>
             </ScrollView>
-          ) : error ? (
+          ) : !readOnly && error ? (
             <ScrollView contentContainerStyle={styles.statusContent}>
               {header}
               <View style={[styles.centered, { padding: spacing.l }]}>
@@ -355,7 +407,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
             <MenuCarousels
               header={header}
               onHeaderLayout={event => { headerHeight.current = event.nativeEvent.layout.height; }}
-              bottomInset={user ? ORDER_BUTTON_CLEARANCE : 12}
+              bottomInset={user && !readOnly ? ORDER_BUTTON_CLEARANCE : 12}
               onScroll={event => {
                 // Solo fijo una línea cuando ya salió toda la cabecera de la lista.
                 setShowCompactDate(event.nativeEvent.contentOffset.y >= headerHeight.current);
@@ -365,15 +417,16 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
               open={dayOpen === true}
               loadingMore={loadingMore}
               loadMoreFailed={loadMoreFailed}
-              hasMore={nextPage <= totalPages}
+              hasMore={!readOnly && nextPage <= totalPages}
               onMore={loadMore}
               onRefresh={refresh}
               onDetail={setSelectedDishId}
               onRequireSignIn={user ? undefined : () => requestSignIn('cart')}
+              readOnly={readOnly}
             />
           )}
 
-          {showCompactDate && fecha && !loading && !error && (
+          {!readOnly && showCompactDate && fecha && !loading && !error && (
             <Pressable
               testID="menu-compact-date"
               accessibilityRole="button"
@@ -397,6 +450,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
             visible={selectedDishId !== null || !!route?.params?.slug}
             dishId={selectedDishId}
             slug={route?.params?.slug}
+            offlineDish={offlineDish}
             restauranteId={restauranteId}
             fecha={route?.params?.slug ? route.params.fecha ?? todayInBogota() : fecha ?? todayInBogota()}
             onClose={() => {
@@ -406,8 +460,8 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
           />
         </>
       )}
-      {!!user && !!restauranteId && <OrderDraftPanel restauranteId={restauranteId} onReserve={() => navigation.navigate('Reservations')} />}
-      {showCalendar && !!restauranteId && !!fecha && isFocused && (
+      {!readOnly && !!user && !!restauranteId && <OrderDraftPanel restauranteId={restauranteId} onReserve={() => navigation.navigate('Reservations')} />}
+      {!readOnly && showCalendar && !!restauranteId && !!fecha && isFocused && (
         <MenuCalendarModal restauranteId={restauranteId} value={fecha} onClose={closeCalendar}
           onSelect={date => { closeCalendar(); void loadDate(date); }} />
       )}

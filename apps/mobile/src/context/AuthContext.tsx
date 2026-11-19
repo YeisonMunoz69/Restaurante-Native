@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   login as apiLogin,
   register as apiRegister,
@@ -9,6 +9,7 @@ import {
   AuthUser,
 } from '../services/auth/auth.service';
 import { onSessionExpired } from '../services/api/api-client';
+import { useOnline } from './ConnectivityContext';
 import type { AccountProfile, LoginDto, RegisterDto, GoogleLoginDto, ProfileUpdateDto } from '@encanto/shared';
 
 interface AuthContextData {
@@ -28,24 +29,24 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const online = useOnline();
+  const restoration = useRef<Promise<void> | null>(null);
+  const wasOnline = useRef(false);
 
   // intento recuperar la sesion guardada de forma segura al abrir la app
   const checkSession = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const session = await apiRestoreSession();
-      if (session) {
-        setUser(session.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.warn('Error al verificar sesion inicial:', error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    if (!online) return;
+    if (restoration.current) return restoration.current;
+    setIsLoading(true);
+    restoration.current = apiRestoreSession()
+      .then(session => setUser(session?.user ?? null))
+      .catch(() => setUser(null))
+      .finally(() => {
+        setIsLoading(false);
+        restoration.current = null;
+      });
+    return restoration.current;
+  }, [online]);
 
   // inicio de sesion
   const handleLogin = async (credentials: LoginDto) => {
@@ -92,9 +93,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // verificamos si hay sesion previa al montar el proveedor
-    checkSession();
+    const cameOnline = online && !wasOnline.current;
+    wasOnline.current = online;
+    if (cameOnline && !user) void checkSession();
+    if (!online && !restoration.current) setIsLoading(false);
+  }, [checkSession, online, user]);
 
+  useEffect(() => {
     // escuchamos si el interceptor de Axios detecta que el refresh token ya no es valido
     const unsubscribe = onSessionExpired(() => {
       console.log('Sesion expirada detectada por el cliente HTTP, limpiando estado de usuario.');
@@ -104,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       unsubscribe();
     };
-  }, [checkSession]);
+  }, []);
 
   return (
     <AuthContext.Provider

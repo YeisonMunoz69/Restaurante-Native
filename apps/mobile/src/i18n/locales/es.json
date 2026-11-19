@@ -8,6 +8,12 @@
   },
   "menu": {
     "title": "Carta",
+    "offlineTitle": "Carta sin conexión",
+    "offlineBundled": "Estás viendo la carta incluida en la app. Conéctate para confirmar precios y disponibilidad.",
+    "offlineSaved": "Estás viendo la última carta guardada. Conéctate para confirmar precios y disponibilidad.",
+    "offlinePrice": "Precio de referencia",
+    "offlineDetailMissing": "Este plato no está en la carta guardada. Vuelve a abrirlo con conexión.",
+    "offlineNoPhotos": "Este plato no tiene fotos incluidas para consulta sin conexión.",
     "allCategories": "Todas",
     "reloadMenu": "Actualizar carta",
     "doubleTapReload": "Dos pulsaciones rápidas recargan la carta completa.",
@@ -379,6 +385,7 @@
     "loading": "Cargando...",
     "error": "Ocurrió un error inesperado",
     "retry": "Reintentar",
+    "internetRequired": "Conéctate a internet para usar esta sección.",
     "back": "Atrás",
     "close": "Cerrar"
   }

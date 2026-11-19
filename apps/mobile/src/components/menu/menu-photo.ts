@@ -1,4 +1,4 @@
-import type { MenuDish } from '@encanto/shared';
+import { menuNameSlug, type MenuDish } from '@encanto/shared';
 import type { ImageSourcePropType } from 'react-native';
 
 const originalPhotos = new Map<string, readonly ImageSourcePropType[]>([
@@ -25,8 +25,11 @@ export function publicMenuPhotoUrl(path: string | null | undefined) {
 }
 
 // Uso la galería de ADMIN si está publicada. Las fotos incluidas cubren platos todavía sin galería.
-export function menuGallery({ slug = '', fotos }: Pick<MenuDish, 'slug' | 'fotos'>) {
-  const published: { id: string; source: ImageSourcePropType }[] = fotos.flatMap(photo => {
+export function menuGallery(
+  { slug = '', fotos, nombre }: Pick<MenuDish, 'slug' | 'fotos'> & Partial<Pick<MenuDish, 'nombre'>>,
+  bundledOnly = false,
+) {
+  const published: { id: string; source: ImageSourcePropType }[] = bundledOnly ? [] : fotos.flatMap(photo => {
     const uri = publicMenuPhotoUrl(photo.path) ?? publicMenuPhotoUrl(photo.pathOg);
     return uri ? [{ id: photo.id, source: { uri } }] : [];
   });
@@ -35,7 +38,8 @@ export function menuGallery({ slug = '', fotos }: Pick<MenuDish, 'slug' | 'fotos
   // Quito el UUID del importador sin depender del nombre o precio que edite el dueño.
   const key = slug.replace(restaurantPrefix, '');
   const originalSlug = key === 'sancocho-de-gallina-criolla-a-la-lena' ? 'sancocho-de-gallina' : key;
-  return (originalPhotos.get(originalSlug) ?? []).slice(0, maxPhotos).map((source, index) => ({
+  const localPhotos = originalPhotos.get(originalSlug) ?? originalPhotos.get(menuNameSlug(nombre ?? ''));
+  return (localPhotos ?? []).slice(0, maxPhotos).map((source, index) => ({
     id: originalSlug + '/' + (index + 1),
     source,
   }));
