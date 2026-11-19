@@ -1,26 +1,33 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Minus, Plus, ShoppingBasket, X } from 'lucide-react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ChevronRight, Minus, Plus, ShoppingBasket, UtensilsCrossed, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import type { MenuDish } from '@encanto/shared';
 import { useOrderDraft } from '../../context/OrderDraftContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { formatCivilDate, formatCop } from '../../utils/formatters';
 import { Feedback } from '../feedback/Feedback';
 import { OverlayModal } from '../feedback/OverlayModal';
+import { MenuDishDetailModal } from './MenuDishDetailModal';
+import { menuGallery } from './menu-photo';
 
 export const ORDER_BUTTON_CLEARANCE = 80;
 
 // Dejo la carta libre para recorrerla y abro el borrador solo al pulsar la cesta.
-export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
+export function OrderDraftPanel({ restauranteId, onReserve }: { restauranteId: string; onReserve: () => void }) {
   const draft = useOrderDraft();
   const [open, setOpen] = useState(false);
+  const [selectedDishId, setSelectedDishId] = useState<string | null>(null);
   const { t } = useTranslation();
   const { colors, typography, radii } = useTheme();
   const insets = useSafeAreaInsets();
   const units = draft.lines.reduce((sum, line) => sum + line.cantidad, 0);
   const total = draft.lines.reduce((sum, line) => sum + line.cantidad * line.dish.precio, 0);
-  const close = () => setOpen(false);
+  const close = () => {
+    setSelectedDishId(null);
+    setOpen(false);
+  };
 
   const reserve = () => {
     close();
@@ -128,10 +135,22 @@ export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
             )}
             {draft.lines.map(line => (
               <View key={line.dish.id} style={[styles.line, { borderBottomColor: colors.superficie.borde }]}>
-                <View style={styles.lineInfo}>
-                  <Text style={[typography.etiqueta, { color: colors.texto.primario }]}>
+                <Pressable
+                  testID={`order-dish-${line.dish.id}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('menu.openDish', { name: line.dish.nombre })}
+                  onPress={() => setSelectedDishId(line.dish.id)}
+                  style={({ pressed }) => [styles.preview, { opacity: pressed ? 0.7 : 1 }]}
+                >
+                  <View style={[styles.thumbnail, { backgroundColor: colors.superficie.elevada }]}>
+                    <DishThumbnail dish={line.dish} />
+                  </View>
+                  <Text style={[typography.tituloM, styles.previewTitle, { color: colors.texto.primario }]}>
                     {line.dish.nombre}
                   </Text>
+                  <ChevronRight size={18} color={colors.marca.primario} />
+                </Pressable>
+                <View style={styles.lineInfo}>
                   <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
                     {formatCop(line.dish.precio * line.cantidad)}
                   </Text>
@@ -221,8 +240,27 @@ export function OrderDraftPanel({ onReserve }: { onReserve: () => void }) {
           </ScrollView>
         </View>
       </View>
+      {selectedDishId && draft.fecha && (
+        // Abro la ficha encima para volver al mismo borrador al cerrarla.
+        <MenuDishDetailModal
+          visible
+          restauranteId={restauranteId}
+          fecha={draft.fecha}
+          dishId={selectedDishId}
+          onClose={() => setSelectedDishId(null)}
+        />
+      )}
     </OverlayModal>
   );
+}
+
+// Reutilizo la portada de la carta y dejo un icono si todavía no hay foto.
+function DishThumbnail({ dish }: { dish: MenuDish }) {
+  const { colors } = useTheme();
+  const photo = menuGallery(dish)[0]?.source;
+  const [failed, setFailed] = useState(false);
+  if (!photo || failed) return <UtensilsCrossed size={20} color={colors.texto.secundario} />;
+  return <Image testID="order-dish-photo" source={photo} style={styles.thumbnailImage} resizeMode="contain" onError={() => setFailed(true)} />;
 }
 
 const styles = StyleSheet.create({
@@ -253,6 +291,10 @@ const styles = StyleSheet.create({
     paddingTop: 8, borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8,
   },
+  preview: { width: '100%', flexDirection: 'row', alignItems: 'center', gap: 10 },
+  previewTitle: { flex: 1 },
+  thumbnail: { width: 56, height: 56, borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  thumbnailImage: { width: 56, height: 56 },
   lineInfo: { flexGrow: 1, flexShrink: 1, flexBasis: 120 },
   iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   remove: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },

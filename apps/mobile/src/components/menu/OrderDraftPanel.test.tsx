@@ -9,11 +9,17 @@ import {
 } from '../../context/OrderDraftContext';
 import { OrderDraftPanel } from './OrderDraftPanel';
 import { Feedback } from '../feedback/Feedback';
+import { MenuDishDetailModal } from './MenuDishDetailModal';
+import { menuApi } from '../../services/menu.service';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
-const dish = { id: 'd1', nombre: 'Plato', precio: 32000 } as MenuDish;
+jest.mock('../../services/menu.service', () => ({ menuApi: { dish: jest.fn() } }));
+const dish = {
+  id: 'd1', nombre: 'Plato', precio: 32000, etiquetas: [],
+  fotos: [{ id: 'foto1', path: 'https://images.example.test/plato.jpg', pathOg: null, principal: true, orden: 0 }],
+} as MenuDish;
 let draft: ReturnType<typeof useOrderDraft>;
 let tree: Renderer.ReactTestRenderer;
 function Observe() {
@@ -23,12 +29,13 @@ function Observe() {
 const reserve = jest.fn();
 beforeEach(async () => {
   jest.clearAllMocks();
+  jest.mocked(menuApi.dish).mockResolvedValue(dish);
   await Renderer.act(async () => {
     tree = Renderer.create(
       <ThemeProvider>
         <OrderDraftProvider scope="local/r1">
           <Observe />
-          <OrderDraftPanel onReserve={reserve} />
+          <OrderDraftPanel restauranteId="r1" onReserve={reserve} />
         </OrderDraftProvider>
       </ThemeProvider>,
     );
@@ -79,4 +86,18 @@ it('cierra por fuera y con el botón sin modificar el borrador', () => {
   expect(tree.root.findAllByProps({ testID: 'order-sheet' })).toHaveLength(0);
   expect(draft.lines[0].cantidad).toBe(1);
   expect(reserve).not.toHaveBeenCalled();
+});
+
+it('muestra la portada y vuelve de la ficha a la misma fecha y cantidades del pedido', async () => {
+  Renderer.act(() => draft.setQuantity(dish, 2, '2026-10-25'));
+  press('order-open');
+  expect(tree.root.findAllByProps({ testID: 'order-dish-photo' })[0].props.source)
+    .toEqual({ uri: 'https://images.example.test/plato.jpg' });
+  await Renderer.act(async () => {
+    tree.root.findAllByProps({ testID: 'order-dish-d1' }).find(node => node.props.onPress)!.props.onPress();
+  });
+  expect(menuApi.dish).toHaveBeenCalledWith('r1', '2026-10-25', 'd1');
+  Renderer.act(() => tree.root.findByType(MenuDishDetailModal).props.onClose());
+  expect(tree.root.findAllByProps({ testID: 'order-sheet' }).length).toBeGreaterThan(0);
+  expect(draft.lines[0].cantidad).toBe(2);
 });

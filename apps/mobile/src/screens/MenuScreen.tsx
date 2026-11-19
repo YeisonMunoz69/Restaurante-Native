@@ -422,7 +422,7 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
           />
         </>
       )}
-      {!!restauranteId && <OrderDraftPanel onReserve={() => navigation.navigate('Reservations')} />}
+      {!!restauranteId && <OrderDraftPanel restauranteId={restauranteId} onReserve={() => navigation.navigate('Reservations')} />}
     </View>
   );
 };
