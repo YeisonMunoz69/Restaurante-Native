@@ -1,0 +1,16 @@
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  color: #222c23;
+  background: #fbf7ee;
+}
+body { margin: 0; }
+header { background: #23422e; padding: 16px max(20px, calc((100% - 720px) / 2)); }
+header a { color: #fff; font-weight: 700; text-decoration: none; }
+main { width: min(720px, calc(100% - 40px)); margin: 44px auto; }
+h1 { margin-block: 0 12px; line-height: 1.15; font: 700 clamp(2rem, 6vw, 3rem)/1.15 Georgia, serif; }
+a { color: #205337; overflow-wrap: anywhere; }
+.cover { width: 100%; display: block; max-height: 430px; object-fit: cover; border-radius: 12px; }
+.body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.app { display: inline-block; padding: 10px 16px; background: #23422e; color: white; border-radius: 8px; }

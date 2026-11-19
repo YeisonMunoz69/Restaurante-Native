@@ -30,6 +30,7 @@ coverage/
 apps/api/src/**/*.js
 .turbo/
 .next/
+apps/web/next-env.d.ts
 out/
 
 # Android (React Native)
