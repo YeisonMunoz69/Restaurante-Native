@@ -16,10 +16,13 @@ jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 jest.mock('../../services/menu.service', () => ({ menuApi: { dish: jest.fn() } }));
-const dish = {
-  id: 'd1', nombre: 'Plato', precio: 32000, etiquetas: [],
+const dish: MenuDish = {
+  id: 'd1', nombre: 'Plato', slug: 'plato', precio: 32000, moneda: 'COP',
+  categoria: { id: 'c1', nombre: 'Carnes', orden: 0 },
+  descripcionBreve: null, descripcion: 'Plato de prueba', alergenos: null,
+  destacado: false, orden: 0, disponible: true, disponibilidadOrigen: 'FECHA', etiquetas: [],
   fotos: [{ id: 'foto1', path: 'https://images.example.test/plato.jpg', pathOg: null, principal: true, orden: 0 }],
-} as MenuDish;
+};
 let draft: ReturnType<typeof useOrderDraft>;
 let tree: Renderer.ReactTestRenderer;
 function Observe() {
