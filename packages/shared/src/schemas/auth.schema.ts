@@ -47,3 +47,18 @@ export const GoogleLoginSchema = z.object({
 }).strict();
 export const GoogleLinkSchema = z.object({ idToken: GoogleTokenSchema }).strict();
 export type GoogleLoginDto = z.infer<typeof GoogleLoginSchema>;
+
+// Comparto la validación de datos editables y dejo el correo y el rol fuera del formulario.
+export const ProfileUpdateSchema = z.object({
+  nombre: z.string().trim().min(2).max(100).optional(),
+  telefono: z.string().trim().regex(/^\d{10}$/).optional(),
+  ciudad: z.string().trim().max(80).nullable().optional(),
+}).strict().refine(input => Object.values(input).some(value => value !== undefined));
+export type ProfileUpdateDto = z.infer<typeof ProfileUpdateSchema>;
+
+export interface AccountProfile {
+  nombre: string;
+  telefono: string;
+  ciudad: string | null;
+  fotoGoogleUrl: string | null;
+}

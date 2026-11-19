@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Req,
   Get,
+  Patch,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
@@ -18,8 +19,8 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
-import { RegisterSchema, LoginSchema, GoogleLoginSchema, GoogleLinkSchema } from '@encanto/shared';
-import type { RegisterDto, LoginDto, GoogleLoginDto } from '@encanto/shared';
+import { RegisterSchema, LoginSchema, GoogleLoginSchema, GoogleLinkSchema, ProfileUpdateSchema } from '@encanto/shared';
+import type { RegisterDto, LoginDto, GoogleLoginDto, ProfileUpdateDto } from '@encanto/shared';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe.js';
 import {
   JwtAuthGuard,
@@ -123,6 +124,16 @@ export class AuthController {
       correo: req.user.correo,
       rol: req.user.rol,
     };
+  }
+
+  @Patch('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar el perfil de la sesión actual' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.COMENSAL, Role.STAFF, Role.ADMIN)
+  // Tomo el dueño del JWT y valido únicamente los campos editables.
+  updateProfile(@Req() req: AuthenticatedRequest, @Body(new ZodValidationPipe(ProfileUpdateSchema)) input: ProfileUpdateDto) {
+    return this.authService.updateProfile(req.user.sub, req.user.provider ?? 'password', input);
   }
 
   @Post('logout')

@@ -76,6 +76,10 @@ model User {
   telefono          String
   passwordHash      String?  @map("password_hash")
   googleSub         String?  @unique @map("google_sub")
+  googleNombre      String?  @map("google_nombre")
+  googleFotoUrl     String?  @map("google_foto_url")
+  nombrePerfil      String?  @map("nombre_perfil")
+  ciudad            String?
   rol               Role     @default(COMENSAL)
   correoVerificado  Boolean  @default(false) @map("correo_verificado")
   totpSecretCifrado String?  @map("totp_secret_cifrado")

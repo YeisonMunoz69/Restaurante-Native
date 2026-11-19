@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from './auth.service.js';
 import { OAuth2Client } from 'google-auth-library';
-import { GoogleLoginSchema } from '@encanto/shared';
+import { GoogleLoginSchema, ProfileUpdateSchema } from '@encanto/shared';
 
 describe('AuthService.logout', () => {
   const updateMany = vi.fn();
@@ -38,11 +38,18 @@ describe('AuthService.logout', () => {
 });
 
 describe('AuthService Google', () => {
-  const account = { id: 'encanto-id', correo: 'persona@example.test', activo: true, rol: 'COMENSAL', googleSub: null };
-  const identity = { sub: 'google-id', email: account.correo, email_verified: true, name: 'Persona' };
+  const account = {
+    id: 'encanto-id', correo: 'persona@example.test', activo: true, rol: 'COMENSAL', googleSub: null,
+    nombre: 'Persona anterior', telefono: '3001234567', nombrePerfil: null, googleNombre: null, googleFotoUrl: null, ciudad: null,
+  };
+  const identity = {
+    sub: 'google-id', email: account.correo, email_verified: true, name: 'María Pérez',
+    picture: 'https://lh3.googleusercontent.com/avatar',
+  };
   const findUnique = vi.fn();
   const create = vi.fn();
   const updateMany = vi.fn();
+  const update = vi.fn();
   const refreshCreate = vi.fn();
   const sign = vi.fn();
   const getConfig = vi.fn();
@@ -52,7 +59,7 @@ describe('AuthService Google', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     getConfig.mockImplementation(key => key === 'GOOGLE_WEB_CLIENT_ID' ? 'web.example' : 'secret-test');
-    const db = { user: { findUnique, create, updateMany }, refreshToken: { create: refreshCreate, findFirst: sessionFind } };
+    const db = { user: { findUnique, create, update, updateMany }, refreshToken: { create: refreshCreate, findFirst: sessionFind } };
     const prisma = { ...db, $transaction: (callback: (client: typeof db) => unknown) => callback(db) };
     service = new AuthService({ sign } as never, { get: getConfig } as never, prisma as never);
     sign.mockReturnValue('jwt-de-prueba');
@@ -82,7 +89,7 @@ describe('AuthService Google', () => {
     updateMany.mockResolvedValue({ count: 1 });
     await service.linkGoogle(account.id, 'encanto-session', 't');
     expect(updateMany).toHaveBeenCalledWith(expect.objectContaining({
-      data: { googleSub: identity.sub, correoVerificado: true },
+      data: { googleSub: identity.sub, correoVerificado: true, googleNombre: identity.name, googleFotoUrl: identity.picture },
     }));
     expect(sign).toHaveBeenCalledWith(expect.objectContaining({ sub: account.id, rol: 'ADMIN', provider: 'google' }));
   });
@@ -91,5 +98,34 @@ describe('AuthService Google', () => {
     vi.mocked(OAuth2Client.prototype.verifyIdToken).mockRejectedValueOnce(new Error('audience'));
     await expect(service.googleLogin({ idToken: 't' })).rejects.toMatchObject({ status: 401 });
     expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('devuelve el nombre y la foto de Google en el perfil, fuera de los JWT', async () => {
+    findUnique.mockResolvedValue({ ...account, googleSub: identity.sub });
+    update.mockResolvedValue({ ...account, googleNombre: identity.name, googleFotoUrl: identity.picture });
+    const session = await service.googleLogin({ idToken: 't' });
+    expect(session.perfil).toEqual({
+      nombre: identity.name, fotoGoogleUrl: identity.picture, telefono: account.telefono, ciudad: null,
+    });
+    expect(sign.mock.calls.every(([payload]) => !('nombre' in payload) && !('fotoGoogleUrl' in payload))).toBe(true);
+  });
+
+  it('edita solo los datos de perfil del dueño y conserva su foto de Google', async () => {
+    expect(ProfileUpdateSchema.safeParse({ nombre: 'Ana Pérez', ciudad: null, rol: 'ADMIN' }).success).toBe(false);
+    update.mockResolvedValue({ ...account, nombrePerfil: 'Ana Pérez', googleFotoUrl: identity.picture, ciudad: 'Timbío' });
+    const profile = await service.updateProfile(account.id, 'google', { nombre: 'Ana Pérez', ciudad: 'Timbío' });
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: account.id, activo: true },
+      data: expect.objectContaining({ nombrePerfil: 'Ana Pérez', ciudad: 'Timbío' }),
+    }));
+    expect(profile).toMatchObject({ nombre: 'Ana Pérez', ciudad: 'Timbío', fotoGoogleUrl: identity.picture });
+  });
+
+  it('permite completar la ciudad sin reemplazar el nombre recibido de Google', async () => {
+    const input = ProfileUpdateSchema.parse({ ciudad: 'Timbío' });
+    update.mockResolvedValue({ ...account, googleNombre: identity.name, ciudad: input.ciudad });
+    const profile = await service.updateProfile(account.id, 'google', input);
+    expect(update.mock.calls[0][0].data).toEqual({ nombrePerfil: undefined, telefono: undefined, ciudad: 'Timbío' });
+    expect(profile.nombre).toBe(identity.name);
   });
 });
