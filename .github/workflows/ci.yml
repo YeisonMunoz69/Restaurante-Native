@@ -69,6 +69,9 @@ jobs:
       - name: Build API
         run: npm run build --workspace=api
 
+      - name: Build public web pages
+        run: npm run build --workspace=@encanto/web
+
       - name: Test mobile app
         run: npm run test --workspace=@encanto/mobile
 
