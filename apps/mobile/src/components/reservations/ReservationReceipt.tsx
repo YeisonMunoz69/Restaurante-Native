@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Share from 'react-native-share';
 import { FileCheck2, ImagePlus, Share2, ZoomIn, ZoomOut } from 'lucide-react-native';
@@ -26,37 +26,37 @@ export function ReservationImagePreview({ image, title, onClose, onShare, onView
 }) {
   const { t } = useTranslation();
   const { colors, typography, spacing } = useTheme();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [zoomed, setZoomed] = useState(false);
   const [failed, setFailed] = useState(false);
-  const displayWidth = Math.max(1, width - spacing.margenLateral * 2);
+  const displayWidth = Math.max(1, Math.min(620, width - spacing.margenLateral * 2));
   const imageWidth = zoomed ? displayWidth * 2.5 : displayWidth;
   return (
     <Modal visible onRequestClose={onClose} animationType="slide" presentationStyle="fullScreen">
-      <View style={[styles.preview, {
-        backgroundColor: colors.superficie.fondo,
-        paddingTop: insets.top, paddingBottom: insets.bottom, paddingHorizontal: spacing.margenLateral,
-      }]}>
-        <BackButton onPress={onClose} />
-        <Text accessibilityRole="header" style={[typography.tituloL, { color: colors.texto.primario }]}>{title}</Text>
-        <View style={styles.actions}>
-          <Button label={t(zoomed ? 'reservations.receiptFit' : 'reservations.receiptZoom')}
-            variant="secondary" icon={zoomed ? ZoomOut : ZoomIn} onPress={() => setZoomed(value => !value)} />
-          {!!onShare && !failed && <Button variant="primary" label={t('reservations.receiptShare')} icon={Share2} onPress={onShare} disabled={busy} />}
+      <SafeAreaView style={[styles.preview, { backgroundColor: colors.superficie.fondo }]}>
+        <View style={[styles.previewHeader, { borderColor: colors.superficie.borde }]}>
+          <BackButton onPress={onClose} style={styles.previewBack} accessibilityLabel={t('common.close')} />
+          <Text accessibilityRole="header" style={[typography.tituloL, styles.title, { color: colors.texto.primario }]}>{title}</Text>
         </View>
         {!!error && <Note live tone="error">{error}</Note>}
         {failed ? <Note live tone="error">{t('reservations.receiptReadError')}</Note> : (
-          <ScrollView key={zoomed ? 'zoom' : 'fit'} nestedScrollEnabled>
-            <ScrollView horizontal scrollEnabled={zoomed} nestedScrollEnabled>
+          <ScrollView key={zoomed ? 'zoom' : 'fit'} nestedScrollEnabled contentContainerStyle={styles.imageContent}>
+            <ScrollView horizontal scrollEnabled={zoomed} nestedScrollEnabled style={styles.imageScroll}
+              contentContainerStyle={[styles.imageRow, { paddingHorizontal: spacing.margenLateral, justifyContent: zoomed ? 'flex-start' : 'center' }]}>
               <Image accessibilityLabel={title} resizeMode="contain"
-                source={{ uri: `data:image/png;base64,${image.imagen}` }}
+                source={{ uri: 'data:image/png;base64,' + image.imagen }}
                 style={{ width: imageWidth, height: imageWidth * image.alto / image.ancho }}
                 onLoad={onViewed} onError={() => setFailed(true)} />
             </ScrollView>
           </ScrollView>
         )}
-      </View>
+        {!failed && <View style={[styles.actions, { borderColor: colors.superficie.borde }]}>
+          <Button style={styles.previewAction} label={t(zoomed ? 'reservations.receiptFit' : 'reservations.receiptZoom')}
+            variant="secondary" icon={zoomed ? ZoomOut : ZoomIn} onPress={() => setZoomed(value => !value)} />
+          {!!onShare && <Button style={styles.previewAction} variant="primary" label={t('reservations.receiptShare')}
+            icon={Share2} onPress={onShare} disabled={busy} />}
+        </View>}
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -156,8 +156,15 @@ export function ReservationReceiptCard({ reservation, onUpdate, active = true, d
 }
 
 const styles = StyleSheet.create({
-  preview: { flex: 1, gap: 12 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  preview: { flex: 1 },
+  previewHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: StyleSheet.hairlineWidth, padding: 12 },
+  previewBack: { marginBottom: 0 },
+  imageContent: { paddingVertical: 12 },
+  imageScroll: { width: '100%' },
+  imageRow: { flexGrow: 1 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 12, marginTop: 'auto',
+    borderTopWidth: StyleSheet.hairlineWidth, maxWidth: 620, width: '100%', alignSelf: 'center' },
+  previewAction: { flexGrow: 1, flexBasis: 120 },
   draftPreview: { width: '100%', height: 130 },
   payment: { flexGrow: 0, maxHeight: 420 },
   card: { padding: 16, gap: 10 },

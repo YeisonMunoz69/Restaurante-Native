@@ -1,6 +1,9 @@
 import React from 'react';
 import Renderer from 'react-test-renderer';
-import { Text } from 'react-native';
+import { Share, Text } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { Button } from '../../components/ui/Button';
+import { ReservationTicketView } from '../../components/reservations/ReservationTicketView';
 import { Feedback as Alert } from '../../components/feedback/Feedback';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
@@ -78,4 +81,24 @@ it('no mezcla reservas de otra cuenta cuando termina una petición vieja', async
   api.mine.mockResolvedValue([]);
   await Renderer.act(async () => { tree.update(<ThemeProvider><ReservationsScreen /></ThemeProvider>); });
   expect(text()).not.toContain('EC-PRUEBA');
+});
+
+it('abre un ticket con datos y partidas, y conserva el texto para copiar y compartir', async () => {
+  const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
+  api.mine.mockResolvedValue([{ ...base, total: 64000, lineas: [
+    { platoId: 'p1', nombre: 'Sancocho de prueba', cantidad: 2, subtotal: 64000 },
+  ] }] as never);
+  await mount();
+  const open = tree.root.findAllByType(Button).find(button => button.props.label === 'reservations.viewTicket')!;
+  Renderer.act(() => open.props.onPress());
+  const view = tree.root.findByType(ReservationTicketView);
+  const buttons = view.findAllByType(Button);
+  expect(view.findAllByType(Text).map(node => node.props.children)).toContain('Sancocho de prueba');
+  expect(view.props.reservation.total).toBe(64000);
+  Renderer.act(() => buttons.find(button => button.props.accessibilityLabel === 'reservations.copyTicket')!.props.onPress());
+  await Renderer.act(async () => buttons.find(button => button.props.accessibilityLabel === 'reservations.shareTicket')!.props.onPress());
+  expect(Clipboard.setString).toHaveBeenCalledWith(base.ticket);
+  expect(share).toHaveBeenCalledWith({ message: base.ticket });
+  Renderer.act(() => view.props.onClose());
+  expect(tree.root.findAllByType(ReservationTicketView)).toHaveLength(0);
 });
