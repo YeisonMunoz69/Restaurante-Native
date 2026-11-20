@@ -3,7 +3,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { BackHandler, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ReservationCreateSchema, ReservationSlotsQuerySchema, RESERVATION_RECEIPT_MAX_BYTES, type MenuDish, type ReservationSlot } from '@encanto/shared';
 import { useTranslation } from 'react-i18next';
-import { CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, Clock3, ImagePlus, Send, Sparkles, Users } from 'lucide-react-native';
+import { CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, Clock3, ImagePlus, Send, Sparkles, Trash2, Users, Wallet } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useConnection } from '../context/ConnectionContext';
@@ -364,14 +364,26 @@ export function ReservationCreateScreen({
               <Text accessibilityRole="header" style={[typography.tituloM, styles.flex, { color: colors.texto.primario }]}>
                 {t(receipt ? 'reservations.receiptSavedDraft' : 'reservations.receiptField')}
               </Text>
+              {receipt && <Pressable accessibilityRole="button" accessibilityLabel={t('reservations.removeDraftReceipt')}
+                disabled={busy} onPress={() => { void clearReceipt(receipt.fileName).catch(() => setError(t('reservations.draftSaveError'))); }}
+                style={({ pressed }) => [styles.receiptRemove, {
+                  borderRadius: radii.completo,
+                  backgroundColor: pressed ? colors.superficie.borde : colors.superficie.fondo,
+                }]}
+              >
+                <Trash2 size={18} color={colors.estado.error} accessible={false} />
+              </Pressable>}
             </View>
             {receipt && <Image source={{ uri: receipt.uri }} accessibilityLabel={t('reservations.receiptField')}
               resizeMode="contain" style={[styles.proof, { backgroundColor: colors.superficie.fondo }]} />}
-            <Button testID="reservation-step4-receipt" label={t(receipt ? 'reservations.receiptReplace' : 'reservations.receiptAttach')}
-              icon={ImagePlus} onPress={() => void pick()} disabled={busy} />
-            {receipt && <Button variant="tertiary" label={t('reservations.removeDraftReceipt')}
-              onPress={() => { void clearReceipt(receipt.fileName).catch(() => setError(t('reservations.draftSaveError'))); }} />}
-            <Button variant="tertiary" label={t('reservations.receiptShowPayment')} onPress={() => setShowPayment(true)} />
+            <View style={styles.receiptActions}>
+              <Button style={[styles.receiptAction, { borderRadius: radii.completo }]} testID="reservation-step4-receipt"
+                label={t(receipt ? 'reservations.changePhoto' : 'reservations.addPhoto')}
+                accessibilityLabel={t(receipt ? 'reservations.receiptReplace' : 'reservations.receiptAttach')}
+                icon={ImagePlus} onPress={() => void pick()} disabled={busy} />
+              <Button style={[styles.receiptAction, { borderRadius: radii.completo }]} variant="tertiary"
+                label={t('reservations.paymentMethods')} icon={Wallet} onPress={() => setShowPayment(true)} disabled={busy} />
+            </View>
           </View>
         </>}
         {step === 'sent' && result && <>
@@ -540,6 +552,9 @@ const styles = StyleSheet.create({
   thumb: { width: 60, height: 60, borderRadius: 11 },
   placeholder: { alignItems: 'center', justifyContent: 'center' },
   quantity: { flexDirection: 'row' },
+  receiptActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  receiptAction: { flexGrow: 1, flexBasis: 120, paddingHorizontal: 8 },
+  receiptRemove: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   proof: { width: '100%', height: 180, borderRadius: 12 },
   payment: { flexGrow: 0, maxHeight: 420 },
 });
