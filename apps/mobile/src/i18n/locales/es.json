@@ -115,7 +115,7 @@
     "progress": "Paso {{step}} de 4",
     "stepHelp": {
       "visit": "Elige un día con servicio de restaurante dentro de los próximos tres meses. Verás los cupos disponibles en el siguiente paso.",
-      "time": "Elige mañana o tarde y desliza los horarios hacia los lados. Verás los cupos de la franja seleccionada.",
+      "time": "Elige mañana o tarde. Usa las flechas o desliza para ver más horarios. Verás los cupos de la franja seleccionada.",
       "order": "El pedido anticipado es opcional hasta siete personas. Para grupos de ocho o más, elige al menos un plato.",
       "review": "Si ya pagaste, adjunta o comparte tu captura desde el banco. También puedes enviarla después desde Mis reservas. El restaurante debe verificarla antes de confirmar. Puedes cancelar una reserva confirmada hasta una hora antes de la visita."
     },
@@ -136,6 +136,8 @@
     "moreSuggestions": "Ver más platos",
     "noVisitTimes": "No hay horarios disponibles para este grupo.",
     "morning": "Mañana",
+    "earlierTimes": "Ver horarios anteriores",
+    "laterTimes": "Ver horarios siguientes",
     "afternoon": "Tarde",
     "resumeDraft": "Continuar reserva",
     "adminProofHelp": "Abre el comprobante vigente y verifica el pago antes de aprobar. Si el cliente reemplaza la imagen, deberás revisar la nueva captura.",

@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { BackHandler, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ReservationCreateSchema, ReservationSlotsQuerySchema, RESERVATION_RECEIPT_MAX_BYTES, type MenuDish, type ReservationSlot } from '@encanto/shared';
 import { useTranslation } from 'react-i18next';
-import { CalendarDays, Check, ClipboardList, Clock3, ImagePlus, Send, Users } from 'lucide-react-native';
+import { CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, Clock3, ImagePlus, Send, Users } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useConnection } from '../context/ConnectionContext';
@@ -430,19 +430,70 @@ function TimeCards({ slots, selected, onSelect }: {
         <Button style={styles.flex} label={t('reservations.morning')} selected={chosen === 'morning'} onPress={() => setPeriod('morning')} />
         <Button style={styles.flex} label={t('reservations.afternoon')} selected={chosen === 'afternoon'} onPress={() => setPeriod('afternoon')} />
       </View>}
-      <ScrollView horizontal key={chosen} showsHorizontalScrollIndicator contentContainerStyle={styles.chips}>
-        {visibleSlots.map(item => (
-          <Button key={item.horaInicio} style={styles.hour} label={item.horaInicio}
-            accessibilityLabel={`${item.horaInicio}–${item.horaFin} · ${t('reservations.seatsAvailable', { count: item.aforoDisponible })}`}
-            selected={selected?.horaInicio === item.horaInicio} onPress={() => onSelect(item)} />
-        ))}
-      </ScrollView>
+      <TimeStrip key={chosen} slots={visibleSlots} selected={selected} onSelect={onSelect} />
       {!!visibleSelection && <Text style={[typography.pie, { color: colors.texto.secundario }]}>
         {t('reservations.seatsAvailable', { count: visibleSelection.aforoDisponible })}
       </Text>}
     </View>
   );
 }
+
+// Mido el ancho real de las franjas para mostrar flechas solo cuando queda contenido por recorrer.
+function TimeStrip({ slots, selected, onSelect }: {
+  slots: ReservationSlot[]; selected: ReservationSlot | null; onSelect: (slot: ReservationSlot) => void;
+}) {
+  const { t } = useTranslation();
+  const { colors, radii } = useTheme();
+  const strip = useRef<ScrollView>(null);
+  const [rowWidth, setRowWidth] = useState(0);
+  const [viewport, setViewport] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const hasOverflow = rowWidth > 0 && contentWidth > rowWidth + 1;
+  const end = Math.max(0, contentWidth - viewport);
+
+  const arrow = (direction: -1 | 1) => {
+    const Icon = direction < 0 ? ChevronLeft : ChevronRight;
+    const disabled = direction < 0 ? offset < 1 : offset >= end - 1;
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t(direction < 0 ? 'reservations.earlierTimes' : 'reservations.laterTimes')}
+        accessibilityState={{ disabled }}
+        disabled={disabled}
+        onPress={() => strip.current?.scrollTo({
+          x: Math.max(0, Math.min(end, offset + direction * Math.max(viewport - 28, 48))), animated: true,
+        })}
+        style={({ pressed }) => [styles.timeArrow, {
+          opacity: disabled ? 0.35 : 1,
+          borderRadius: radii.completo,
+          backgroundColor: pressed ? colors.marca.primarioSuave : 'transparent',
+        }]}
+      >
+        <Icon size={20} color={colors.marca.primario} accessible={false} />
+      </Pressable>
+    );
+  };
+
+  return (
+    <View style={styles.timeStrip} onLayout={event => setRowWidth(event.nativeEvent.layout.width)}>
+      {hasOverflow && arrow(-1)}
+      <ScrollView horizontal ref={strip} style={styles.flex} showsHorizontalScrollIndicator={false}
+        onLayout={event => setViewport(event.nativeEvent.layout.width)}
+        onContentSizeChange={setContentWidth}
+        onScroll={event => setOffset(event.nativeEvent.contentOffset.x)} scrollEventThrottle={32}
+        contentContainerStyle={styles.timeChips}>
+        {slots.map(item => (
+          <Button key={item.horaInicio} style={styles.hour} label={item.horaInicio}
+            accessibilityLabel={item.horaInicio + '–' + item.horaFin + ' · ' + t('reservations.seatsAvailable', { count: item.aforoDisponible })}
+            selected={selected?.horaInicio === item.horaInicio} onPress={() => onSelect(item)} />
+        ))}
+      </ScrollView>
+      {hasOverflow && arrow(1)}
+    </View>
+  );
+}
+
 
 function DishRow({ dish, count, onChange }: { dish: MenuDish; count?: number; onChange?: (delta: number) => void }) {
   const { t } = useTranslation();
@@ -478,7 +529,10 @@ const styles = StyleSheet.create({
   surface: { padding: 12, borderRadius: 18, gap: 10 },
   summary: { padding: 15, gap: 10 },
   chips: { gap: 8, paddingBottom: 8 },
-  hour: { minWidth: 96 },
+  timeChips: { gap: 8 },
+  timeStrip: { flexDirection: 'row', alignItems: 'center' },
+  timeArrow: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  hour: { minWidth: 88 },
   footer: { width: '100%', maxWidth: 760, alignSelf: 'center', borderTopWidth: StyleSheet.hairlineWidth, padding: 12, gap: 7 },
   dish: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10 },
   thumb: { width: 60, height: 60, borderRadius: 11 },
