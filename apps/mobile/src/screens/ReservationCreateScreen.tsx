@@ -3,7 +3,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { BackHandler, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ReservationCreateSchema, ReservationSlotsQuerySchema, RESERVATION_RECEIPT_MAX_BYTES, type MenuDish, type ReservationSlot } from '@encanto/shared';
 import { useTranslation } from 'react-i18next';
-import { CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, Clock3, ImagePlus, Send, Users } from 'lucide-react-native';
+import { CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, Clock3, ImagePlus, Send, Sparkles, Users } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useConnection } from '../context/ConnectionContext';
@@ -335,8 +335,10 @@ export function ReservationCreateScreen({
           </View>
           {selected.map(dish => <DishRow key={dish.id} dish={dish} count={quantities[dish.id]} onChange={delta => quantity(dish, delta)} />)}
           {!selected.length && !busy && <Note>{t(people >= 8 ? 'reservations.preorderRequired' : 'reservations.noOrder')}</Note>}
-          <Button variant="secondary" label={t(showSuggestions ? 'reservations.hideSuggestions' : 'reservations.showSuggestions')}
-            onPress={() => setShowSuggestions(value => !value)} disabled={!remaining.length} />
+          <Button variant="tertiary" icon={Sparkles} expanded={showSuggestions}
+            style={{ backgroundColor: colors.marca.primarioSuave, borderRadius: radii.completo }}
+            label={t(showSuggestions ? 'reservations.hideSuggestions' : 'reservations.showSuggestions')}
+            onPress={() => setShowSuggestions(value => !value)} disabled={!remaining.length && !showSuggestions} />
           {showSuggestions && categories.length > 1 && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
             <Button label={t('menu.allCategories')} selected={category === null} onPress={() => { setCategory(null); setSuggestionLimit(6); }} />
             {categories.map(item => <Button key={item.id} label={item.nombre} selected={category === item.id} onPress={() => { setCategory(item.id); setSuggestionLimit(6); }} />)}

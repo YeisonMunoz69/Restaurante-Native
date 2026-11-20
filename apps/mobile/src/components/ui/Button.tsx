@@ -14,6 +14,7 @@ interface ButtonProps {
   disabled?: boolean;
   busy?: boolean;
   selected?: boolean;
+  expanded?: boolean;
   testID?: string;
   accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
@@ -22,7 +23,7 @@ interface ButtonProps {
 // Reservo el acento para la acción principal y centro todas las etiquetas, incluso en varias líneas.
 export function Button({
   label, onPress, variant = 'secondary', tone = 'normal', icon: Icon, disabled, busy,
-  selected, testID, accessibilityLabel, style,
+  selected, expanded, testID, accessibilityLabel, style,
 }: ButtonProps) {
   const { colors, typography, radii } = useTheme();
   const unavailable = !!(disabled || busy);
@@ -39,7 +40,7 @@ export function Button({
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled: unavailable, selected, busy }}
+      accessibilityState={{ disabled: unavailable, selected, expanded, busy }}
       disabled={unavailable}
       onPress={onPress}
       style={({ pressed }) => [
