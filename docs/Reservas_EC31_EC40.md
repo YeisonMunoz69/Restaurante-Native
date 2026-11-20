@@ -8,6 +8,10 @@ La migración `20261119220000_comprobantes_privados_reservas` crea una tabla 1:1
 
 **Corte:** 16 de octubre de 2026. Integramos esta implementación en `dev` mediante PR #11, merge `0245146`, conservando sus commits y migraciones. El CI de la cabeza final pasó 195 pruebas API sin omisiones y 49 móviles, además del runtime Docker. Esta integración técnica no cierra Sprint 3 ni cambia automáticamente sus responsables o aceptación. Evidencia de VPS y límites en [el acta de cierre](Cierre_Sprint2_2026-10-16.md).
 
+**Verificación en Samsung Galaxy S21.** El menú Compartir de Galería ofreció «EncantoApp» y guardó una imagen ficticia en modo invitado. Después de iniciar sesión, la app abrió el paso 1 con la captura disponible. Al compartir otra vez desde el paso 2, conservó la franja de las 10:00 y mostró el aviso de guardado. En el paso 4 se vieron la miniatura de un plato real de la carta y la captura ficticia. El aviso de día cerrado apareció tres segundos. La ayuda con desenfoque se cerró al tocar fuera. El borrador conservó el paso 4, fecha, horario, plato y archivo al reinstalar el APK sobre la misma app.
+
+El arranque tras un cierre forzado y tras actualizar el APK volvió a invitado. La entrada de renovación estaba presente después de entrar con Google y desapareció durante el arranque. Queda por identificar qué validación falló en dev. El borrador para la misma cuenta seguía guardado con sus datos y la captura. La revisión física terminó en el borrador. Pasaron 133 pruebas móviles y 298 de API con PostgreSQL aislado. La aceptación del envío y revisión de comprobantes contra dev queda pendiente del despliegue de la API y su migración.
+
 ## Qué quedó implementado
 
 - **EC-31/32:** consultamos franjas reales del calendario, duración por tamaño de grupo, anticipación, mínimo para días de solo reserva y cupo concurrente. La creación verifica disponibilidad y escribe solicitud/líneas dentro de una transacción `Serializable`; una colisión controlada devuelve conflicto y no guarda líneas parciales.
