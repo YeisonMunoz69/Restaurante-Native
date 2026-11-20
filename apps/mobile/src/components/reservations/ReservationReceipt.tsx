@@ -12,6 +12,8 @@ import { BackButton } from '../navigation/BackButton';
 import { Button } from '../ui/Button';
 import { Note } from '../attention/Controls';
 import { PaymentInstructions } from '../PaymentInstructions';
+import type { DraftReceipt } from '../../context/ReservationDraftContext';
+import { ContextHelp, ContextOverlay, LoadingOverlay } from '../feedback/ContextOverlay';
 
 export function ReservationImagePreview({ image, title, onClose, onShare, onViewed, error, busy }: {
   image: ReservationReceiptImage;
@@ -59,10 +61,11 @@ export function ReservationImagePreview({ image, title, onClose, onShare, onView
   );
 }
 
-export function ReservationReceiptCard({ reservation, onUpdate, active = true }: {
+export function ReservationReceiptCard({ reservation, onUpdate, active = true, draftReceipt }: {
   reservation: ReservationResult;
-  onUpdate: (reservation: ReservationResult) => void;
+  onUpdate: (reservation: ReservationResult, localFileName?: string) => void;
   active?: boolean;
+  draftReceipt?: DraftReceipt;
 }) {
   const { t } = useTranslation();
   const { colors, typography, radii } = useTheme();
@@ -105,6 +108,13 @@ export function ReservationReceiptCard({ reservation, onUpdate, active = true }:
   }, 'reservations.receiptUploadError');
   const open = () => void run(async () => setPreview(await reservationsApi.receiptTicket(reservation.id)),
     'reservations.receiptReadError');
+  const sendSaved = () => {
+    if (!draftReceipt) return;
+    void run(async () => {
+      const updated = await reservationsApi.uploadReceipt(reservation.id, draftReceipt);
+      onUpdate(updated, draftReceipt.fileName);
+    }, 'reservations.receiptUploadError');
+  };
   const share = () => {
     if (!preview) return;
     void run(async () => {
@@ -123,17 +133,24 @@ export function ReservationReceiptCard({ reservation, onUpdate, active = true }:
           style={[typography.tituloM, styles.title, { color: colors.texto.primario }]}>
           {t(receipt ? (pending ? 'reservations.receiptUnderReview' : 'reservations.receiptAttached') : 'reservations.receiptMissing')}
         </Text>
+        {pending && <ContextHelp title={t('reservations.receiptField')} text={t(receipt ? 'reservations.receiptReviewHint' : 'reservations.receiptHelp')} />}
       </View>
-      {pending && <Note>{t(receipt ? 'reservations.receiptReviewHint' : 'reservations.receiptHelp')}</Note>}
       {!!error && <Note live tone="error">{error}</Note>}
       {!!receipt && <Button variant="primary" testID="reservation-receipt-preview" label={t('reservations.receiptViewTicket')} onPress={open} disabled={busy} />}
+      {pending && !!draftReceipt && <Image source={{ uri: draftReceipt.uri }} accessibilityLabel={t('reservations.receiptSavedDraft')}
+        resizeMode="contain" style={styles.draftPreview} />}
+      {pending && !!draftReceipt && <Button testID="reservation-send-saved-receipt" label={t('reservations.sendDraftReceipt')}
+        icon={ImagePlus} variant="primary" onPress={sendSaved} disabled={busy} />}
       {pending && <Button testID="reservation-attach-receipt" label={t(receipt ? 'reservations.receiptReplace' : 'reservations.receiptAttach')}
-        variant={receipt ? 'secondary' : 'primary'} icon={ImagePlus} onPress={attach} disabled={busy} />}
+        variant={receipt || draftReceipt ? 'secondary' : 'primary'} icon={ImagePlus} onPress={attach} disabled={busy} />}
       {pending && <Button variant="tertiary" label={t(showPayment ? 'reservations.receiptHidePayment' : 'reservations.receiptShowPayment')}
         onPress={() => setShowPayment(value => !value)} disabled={busy} />}
-      {pending && showPayment && <PaymentInstructions codigo={reservation.codigo} ticket={reservation.ticket} active={active} />}
+      {pending && showPayment && <ContextOverlay visible={active} title={t('reservations.receiptShowPayment')} onClose={() => setShowPayment(false)}>
+        <ScrollView style={styles.payment}><PaymentInstructions codigo={reservation.codigo} ticket={reservation.ticket} active={active} /></ScrollView>
+      </ContextOverlay>}
       {active && !!preview && <ReservationImagePreview image={preview} title={t('reservations.receiptViewTicket')}
         onClose={() => setPreview(null)} onShare={share} error={error} busy={busy} />}
+      <LoadingOverlay visible={active && busy && !preview} />
     </View>
   );
 }
@@ -141,6 +158,8 @@ export function ReservationReceiptCard({ reservation, onUpdate, active = true }:
 const styles = StyleSheet.create({
   preview: { flex: 1, gap: 12 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  draftPreview: { width: '100%', height: 130 },
+  payment: { flexGrow: 0, maxHeight: 420 },
   card: { padding: 16, gap: 10 },
   heading: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   title: { flex: 1 },

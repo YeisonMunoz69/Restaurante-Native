@@ -108,8 +108,36 @@
     "sentTitle": "Solicitud enviada",
     "steps": {
       "visit": "Tu visita",
+      "time": "Elige el horario",
+      "order": "Tu pedido",
       "review": "Revisa y envía"
     },
+    "progress": "Paso {{step}} de 4",
+    "stepHelp": {
+      "visit": "Elige un día con servicio de restaurante dentro de los próximos tres meses. Verás los cupos disponibles en el siguiente paso.",
+      "time": "Elige mañana o tarde y desliza los horarios hacia los lados. Verás los cupos de la franja seleccionada.",
+      "order": "El pedido anticipado es opcional hasta siete personas. Para grupos de ocho o más, elige al menos un plato.",
+      "review": "Si ya pagaste, adjunta o comparte tu captura desde el banco. También puedes enviarla después desde Mis reservas. El restaurante debe verificarla antes de confirmar. Puedes cancelar una reserva confirmada hasta una hora antes de la visita."
+    },
+    "closedDayNotice": "Ese día no hay servicio de restaurante.",
+    "incomingReceiptError": "No pudimos guardar la captura. Elige una imagen JPG, PNG o WebP de hasta 10 MB.",
+    "incomingReceiptGuest": "Captura guardada. Inicia sesión para vincularla a tu reserva.",
+    "incomingReceiptSaved": "Captura guardada en el paso 4 de tu reserva.",
+    "draftSaveError": "No pudimos guardar el borrador en este dispositivo.",
+    "orderChanged": "Retiramos los platos que ya no están disponibles para esta fecha.",
+    "receiptQueuedRetry": "Enviamos tu solicitud. La captura quedó guardada para reintentar su envío.",
+    "receiptField": "Comprobante de pago",
+    "receiptSavedDraft": "Comprobante guardado",
+    "removeDraftReceipt": "Quitar captura",
+    "sendDraftReceipt": "Enviar captura guardada",
+    "selectedDishes": "Platos elegidos",
+    "hideSuggestions": "Ocultar sugerencias",
+    "showSuggestions": "¿Algo más para la mesa?",
+    "moreSuggestions": "Ver más platos",
+    "noVisitTimes": "No hay horarios disponibles para este grupo.",
+    "morning": "Mañana",
+    "afternoon": "Tarde",
+    "resumeDraft": "Continuar reserva",
     "adminProofHelp": "Abre el comprobante vigente y verifica el pago antes de aprobar. Si el cliente reemplaza la imagen, deberás revisar la nueva captura.",
     "visitTimes": "Horarios disponibles",
     "continueReview": "Continuar al resumen",
@@ -428,6 +456,7 @@
     "internetRequired": "Conéctate a internet para usar esta sección.",
     "back": "Atrás",
     "close": "Cerrar",
+    "continue": "Continuar",
     "helpFor": "Ayuda sobre {{title}}"
   }
 }

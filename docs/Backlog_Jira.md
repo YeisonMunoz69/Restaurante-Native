@@ -396,18 +396,19 @@ Impedir que dos solicitudes concurrentes superen la capacidad del restaurante.
 - Un conflicto se traduce en un mensaje de negocio, no en un error tecnico
 - Existe una prueba que lanza dos solicitudes concurrentes por el ultimo cupo y verifica que solo una prospera
 
-### [~] Construir el flujo de reserva en dos pantallas
+### [~] Construir el flujo de reserva en cuatro pasos
 
 `Sprint 3` · `13 pts` · `Highest` · `movil` · `RF-RES03 a RF-RES06`
 
-Reunimos fecha, personas y horario en «Tu visita». Luego «Revisa y envía» resume el pedido y permite ajustar platos o añadir una nota.
+Organizamos la visita, el horario, el pedido y el resumen en cuatro pasos. El encabezado ofrece ayuda contextual en un cuadro con desenfoque y los avisos breves desaparecen a los tres segundos.
 
 **Criterios de aceptación**
 
 - Sin sesion, el flujo desvia al inicio de sesion y regresa conservando lo seleccionado
-- El resumen conserva el borrador y ofrece solo mesa para grupos de menos de ocho personas.
-- El editor lista solo los platos habilitados para la fecha elegida.
-- El resumen muestra el total sin impuestos y la política de cancelación.
+- El borrador recupera el último paso, fecha, grupo, hora, platos y nota al reabrir la app. Para grupos de menos de ocho personas se permite reservar solo mesa.
+- La selección de horario agrupa mañana y tarde en una fila horizontal, con Continuar siempre visible.
+- El editor separa los platos elegidos de las sugerencias disponibles para la fecha.
+- El resumen muestra fotos, cantidades y total sin impuestos. La política de cancelación se consulta desde el icono de ayuda.
 - El boton final dice Enviar solicitud, no Confirmar reserva
 - El boton fisico de retroceso de Android retrocede paso a paso, sin salir del flujo
 - La interfaz no usa lenguaje ni patrones de comercio electronico: sin carrito ni checkout
@@ -434,8 +435,9 @@ Dejar claro que la reserva todavia no esta confirmada y que falta un paso humano
 **Criterios de aceptación**
 
 - Se muestra el codigo de reserva, seleccionable y copiable
-- Se presentan las instrucciones de pago con monto, medios y numero del dueno
-- La acción principal adjunta o reemplaza un comprobante privado. El usuario también puede hacerlo desde Mis reservas.
+- Las instrucciones muestran los medios publicados y el contacto del restaurante.
+- El paso 4 permite adjuntar manualmente una imagen. Desde Android, el menú Compartir acepta una captura de hasta 10 MB, la guarda y devuelve al paso activo. Sin un borrador previo, abre el paso 1 y conserva la captura para el paso 4.
+- La carga al servidor se inicia al enviar la solicitud. Si falla, se reintenta sobre la misma reserva. La captura también se puede adjuntar o reemplazar después en Mis reservas.
 - El comensal puede abrir y compartir un PNG vertical con los datos y la captura.
 - Un aviso explica que la reserva queda confirmada cuando el restaurante verifique el pago
 - El icono y el titulo comunican envio, no exito

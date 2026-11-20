@@ -1,9 +1,11 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { BackHandler, Linking, ScrollView, Text, TextInput } from 'react-native';
+import { BackHandler, Linking, Text, TextInput } from 'react-native';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { Button } from '../../components/ui/Button';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ReservationDraftProvider, useReservationDraft } from '../../context/ReservationDraftContext';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Share from 'react-native-share';
 import { ReservationImagePreview } from '../../components/reservations/ReservationReceipt';
@@ -113,17 +115,26 @@ describe('ReservationCreateScreen', () => {
     api.create.mockResolvedValue(response as never);
   });
 
+  async function press(tree: ReactTestRenderer.ReactTestRenderer, testID: string) {
+    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID }).props.onPress(); });
+  }
+
+  async function openOrder(tree: ReactTestRenderer.ReactTestRenderer) {
+    await press(tree, 'reservation-continue-visit');
+    ReactTestRenderer.act(() => tree.root.findAllByType(Button).find(button => button.props.label === '10:00')!.props.onPress());
+    await press(tree, 'reservation-continue-time');
+  }
+
   async function openReview(tree: ReactTestRenderer.ReactTestRenderer) {
-    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
-    ReactTestRenderer.act(() => tree.root.findAllByType(Action).find(action => String(action.props.label).startsWith('10:00'))!.props.onPress());
-    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    await openOrder(tree);
+    await press(tree, 'reservation-continue-order');
   }
 
   async function openPayment(tree: ReactTestRenderer.ReactTestRenderer) {
     await ReactTestRenderer.act(async () => { tree.root.findAllByType(Button).find(button => button.props.label === 'reservations.receiptShowPayment')!.props.onPress(); });
   }
 
-  it('mantiene las franjas en Tu visita y vuelve desde el resumen con Atrás', async () => {
+  it('consulta las franjas en el segundo paso y vuelve desde el resumen con Atrás', async () => {
     let back!: () => boolean | null | undefined;
     const subscription = jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_event, handler) => {
       back = () => handler({} as never);
@@ -163,15 +174,65 @@ describe('ReservationCreateScreen', () => {
     ReactTestRenderer.act(() => tree.unmount());
   });
 
+  it('restaura el paso 4 y su captura y reintenta la carga sobre la misma solicitud', async () => {
+    await AsyncStorage.clear();
+    const uri = 'file:///comprobante-de-prueba.png';
+    jest.mocked(launchImageLibrary).mockResolvedValue({ assets: [{ uri, type: 'image/png' }] });
+    api.uploadReceipt.mockRejectedValueOnce(new Error('Red interrumpida')).mockResolvedValueOnce({
+      ...response.reserva,
+      comprobante: { id: 'recibo-2', ancho: 240, alto: 580, subidoEn: '2031-02-20T12:00:00Z' },
+    } as never);
+    function DraftForm() {
+      return useReservationDraft().ready ? <ReservationCreateScreen onBack={onBack} onCreated={onCreated} /> : null;
+    }
+    const form = (scope = 'https://api.example.invalid/restaurant/qa') => <ThemeProvider>
+      <ReservationDraftProvider scope={scope} authLoading={false} canOpen onOpen={jest.fn()}><DraftForm /></ReservationDraftProvider>
+    </ThemeProvider>;
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(form()); });
+    await openReview(tree);
+    await press(tree, 'reservation-step4-receipt');
+    expect(api.uploadReceipt).not.toHaveBeenCalled();
+    expect(api.create).not.toHaveBeenCalled();
+    ReactTestRenderer.act(() => tree.unmount());
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(form('different-account')); });
+    expect(tree.root.findByProps({ testID: 'reservation-continue-visit' })).toBeDefined();
+    ReactTestRenderer.act(() => tree.unmount());
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(form()); });
+    expect(tree.root.findAllByType(Text).some(node => node.props.children === 'reservations.receiptSavedDraft')).toBe(true);
+    await press(tree, 'reservation-submit');
+    expect(api.create).toHaveBeenCalledTimes(1);
+    expect(api.uploadReceipt).toHaveBeenCalledWith('reservation-id', expect.objectContaining({ uri }));
+    await press(tree, 'reservation-send-saved-receipt');
+    expect(api.uploadReceipt).toHaveBeenCalledTimes(2);
+    expect(api.create).toHaveBeenCalledTimes(1);
+    expect(tree.root.findAllByProps({ testID: 'reservation-send-saved-receipt' })).toHaveLength(0);
+    ReactTestRenderer.act(() => tree.unmount());
+  });
+
+  it('avisa sobre el día cerrado y retira el mensaje a los tres segundos', async () => {
+    jest.useFakeTimers();
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    try {
+      await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
+      ReactTestRenderer.act(() => tree.root.findByType(ReservationCalendar).props.onUnavailable('2031-02-24'));
+      expect(tree.root.findAllByType(Text).some(node => node.props.children === 'reservations.closedDayNotice')).toBe(true);
+      ReactTestRenderer.act(() => jest.advanceTimersByTime(3000));
+      expect(tree.root.findAllByType(Text).some(node => node.props.children === 'reservations.closedDayNotice')).toBe(false);
+      expect(api.slots).not.toHaveBeenCalled();
+    } finally {
+      if (tree) ReactTestRenderer.act(() => tree.unmount());
+      jest.useRealTimers();
+    }
+  });
+
   it.each(['sin-aplicacion', 'error-al-abrir', 'telefono-no-configurado'])('conserva código y ticket cuando WhatsApp falla: %s', async scenario => {
     const canOpen = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(scenario !== 'sin-aplicacion');
     const open = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('No disponible'));
     if (scenario === 'telefono-no-configurado') payments.current.mockResolvedValue({ ...currentPayment, whatsapp: '', configurada: false });
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
-    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
-    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
-    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    await openReview(tree!);
     await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
     await openPayment(tree!);
     await ReactTestRenderer.act(async () => { await tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.sendWhatsApp')!.props.onPress(); });
@@ -189,9 +250,7 @@ describe('ReservationCreateScreen', () => {
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
-    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
-    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
-    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    await openReview(tree!);
     await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
     await openPayment(tree!);
     payments.current.mockResolvedValue({ ...currentPayment, whatsapp: '+573000000002', mediosPago: 'Llave nueva de prueba', version: 2 });
@@ -217,20 +276,7 @@ describe('ReservationCreateScreen', () => {
       );
     });
 
-    const initialScroll = tree!.root.findByType(ScrollView);
-    await ReactTestRenderer.act(async () => {
-      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
-    });
-    expect(tree!.root.findByType(ScrollView)).toBe(initialScroll);
-    await ReactTestRenderer.act(async () => {
-      tree!.root
-        .findAllByType(Action)
-        .find(action => String(action.props.label).startsWith('10:00'))!
-        .props.onPress();
-    });
-    await ReactTestRenderer.act(async () => {
-      await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress();
-    });
+    await openReview(tree!);
     await ReactTestRenderer.act(async () => {
       await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress();
     });
@@ -248,17 +294,14 @@ describe('ReservationCreateScreen', () => {
   it('repasa las líneas y su subtotal en el resumen antes de enviar', async () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
-    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
-    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
-    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
-    await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-toggle-dishes' }).props.onPress(); });
-    ReactTestRenderer.act(() => {
-      const add = tree!.root.findAllByType(Action).find(a => a.props.label === '+')!;
-      add.props.onPress(); add.props.onPress();
-    });
-    ReactTestRenderer.act(() => tree!.root.findByProps({ testID: 'reservation-toggle-dishes' }).props.onPress());
+    await openOrder(tree!);
+    expect(tree!.root.findAllByProps({ children: availableDish.nombre })).toHaveLength(0);
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Button).find(b => b.props.label === 'reservations.showSuggestions')!.props.onPress());
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Button).find(b => b.props.label === 'discovery.addShort')!.props.onPress());
+    ReactTestRenderer.act(() => tree!.root.findAllByType(Action).find(a => a.props.label === '+')!.props.onPress());
+    await press(tree!, 'reservation-continue-order');
     const texts = tree!.root.findAllByType(Text).flatMap(node => node.props.children);
-    expect(texts).toContain('reservations.orderLine');
+    expect(texts).toContain(availableDish.nombre);
     expect(texts.map(value => typeof value === 'string' ? value.replace(/\s/g, '') : value)).toContain('$64.000');
     expect(api.create).not.toHaveBeenCalled();
     ReactTestRenderer.act(() => tree!.unmount());
@@ -276,16 +319,8 @@ describe('ReservationCreateScreen', () => {
     ReactTestRenderer.act(() => {
       tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.groupSize')!.props.onChangeText('8');
     });
-    await ReactTestRenderer.act(async () => {
-      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
-    });
-    ReactTestRenderer.act(() => {
-      tree!.root.findAllByType(Action).find(action => String(action.props.label).startsWith('10:00'))!.props.onPress();
-    });
-    await ReactTestRenderer.act(async () => {
-      await tree!.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress();
-    });
-    const review = tree!.root.findByProps({ testID: 'reservation-submit' });
+    await openOrder(tree!);
+    const review = tree!.root.findByProps({ testID: 'reservation-continue-order' });
     expect(review.props.disabled).toBe(true);
     ReactTestRenderer.act(() => tree!.unmount());
   });
@@ -316,39 +351,31 @@ describe('ReservationCreateScreen', () => {
       tree!.root.findByType(ReservationCalendar).props.onChange(nextWeek);
     });
     await ReactTestRenderer.act(async () => {
-      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
+      await tree!.root.findByProps({ testID: 'reservation-continue-visit' }).props.onPress();
     });
 
     expect(api.slots).toHaveBeenCalledWith({ fecha: nextWeek, numComensales: 2 });
     ReactTestRenderer.act(() => tree!.unmount());
   });
 
-  it('consulta automáticamente en Tu visita y descarta horarios de un grupo anterior', async () => {
-    const slot = { horaInicio: '10:00', horaFin: '11:30', duracionMin: 90, aforoDisponible: 20 };
-    const fresh = { fecha: '2031-02-23', zonaHoraria: 'America/Bogota', duracionMin: 90,
-      franjas: [{ ...slot, horaInicio: '13:00', horaFin: '14:30' }], mensaje: null };
+  it('descarta una respuesta de horarios si la pantalla pierde el foco', async () => {
+    const slot = { horaInicio: '13:00', horaFin: '14:30', duracionMin: 90, aforoDisponible: 20 };
+    const fresh = { fecha: '2031-02-23', zonaHoraria: 'America/Bogota', duracionMin: 90, franjas: [slot], mensaje: null };
     let finish!: (value: typeof fresh) => void;
     api.slots.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
     api.slots.mockResolvedValueOnce(fresh);
     let tree!: ReactTestRenderer.ReactTestRenderer;
-    jest.useFakeTimers();
-    try {
-      await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
-      await ReactTestRenderer.act(async () => { jest.advanceTimersByTime(330); });
-      expect(api.slots).toHaveBeenCalledWith(expect.objectContaining({ numComensales: 2 }));
-      ReactTestRenderer.act(() => {
-        tree.root.findByType(TextInput).props.onChangeText('5');
-      });
-      await ReactTestRenderer.act(async () => { jest.advanceTimersByTime(330); });
-      expect(api.slots).toHaveBeenLastCalledWith(expect.objectContaining({ numComensales: 5 }));
-      await ReactTestRenderer.act(async () => finish({ ...fresh, franjas: [slot] }));
-      const actions = tree.root.findAllByType(Action).map(action => action.props.label);
-      expect(actions).toContain('13:00–14:30');
-      expect(actions).not.toContain('10:00–11:30');
-    } finally {
-      if (tree) ReactTestRenderer.act(() => tree.unmount());
-      jest.useRealTimers();
-    }
+    const screen = (isActive: boolean) => <ThemeProvider><ReservationCreateScreen isActive={isActive} onBack={onBack} onCreated={onCreated} /></ThemeProvider>;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(screen(true)); });
+    await press(tree, 'reservation-continue-visit');
+    expect(api.slots).toHaveBeenCalledTimes(1);
+    await ReactTestRenderer.act(async () => { tree.update(screen(false)); });
+    await ReactTestRenderer.act(async () => { tree.update(screen(true)); });
+    await ReactTestRenderer.act(async () => finish({ ...fresh, franjas: [{ ...slot, horaInicio: '10:00' }] }));
+    const actions = tree.root.findAllByType(Button).map(button => button.props.label);
+    expect(actions).toContain('13:00');
+    expect(actions).not.toContain('10:00');
+    ReactTestRenderer.act(() => tree.unmount());
   });
 
   it('pide iniciar sesión antes de consultar y conserva el grupo seleccionado', async () => {
@@ -370,7 +397,7 @@ describe('ReservationCreateScreen', () => {
       tree!.root.findAllByType(TextInput).find(field => field.props.accessibilityLabel === 'reservations.groupSize')!.props.onChangeText('7');
     });
     await ReactTestRenderer.act(async () => {
-      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
+      await tree!.root.findByProps({ testID: 'reservation-continue-visit' }).props.onPress();
     });
 
     expect(onRequireLogin).toHaveBeenCalledTimes(1);
@@ -385,7 +412,7 @@ describe('ReservationCreateScreen', () => {
     });
     expect(tree!.root.findAllByProps({ children: 'reservations.loginPreserveSelection' })).toHaveLength(0);
     await ReactTestRenderer.act(async () => {
-      await tree!.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress();
+      await tree!.root.findByProps({ testID: 'reservation-continue-visit' }).props.onPress();
     });
     expect(api.slots).toHaveBeenCalledWith(expect.objectContaining({ numComensales: 7 }));
     ReactTestRenderer.act(() => tree!.unmount());
@@ -406,18 +433,16 @@ describe('ReservationCreateScreen', () => {
     });
     menu.dishes.mockResolvedValue({ restauranteId: restaurantId, fecha: '2031-02-23', data: [{ ...availableDish, precio: 35000 }], paginacion: { pagina: 1, tamanoPagina: 20, total: 1, totalPaginas: 1 } });
     await ReactTestRenderer.act(async () => { tree.update(shell(true)); });
-    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-find-slots' }).props.onPress(); });
-    ReactTestRenderer.act(() => tree.root.findAllByType(Action).find(a => String(a.props.label).startsWith('10:00'))!.props.onPress());
-    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    await openReview(tree);
     expect(draft.lines).toEqual([{ dish: { ...availableDish, precio: 35000 }, cantidad: 2 }]);
-    expect(tree.root.findAllByProps({ children: 'discovery.revalidate' }).length).toBeGreaterThan(0);
+    expect(tree.root.findAllByProps({ children: 'reservations.orderChanged' }).length).toBeGreaterThan(0);
     api.create.mockRejectedValueOnce(new Error('Conflicto al enviar'));
     await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
     expect(draft.lines[0].cantidad).toBe(2);
     await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
     expect(api.create).toHaveBeenLastCalledWith(expect.objectContaining({ lineas: [{ platoId: dishId, cantidad: 2 }] }));
     expect(draft.lines).toEqual([]);
-    expect(tree.root.findAllByProps({ children: 'discovery.revalidate' })).toHaveLength(0);
+    expect(tree.root.findAllByProps({ children: 'reservations.orderChanged' })).toHaveLength(0);
     ReactTestRenderer.act(() => tree.unmount());
   });
 });

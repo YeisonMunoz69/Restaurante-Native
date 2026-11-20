@@ -23,6 +23,8 @@ import { ReservationCreateScreen } from './ReservationCreateScreen';
 import { ReservationReceiptCard } from '../components/reservations/ReservationReceipt';
 import { formatCop, formatDateDdMmYyyy } from '../utils/formatters';
 import { useOrderDraft } from '../context/OrderDraftContext';
+import { useReservationDraft } from '../context/ReservationDraftContext';
+import { LoadingOverlay } from '../components/feedback/ContextOverlay';
 
 type ReservationTab = 'upcoming' | 'history';
 const upcomingStates = new Set(['SOLICITADA', 'CONFIRMADA', 'EN_CURSO']);
@@ -48,10 +50,15 @@ export const ReservationsScreen: React.FC = () => {
   const [tab, setTab] = useState<ReservationTab>('upcoming');
   const [creating, setCreating] = useState(false);
   const draft = useOrderDraft();
+  const progress = useReservationDraft();
   const { pending, consume } = draft;
   useEffect(() => {
-    if (isFocused && pending) { setCreating(true); consume(); }
-  }, [isFocused, pending, consume]);
+    if (isFocused && progress.ready && (pending || progress.openRequested)) {
+      setCreating(true);
+      if (pending) consume();
+      if (progress.openRequested) progress.consumeOpen();
+    }
+  }, [isFocused, pending, consume, progress.ready, progress.openRequested, progress.consumeOpen]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestVersion = useRef(0);
@@ -162,7 +169,7 @@ export const ReservationsScreen: React.FC = () => {
     return `${right.fecha}T${right.horaInicio}`.localeCompare(`${left.fecha}T${left.horaInicio}`);
   });
 
-  if (creating) {
+  if (creating && progress.ready) {
     return (
       <ReservationCreateScreen
         key={draft.requestId}
@@ -188,7 +195,7 @@ export const ReservationsScreen: React.FC = () => {
         <TabPageHeader title={t('reservations.title')} />
 
         {authLoading ? (
-          <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />
+          <LoadingOverlay visible={isFocused} />
         ) : !user ? (
           <Panel>
             <CalendarCheck size={40} color={colors.marca.primario} />
@@ -201,15 +208,20 @@ export const ReservationsScreen: React.FC = () => {
           <>
             <Action variant="primary"
               testID="reservation-new"
-              label={t('reservations.btnNewReservation')}
+              label={t(progress.saved.fields || progress.saved.receipt ? 'reservations.resumeDraft' : 'reservations.btnNewReservation')}
               onPress={() => setCreating(true)}
             />
+            {progress.saved.fields?.result && !progress.saved.receipt && (
+              <Action variant="secondary" label={t('reservations.btnNewReservation')} onPress={() => {
+                void progress.reset().then(() => setCreating(true)).catch(() => setError(t('reservations.draftSaveError')));
+              }} />
+            )}
             <View style={styles.row}>
               <View style={styles.flex}><Action label={t('reservations.tabUpcoming')} selected={tab === 'upcoming'} onPress={() => setTab('upcoming')} /></View>
               <View style={styles.flex}><Action label={t('reservations.tabHistory')} selected={tab === 'history'} onPress={() => setTab('history')} /></View>
             </View>
             {error && <Note live tone="error">{error}</Note>}
-            {loading && <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />}
+            <LoadingOverlay visible={isFocused && loading} />
             {!loading && ordered.length === 0 ? (
               <Panel>
                 <CalendarCheck size={40} color={colors.texto.secundario} />

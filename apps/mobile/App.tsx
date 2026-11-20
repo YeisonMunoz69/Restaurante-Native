@@ -1,29 +1,36 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   NavigationContainer,
   DefaultTheme,
   DarkTheme,
+  useNavigationContainerRef,
 } from '@react-navigation/native';
 import './src/i18n'; // cargamos la configuracion de internacionalizacion
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FeedbackHost } from './src/components/feedback/Feedback';
-import { BottomTabNavigator, TAB_BAR_HEIGHT } from './src/navigation/BottomTabNavigator';
+import { BottomTabNavigator, TAB_BAR_HEIGHT, type RootTabParamList } from './src/navigation/BottomTabNavigator';
 import { WEB_LINKING } from './src/navigation/app-links';
 import { GuestAccessProvider } from './src/context/GuestAccessContext';
 import { ConnectionProvider } from './src/context/ConnectionContext';
 import { useConnection } from './src/context/ConnectionContext';
 import { OrderDraftProvider } from './src/context/OrderDraftContext';
 import { connectionUrl } from './src/config/connection';
-import { ConnectivityProvider } from './src/context/ConnectivityContext';
+import { ConnectivityProvider, useOnline } from './src/context/ConnectivityContext';
+import { ReservationDraftProvider } from './src/context/ReservationDraftContext';
 
 // componente interno que conecta el tema de React Navigation con nuestro ThemeContext
 const AppContent: React.FC = () => {
   const { isDark, colors } = useTheme();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const { settings } = useConnection();
+  const online = useOnline();
+  const navigation = useNavigationContainerRef<RootTabParamList>();
+  const [navigationReady, setNavigationReady] = useState(false);
+  const accountScope = user ? `${connectionUrl(settings)}/${settings.restauranteId}/${user.id}` : null;
+  const openReservation = useCallback(() => { if (navigation.isReady()) navigation.navigate('Reservations'); }, [navigation]);
 
   // adaptamos el tema de navegacion para que coincida con nuestros tokens
   const navTheme = isDark
@@ -54,11 +61,14 @@ const AppContent: React.FC = () => {
     <>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <GuestAccessProvider authenticated={!!user} reminderOffset={TAB_BAR_HEIGHT}>
-        <NavigationContainer theme={navTheme} linking={WEB_LINKING}>
-          <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
-            <BottomTabNavigator />
-          </OrderDraftProvider>
-        </NavigationContainer>
+        <ReservationDraftProvider scope={accountScope} authLoading={isLoading}
+          canOpen={!!user && online && navigationReady} onOpen={openReservation}>
+          <NavigationContainer ref={navigation} onReady={() => setNavigationReady(true)} theme={navTheme} linking={WEB_LINKING}>
+            <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
+              <BottomTabNavigator />
+            </OrderDraftProvider>
+          </NavigationContainer>
+        </ReservationDraftProvider>
       </GuestAccessProvider>
       <FeedbackHost scope={user?.id} />
     </>
