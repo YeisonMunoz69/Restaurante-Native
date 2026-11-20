@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 import { BackHandler, Linking, Text, TextInput } from 'react-native';
+import { Feedback } from '../../components/feedback/Feedback';
 import { ThemeProvider } from '../../theme/ThemeContext';
 import { Action } from '../../components/attention/Controls';
 import { Button } from '../../components/ui/Button';
@@ -134,7 +135,7 @@ describe('ReservationCreateScreen', () => {
     await ReactTestRenderer.act(async () => { tree.root.findAllByType(Button).find(button => button.props.label === 'reservations.receiptShowPayment')!.props.onPress(); });
   }
 
-  it('consulta las franjas en el segundo paso y vuelve desde el resumen con Atrás', async () => {
+  it('separa el paso anterior de Atrás, que guarda y confirma antes de salir', async () => {
     let back!: () => boolean | null | undefined;
     const subscription = jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_event, handler) => {
       back = () => handler({} as never);
@@ -144,15 +145,58 @@ describe('ReservationCreateScreen', () => {
     await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
     await openReview(tree);
     expect(tree.root.findByProps({ testID: 'reservation-submit' })).toBeDefined();
-    ReactTestRenderer.act(() => { expect(back()).toBe(true); });
+    const feedback = jest.spyOn(Feedback, 'alert');
+    await ReactTestRenderer.act(async () => { expect(back()).toBe(true); back(); });
+    expect(feedback).toHaveBeenCalledTimes(1);
+    expect(feedback.mock.calls[0][0]).toBe('reservations.progressSaved');
+    expect(onBack).not.toHaveBeenCalled();
+    const actions = feedback.mock.calls[0][2]!;
+    ReactTestRenderer.act(() => { actions.find(action => action.style === 'cancel')!.onPress!(); });
+    expect(tree.root.findByProps({ testID: 'reservation-submit' })).toBeDefined();
+    await press(tree, 'reservation-previous-step');
     expect(tree.root.findByProps({ testID: 'reservation-continue-order' })).toBeDefined();
-    await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-continue-order' }).props.onPress(); });
+    await press(tree, 'reservation-continue-order');
+    await ReactTestRenderer.act(async () => { back(); });
+    const exit = feedback.mock.calls[1][2]!.find(action => action.text === 'reservations.leaveDraft')!;
+    ReactTestRenderer.act(() => { exit.onPress!(); });
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(api.create).not.toHaveBeenCalled();
+    Feedback.clear();
+    feedback.mockRestore();
     await ReactTestRenderer.act(async () => { await tree.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
     await ReactTestRenderer.act(async () => { back(); });
     expect(onCreated).toHaveBeenCalledTimes(1);
     expect(api.create).toHaveBeenCalledTimes(1);
     ReactTestRenderer.act(() => tree.unmount());
     subscription.mockRestore();
+  });
+
+  it('solo ofrece flechas de horario cuando desborda y desactiva cada extremo', async () => {
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>);
+    });
+    await press(tree, 'reservation-continue-visit');
+    const strip = tree.root.findAllByProps({ testID: 'reservation-time-scroll' }).find(node => node.props.onContentSizeChange)!;
+    const row = tree.root.findAllByProps({ testID: 'reservation-time-strip' }).find(node => node.props.onLayout)!;
+    const arrow = (testID: string) => tree.root.findAllByProps({ testID })
+      .find(node => node.props.accessibilityLabel && typeof node.props.disabled === 'boolean');
+    ReactTestRenderer.act(() => {
+      row.props.onLayout({ nativeEvent: { layout: { width: 280 } } });
+      strip.props.onLayout({ nativeEvent: { layout: { width: 280 } } });
+      strip.props.onContentSizeChange(200);
+    });
+    expect(arrow('reservation-time-later')).toBeUndefined();
+    ReactTestRenderer.act(() => {
+      strip.props.onContentSizeChange(480);
+      strip.props.onLayout({ nativeEvent: { layout: { width: 184 } } });
+    });
+    expect(arrow('reservation-time-earlier')?.props.disabled).toBe(true);
+    expect(arrow('reservation-time-later')?.props.disabled).toBe(false);
+    ReactTestRenderer.act(() => strip.props.onScroll({ nativeEvent: { contentOffset: { x: 296 } } }));
+    expect(arrow('reservation-time-earlier')?.props.disabled).toBe(false);
+    expect(arrow('reservation-time-later')?.props.disabled).toBe(true);
+    ReactTestRenderer.act(() => tree.unmount());
   });
 
   it('adjunta el comprobante y abre el PNG generado con los datos de la reserva', async () => {

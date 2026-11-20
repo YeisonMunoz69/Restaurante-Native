@@ -21,6 +21,7 @@ import { useOrderDraft } from '../context/OrderDraftContext';
 import { receiptBridge, useReservationDraft, type DraftReceipt, type ReservationStep } from '../context/ReservationDraftContext';
 import { ReservationCalendar } from '../components/calendar/ReservationCalendar';
 import { ContextHelp, ContextOverlay, LoadingOverlay, TransientNotice } from '../components/feedback/ContextOverlay';
+import { Feedback } from '../components/feedback/Feedback';
 import { formatCivilDate, formatCop, todayInBogota } from '../utils/formatters';
 
 const steps = ['visit', 'time', 'order', 'review'] as const;
@@ -80,10 +81,12 @@ export function ReservationCreateScreen({
   const [showNote, setShowNote] = useState(!!initial?.note);
   const [showPayment, setShowPayment] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [savingExit, setSavingExit] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const request = useRef(0);
   const submitting = useRef(false);
+  const exitRequest = useRef<symbol | null>(null);
   const clearNotice = useCallback(() => setNotice(null), []);
   const people = Number(peopleText);
   const receipt = saved.receipt;
@@ -108,13 +111,35 @@ export function ReservationCreateScreen({
     if (result?.reserva.comprobante && !receipt) await reset().catch(() => {});
     await onCreated();
   };
-  const backRef = useEffectEvent(() => {
-    if (busy || (step === 'visit' && calendarBusy)) return;
-    setError(null);
-    if (step === 'sent') void finish();
-    else if (step === 'visit') onBack();
-    else setStep(previousStep[step]);
-  });
+  useEffect(() => () => { exitRequest.current = null; }, [isActive, saveFields]);
+
+  // Confirmo la salida solo después de guardar este paso. Atrás físico cancela el diálogo.
+  const leaveForm = async () => {
+    if (!isActive || busy || calendarBusy || exitRequest.current) return;
+    if (step === 'sent') { await finish(); return; }
+    const pendingExit = Symbol();
+    exitRequest.current = pendingExit;
+    const release = () => {
+      if (exitRequest.current !== pendingExit) return false;
+      exitRequest.current = null;
+      return true;
+    };
+    setSavingExit(true);
+    try {
+      await saveFields({ step, date, people: peopleText, slot, quantities, note, result });
+      if (exitRequest.current !== pendingExit) return;
+      Feedback.alert(t('reservations.progressSaved'), t('reservations.keepEditingPrompt'), [
+        { text: t('reservations.keepEditing'), style: 'cancel', onPress: () => { release(); } },
+        { text: t('reservations.leaveDraft'), onPress: () => { if (release()) onBack(); } },
+      ], { kind: 'success' });
+    } catch {
+      if (release()) setError(t('reservations.draftSaveError'));
+    } finally {
+      setSavingExit(false);
+    }
+  };
+
+  const backRef = useEffectEvent(() => { void leaveForm(); });
   useEffect(() => {
     if (!isActive) return undefined;
     const listener = BackHandler.addEventListener('hardwareBackPress', () => { backRef(); return true; });
@@ -272,7 +297,7 @@ export function ReservationCreateScreen({
   const title = t(step === 'sent' ? 'reservations.sentTitle' : `reservations.steps.${step}`);
   const groupValid = Number.isInteger(people) && people >= 1 && people <= 120;
   const invalidOrder = (people >= 8 && !requested.length) || (!!requested.length && catalog?.date !== date);
-  const cannotAdvance = busy || (step === 'visit' && (!available || !groupValid || calendarBusy)) || (step === 'time' && !slot) ||
+  const cannotAdvance = busy || savingExit || (step === 'visit' && (!available || !groupValid || calendarBusy)) || (step === 'time' && !slot) ||
     ((step === 'order' || step === 'review') && invalidOrder);
   const advance = () => {
     if (cannotAdvance) return;
@@ -301,11 +326,8 @@ export function ReservationCreateScreen({
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView key={step} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.row}>
-          <BackButton onPress={() => {
-            if (step === 'sent') void finish();
-            else if (step === 'visit') onBack();
-            else { setError(null); setStep(previousStep[step]); }
-          }} disabled={busy} />
+          <BackButton onPress={() => void leaveForm()} disabled={busy || calendarBusy || savingExit}
+            accessibilityLabel={t('reservations.backToList')} />
           {!!stepNumber && <Text style={[typography.pie, { color: colors.texto.secundario }]}>
             {t('reservations.progress', { step: stepNumber })}
           </Text>}
@@ -408,10 +430,18 @@ export function ReservationCreateScreen({
           <Text style={[typography.etiqueta, styles.flex, { color: colors.texto.secundario }]}>{t('reservations.orderTotal')}</Text>
           <Text style={[typography.precio, { color: colors.marca.acento }]}>{formatCop(total)}</Text>
         </View>}
-        <Button variant="primary" testID={step === 'review' ? 'reservation-submit' : `reservation-continue-${step}`}
-          label={t(step === 'sent' ? 'reservations.backToList' : step === 'review' ? 'reservations.submit' : 'common.continue')}
-          icon={step === 'review' ? Check : undefined} onPress={advance}
-          disabled={cannotAdvance} />
+        <View style={styles.stepActions}>
+          {step !== 'sent' && step !== 'visit' && <BackButton testID="reservation-previous-step"
+            style={styles.previousStep} accessibilityLabel={t('reservations.previousStep')}
+            disabled={busy || savingExit} onPress={() => { setError(null); setStep(previousStep[step]); }} />}
+          <Button style={styles.flex} variant="primary" testID={step === 'review' ? 'reservation-submit' : `reservation-continue-${step}`}
+            label={t(step === 'sent' ? 'reservations.backToList' : step === 'review' ? 'reservations.submit' : 'common.continue')}
+            icon={step === 'review' ? Check : undefined}
+            endIcon={stepNumber > 0 && step !== 'review' ? ChevronRight : undefined}
+            accessibilityLabel={t(stepNumber > 0 && step !== 'review' ? 'reservations.nextStep'
+              : step === 'review' ? 'reservations.submit' : 'reservations.backToList')}
+            onPress={advance} disabled={cannotAdvance} />
+        </View>
       </View>
       {showPayment && <ContextOverlay visible title={t('reservations.receiptShowPayment')} onClose={() => setShowPayment(false)}>
         <ScrollView style={styles.payment}><PaymentInstructions codigo="" ticket="" /></ScrollView>
@@ -458,7 +488,7 @@ function TimeStrip({ slots, selected, onSelect }: {
 }) {
   const { t } = useTranslation();
   const { colors, radii } = useTheme();
-  const strip = useRef<ScrollView>(null);
+  const strip = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const [rowWidth, setRowWidth] = useState(0);
   const [viewport, setViewport] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
@@ -471,6 +501,7 @@ function TimeStrip({ slots, selected, onSelect }: {
     const disabled = direction < 0 ? offset < 1 : offset >= end - 1;
     return (
       <Pressable
+        testID={direction < 0 ? 'reservation-time-earlier' : 'reservation-time-later'}
         accessibilityRole="button"
         accessibilityLabel={t(direction < 0 ? 'reservations.earlierTimes' : 'reservations.laterTimes')}
         accessibilityState={{ disabled }}
@@ -490,9 +521,9 @@ function TimeStrip({ slots, selected, onSelect }: {
   };
 
   return (
-    <View style={styles.timeStrip} onLayout={event => setRowWidth(event.nativeEvent.layout.width)}>
+    <View testID="reservation-time-strip" style={styles.timeStrip} onLayout={event => setRowWidth(event.nativeEvent.layout.width)}>
       {hasOverflow && arrow(-1)}
-      <ScrollView horizontal ref={strip} style={styles.flex} showsHorizontalScrollIndicator={false}
+      <ScrollView testID="reservation-time-scroll" horizontal ref={strip} style={[styles.flex, styles.timeViewport]} showsHorizontalScrollIndicator={false}
         onLayout={event => setViewport(event.nativeEvent.layout.width)}
         onContentSizeChange={setContentWidth}
         onScroll={event => setOffset(event.nativeEvent.contentOffset.x)} scrollEventThrottle={32}
@@ -545,8 +576,11 @@ const styles = StyleSheet.create({
   chips: { gap: 8, paddingBottom: 8 },
   timeChips: { gap: 8 },
   timeStrip: { flexDirection: 'row', alignItems: 'center' },
+  timeViewport: { minHeight: 48 },
   timeArrow: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   hour: { minWidth: 88 },
+  stepActions: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  previousStep: { marginBottom: 0, alignSelf: 'center' },
   footer: { width: '100%', maxWidth: 760, alignSelf: 'center', borderTopWidth: StyleSheet.hairlineWidth, padding: 12, gap: 7 },
   dish: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10 },
   thumb: { width: 60, height: 60, borderRadius: 11 },

@@ -113,6 +113,12 @@
       "review": "Revisa y envía"
     },
     "progress": "Paso {{step}} de 4",
+    "previousStep": "Ir al paso anterior",
+    "nextStep": "Ir al siguiente paso",
+    "progressSaved": "Progreso guardado",
+    "keepEditingPrompt": "¿Quieres seguir editando? Puedes retomar este paso desde Mis reservas.",
+    "keepEditing": "Sí, seguir editando",
+    "leaveDraft": "No, volver a Mis reservas",
     "stepHelp": {
       "visit": "Elige un día con servicio de restaurante dentro de los próximos tres meses. Verás los cupos disponibles en el siguiente paso.",
       "time": "Elige mañana o tarde. Usa las flechas o desliza para ver más horarios. Verás los cupos de la franja seleccionada.",

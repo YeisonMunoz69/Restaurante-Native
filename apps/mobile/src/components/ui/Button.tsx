@@ -11,6 +11,7 @@ interface ButtonProps {
   variant?: Variant;
   tone?: 'normal' | 'danger';
   icon?: LucideIcon;
+  endIcon?: LucideIcon;
   disabled?: boolean;
   busy?: boolean;
   selected?: boolean;
@@ -22,7 +23,7 @@ interface ButtonProps {
 
 // Reservo el acento para la acción principal y centro todas las etiquetas, incluso en varias líneas.
 export function Button({
-  label, onPress, variant = 'secondary', tone = 'normal', icon: Icon, disabled, busy,
+  label, onPress, variant = 'secondary', tone = 'normal', icon: Icon, endIcon: EndIcon, disabled, busy,
   selected, expanded, testID, accessibilityLabel, style,
 }: ButtonProps) {
   const { colors, typography, radii } = useTheme();
@@ -67,6 +68,7 @@ export function Button({
         <Icon size={19} color={foreground} accessible={false} />
       )}
       <Text style={[typography.cuerpoL, styles.label, { color: foreground }]}>{label}</Text>
+      {!busy && EndIcon && <EndIcon size={19} color={foreground} accessible={false} />}
     </Pressable>
   );
 }

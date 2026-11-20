@@ -1,21 +1,25 @@
 import React from 'react';
-import { I18nManager, Pressable, StyleSheet } from 'react-native';
+import { I18nManager, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../theme/ThemeContext';
 
 // Comparto el regreso visual sin cambiar la navegación ni el botón físico de Android.
-export function BackButton({ onPress, disabled = false }: {
+export function BackButton({ onPress, disabled = false, accessibilityLabel, style, testID }: {
   onPress: () => void;
   disabled?: boolean;
+  accessibilityLabel?: string;
+  style?: StyleProp<ViewStyle>;
+  testID?: string;
 }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const Chevron = I18nManager.isRTL ? ChevronRight : ChevronLeft;
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
-      accessibilityLabel={t('common.back')}
+      accessibilityLabel={accessibilityLabel ?? t('common.back')}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
@@ -26,6 +30,7 @@ export function BackButton({ onPress, disabled = false }: {
           borderColor: colors.superficie.borde,
           opacity: disabled ? 0.45 : 1,
         },
+        style,
       ]}
     >
       <Chevron size={25} strokeWidth={2.4} color={colors.marca.primario} accessible={false} />
