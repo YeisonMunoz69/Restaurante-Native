@@ -103,7 +103,7 @@ export function ReservationReceiptCard({ reservation, onUpdate, active = true, d
       return;
     }
     const updated = await reservationsApi.uploadReceipt(reservation.id, { ...asset, uri: asset.uri });
-    onUpdate(updated);
+    onUpdate(updated, draftReceipt?.fileName);
     setShowPayment(false);
   }, 'reservations.receiptUploadError');
   const open = () => void run(async () => setPreview(await reservationsApi.receiptTicket(reservation.id)),

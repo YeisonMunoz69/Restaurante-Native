@@ -105,7 +105,7 @@ export function ReservationCreateScreen({
   }, [step, date, peopleText, slot, quantities, note, result, saveFields, t]);
 
   const finish = async () => {
-    if (result?.reserva.comprobante) await reset().catch(() => {});
+    if (result?.reserva.comprobante && !receipt) await reset().catch(() => {});
     await onCreated();
   };
   const backRef = useEffectEvent(() => {
