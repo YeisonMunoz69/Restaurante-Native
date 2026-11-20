@@ -4,7 +4,7 @@ import { BackHandler, Image, ScrollView, StyleSheet, Text, View } from 'react-na
 import { ReservationCreateSchema, ReservationSlotsQuerySchema, RESERVATION_RECEIPT_MAX_BYTES, type MenuDish, type ReservationSlot } from '@encanto/shared';
 import { useTranslation } from 'react-i18next';
 import { CalendarDays, Check, ClipboardList, Clock3, ImagePlus, Send, Users } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useConnection } from '../context/ConnectionContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -54,6 +54,7 @@ export function ReservationCreateScreen({
   const cart = useOrderDraft();
   const { saved, saveFields, saveReceipt, clearReceipt, reset } = useReservationDraft();
   const { colors, typography, radii } = useTheme();
+  const insets = useSafeAreaInsets();
   const today = useMemo(todayInBogota, []);
   const maxDate = useMemo(() => addMonths(today, 3), [today]);
   const initial = saved.fields;
@@ -402,7 +403,7 @@ export function ReservationCreateScreen({
         <ScrollView style={styles.payment}><PaymentInstructions codigo="" ticket="" /></ScrollView>
       </ContextOverlay>}
       <LoadingOverlay visible={isActive && (busy || (step === 'visit' && calendarBusy))} />
-      <TransientNotice message={notice} clear={clearNotice} />
+      <TransientNotice message={notice} clear={clearNotice} top={insets.top + 4} />
     </SafeAreaView>
   );
 }
@@ -416,6 +417,8 @@ function TimeCards({ slots, selected, onSelect }: {
   const morning = slots.filter(item => item.horaInicio < '12:00');
   const afternoon = slots.filter(item => item.horaInicio >= '12:00');
   const chosen = morning.length && afternoon.length ? period : afternoon.length ? 'afternoon' : 'morning';
+  const visibleSlots = chosen === 'morning' ? morning : afternoon;
+  const visibleSelection = visibleSlots.find(item => item.horaInicio === selected?.horaInicio);
   if (!slots.length) return null;
   return (
     <View style={[styles.surface, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
@@ -428,12 +431,15 @@ function TimeCards({ slots, selected, onSelect }: {
         <Button style={styles.flex} label={t('reservations.afternoon')} selected={chosen === 'afternoon'} onPress={() => setPeriod('afternoon')} />
       </View>}
       <ScrollView horizontal key={chosen} showsHorizontalScrollIndicator contentContainerStyle={styles.chips}>
-        {(chosen === 'morning' ? morning : afternoon).map(item => (
+        {visibleSlots.map(item => (
           <Button key={item.horaInicio} style={styles.hour} label={item.horaInicio}
             accessibilityLabel={`${item.horaInicio}–${item.horaFin} · ${t('reservations.seatsAvailable', { count: item.aforoDisponible })}`}
             selected={selected?.horaInicio === item.horaInicio} onPress={() => onSelect(item)} />
         ))}
       </ScrollView>
+      {!!visibleSelection && <Text style={[typography.pie, { color: colors.texto.secundario }]}>
+        {t('reservations.seatsAvailable', { count: visibleSelection.aforoDisponible })}
+      </Text>}
     </View>
   );
 }
