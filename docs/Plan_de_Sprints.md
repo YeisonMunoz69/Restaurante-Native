@@ -175,7 +175,7 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 | :-------: | ---------------------------------------------------------------------------- | -------------------------- | :----: | ----------- |
 |    [~]    | Cálculo de franjas a partir del calendario, la duración y la granularidad    | RF-RES01, 02, 17           |   8    | Fabián      |
 |    [~]    | Validación de aforo en transacción serializable                              | RF-RES02, ADR-005          |   5    | Fabián      |
-|    [~]    | Reserva en cuatro pasos, horarios compactos y borrador persistente                         | RF-RES03–06                |   13   | Alex        |
+|    [~]    | Reserva en cuatro pasos, navegación en el pie y borrador persistente                         | RF-RES03–06                |   13   | Alex        |
 |    [~]    | Cálculo del total y generación del ticket copiable                           | RF-RES05, RF-RES18         |   5    | Fabián      |
 |    [~]    | Comprobante privado en el paso 4, compartir desde Android y resumen en PNG                      | RF-RES07                   |   3    | Alex        |
 |    [~]    | Bandeja de solicitudes con aprobación y rechazo con motivo                   | RF-RES09, RF-ADM08, 11, 12 |   8    | Yeison      |

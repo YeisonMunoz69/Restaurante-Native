@@ -406,11 +406,11 @@ Organizamos la visita, el horario, el pedido y el resumen en cuatro pasos. El en
 
 - Sin sesion, el flujo desvia al inicio de sesion y regresa conservando lo seleccionado
 - El borrador recupera el último paso, fecha, grupo, hora, platos y nota al reabrir la app. Para grupos de menos de ocho personas se permite reservar solo mesa.
-- La selección de horario agrupa mañana y tarde en una fila horizontal, con Continuar siempre visible.
+- La selección de horario agrupa mañana y tarde en una fila horizontal. Las flechas aparecen cuando hay más franjas fuera de vista.
 - El editor separa los platos elegidos de las sugerencias disponibles para la fecha.
 - El resumen muestra fotos, cantidades y total sin impuestos. La política de cancelación se consulta desde el icono de ayuda.
 - El boton final dice Enviar solicitud, no Confirmar reserva
-- El boton fisico de retroceso de Android retrocede paso a paso, sin salir del flujo
+- Los controles del pie recorren los pasos. Atrás del encabezado y Atrás físico guardan el paso actual y preguntan si se desea seguir editando o volver a Mis reservas.
 - La interfaz no usa lenguaje ni patrones de comercio electronico: sin carrito ni checkout
 
 ### [~] Calcular el total y generar el ticket de la reserva
@@ -424,7 +424,8 @@ Producir el detalle que el dueno pegara en el grupo de cocina.
 - El total es la suma de cantidad por precio unitario, sin impuestos
 - El precio se copia en la linea al momento de solicitar, para que un cambio de carta no altere reservas emitidas
 - El ticket se genera en texto plano legible, con codigo, fecha, franja, comensales y detalle
-- Una reserva sin pedido tambien genera ticket, sin lineas
+- Mis reservas abre un ticket visual con código, estado, fecha, horario, comensales, partidas y total. Las acciones para copiar y compartir conservan el ticket de texto.
+- Una reserva sin pedido también genera ticket y muestra que es solo mesa.
 
 ### [~] Disenar la pantalla de solicitud enviada con instrucciones de pago
 

@@ -12,6 +12,8 @@ La migración `20261119220000_comprobantes_privados_reservas` crea una tabla 1:1
 
 El arranque tras un cierre forzado y tras actualizar el APK volvió a invitado. La entrada de renovación estaba presente después de entrar con Google y desapareció durante el arranque. Queda por identificar qué validación falló en dev. El borrador para la misma cuenta seguía guardado con sus datos y la captura. La revisión física terminó en el borrador. Pasaron 133 pruebas móviles y 298 de API con PostgreSQL aislado. La aceptación del envío y revisión de comprobantes contra dev queda pendiente del despliegue de la API y su migración.
 
+**Ajustes de navegación y presentación.** En EC-33 añadimos flechas a ambos lados de las horas cuando hay franjas fuera de vista. El pie del formulario permite volver de paso y continuar, mientras Atrás abre «Progreso guardado» y deja elegir entre seguir editando y regresar a Mis reservas. En el paso 3, las sugerencias tienen un tinte verde suave. En EC-35, agrupamos «Adjuntar foto» y «Medios de pago» y dejamos la opción para quitar la captura junto a su encabezado. En EC-34, «Ver ticket» abre la visita, el pedido y el total en una vista con acciones inferiores para copiar y compartir. La imagen PNG sigue disponible desde el comprobante adjunto.
+
 ## Qué quedó implementado
 
 - **EC-31/32:** consultamos franjas reales del calendario, duración por tamaño de grupo, anticipación, mínimo para días de solo reserva y cupo concurrente. La creación verifica disponibilidad y escribe solicitud/líneas dentro de una transacción `Serializable`; una colisión controlada devuelve conflicto y no guarda líneas parciales.

@@ -84,7 +84,7 @@ it('no mezcla reservas de otra cuenta cuando termina una petición vieja', async
 });
 
 it('abre un ticket con datos y partidas, y conserva el texto para copiar y compartir', async () => {
-  const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
+  const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction', activityType: undefined });
   api.mine.mockResolvedValue([{ ...base, total: 64000, lineas: [
     { platoId: 'p1', nombre: 'Sancocho de prueba', cantidad: 2, subtotal: 64000 },
   ] }] as never);
