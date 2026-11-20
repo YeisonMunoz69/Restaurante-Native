@@ -3,7 +3,7 @@ FROM node:22-alpine
 WORKDIR /usr/src/app
 
 # Herramientas para compilar módulos nativos (argon2) y OpenSSL para el motor de Prisma
-RUN apk add --no-cache python3 make g++ openssl
+RUN apk add --no-cache python3 make g++ openssl font-dejavu
 
 # Copiamos manifiestos del monorepo
 COPY package*.json ./

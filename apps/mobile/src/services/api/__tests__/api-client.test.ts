@@ -1,4 +1,6 @@
+import axios from 'axios';
 import { onSessionExpired } from '../api-client';
+import { restoreSession } from '../../auth/auth.service';
 import {
   setInMemoryAccessToken,
   getInMemoryAccessToken,
@@ -40,5 +42,19 @@ describe('Cliente HTTP e Interceptor de Renovación Silenciosa (EC-19)', () => {
     await saveRefreshToken('nuevo-refresh-token');
     const token = await getRefreshToken();
     expect(token).toBe('nuevo-refresh-token');
+  });
+
+  it('conserva el token de renovación si se pierde la red al restaurar la sesión', async () => {
+    await saveRefreshToken('refresh-guardado');
+    jest.mocked(axios.post).mockRejectedValueOnce(new axios.AxiosError('Network Error', 'ERR_NETWORK'));
+    await expect(restoreSession()).resolves.toBeNull();
+    await expect(getRefreshToken()).resolves.toBe('refresh-guardado');
+  });
+
+  it('retira el token guardado cuando el servidor confirma que no es válido', async () => {
+    await saveRefreshToken('refresh-revocado');
+    jest.mocked(axios.post).mockRejectedValueOnce({ isAxiosError: true, response: { status: 401 } });
+    await expect(restoreSession()).resolves.toBeNull();
+    await expect(getRefreshToken()).resolves.toBeNull();
   });
 });

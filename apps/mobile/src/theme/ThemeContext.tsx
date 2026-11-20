@@ -18,34 +18,41 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // este proveedor envuelve toda la aplicacion para que ninguna pantalla use colores en duro
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+export const ThemeProvider: React.FC<{ children: React.ReactNode; accountKey?: string | null }> = ({
   children,
+  accountKey,
 }) => {
-  const [themeMode, setStoredMode] = useState<ThemeMode | null>(null);
+  const key = accountKey === null ? null : accountKey
+    ? `${storageKey}/${encodeURIComponent(accountKey)}`
+    : storageKey;
+  const [stored, setStoredMode] = useState<{ key: string; mode: ThemeMode }>();
+  const themeMode = stored?.key === key ? stored?.mode : undefined;
 
   // Leo la preferencia antes de mostrar el acceso para evitar un destello al abrir.
   useEffect(() => {
+    if (!key) return;
     let active = true;
-    void AsyncStorage.getItem(storageKey).catch(() => null).then(saved => {
-      if (active) setStoredMode(saved === 'dark' ? 'dark' : 'light');
+    void AsyncStorage.getItem(key).catch(() => null).then(saved => {
+      if (active) setStoredMode({ key, mode: saved === 'dark' ? 'dark' : 'light' });
     });
     return () => { active = false; };
-  }, []);
+  }, [key]);
 
   const isDark = themeMode === 'dark';
   const colors = isDark ? DarkColors : LightColors;
 
   // La elección queda en este dispositivo y se carga nuevamente al iniciar.
   const setThemeMode = (mode: ThemeMode) => {
-    setStoredMode(mode);
-    void AsyncStorage.setItem(storageKey, mode).catch(() => undefined);
+    if (!key) return;
+    setStoredMode({ key, mode });
+    void AsyncStorage.setItem(key, mode).catch(() => undefined);
   };
 
   return (
     <ThemeContext.Provider
       value={{
         isDark,
-        isThemeReady: themeMode !== null,
+        isThemeReady: !key || themeMode !== undefined,
         setThemeMode,
         colors,
         spacing: Spacing,

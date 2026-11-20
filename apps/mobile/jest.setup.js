@@ -4,11 +4,17 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 
+jest.mock('@react-native-community/netinfo', () => ({
+  useNetInfo: () => ({ isConnected: true, isInternetReachable: true }),
+}));
+
 // Evito cargar el módulo nativo del portapapeles cuando pruebo componentes en Node.
 jest.mock('@react-native-clipboard/clipboard', () => ({
   setString: jest.fn(),
   getString: jest.fn(() => Promise.resolve('')),
 }));
+
+jest.mock('react-native-share', () => ({ open: jest.fn() }));
 
 // simulacion basica de react-native-keychain para el entorno de pruebas unitarias
 jest.mock(

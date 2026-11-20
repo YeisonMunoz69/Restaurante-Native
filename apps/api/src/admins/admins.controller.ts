@@ -8,6 +8,7 @@ import { RolesGuard } from '../common/guards/roles.guard.js';
 import { parseMenu } from '../menu/menu.validation.js';
 import { AdminsService } from './admins.service.js';
 const changeSchema = z.object({ correo: z.string().trim().email().max(254), administrador: z.boolean() }).strict();
+const roleSchema = z.object({ correo: z.string().trim().email().max(254), rol: z.nativeEnum(Role) }).strict();
 
 @ApiTags('Administradores')
 @ApiBearerAuth()
@@ -19,6 +20,15 @@ export class AdminsController {
   @Get()
   @ApiOperation({ summary: 'Consultar administradores y mínimo de tres activos' })
   list(@Req() req: AuthenticatedRequest) { return this.admins.list(req.user.sub); }
+  @Get('roles')
+  @ApiOperation({ summary: 'Consultar cuentas con acceso de administración u operación' })
+  roles(@Req() req: AuthenticatedRequest) { return this.admins.list(req.user.sub, true); }
+  @Put('roles')
+  @ApiOperation({ summary: 'Asignar un rol a una cuenta registrada' })
+  changeRole(@Req() req: AuthenticatedRequest, @Body() body: unknown) {
+    const input = parseMenu(roleSchema, body);
+    return this.admins.change(req.user.sub, input.correo, input.rol);
+  }
   @Put()
   @ApiOperation({ summary: 'Designar o retirar permisos a una cuenta existente, sin borrar su historial' })
   change(@Req() req: AuthenticatedRequest, @Body() body: unknown) {

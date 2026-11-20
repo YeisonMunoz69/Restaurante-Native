@@ -4,13 +4,15 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
 import * as argon2 from 'argon2';
 import type { AccountProfile, RegisterDto, LoginDto, GoogleLoginDto, ProfileUpdateDto } from '@encanto/shared';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { OAuth2Client } from 'google-auth-library';
 
 import { PrismaService } from '../prisma/prisma.service.js';
+import { lockAdminRoleChanges, protectedAdminEmails } from '../admins/protected-admins.js';
 
 const sessionUser = {
   id: true, correo: true, rol: true, activo: true, nombre: true, telefono: true,
+  googleSub: true,
   googleNombre: true, googleFotoUrl: true, nombrePerfil: true, ciudad: true,
   region: true, nacionalidad: true, fechaNacimiento: true,
 } satisfies Prisma.UserSelect;
@@ -28,6 +30,7 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     this.requirePasswordEnabled();
+    if (this.protectedEmail(registerDto.correo)) throw new ForbiddenException('Esta cuenta debe registrarse con Google');
     // Verificar si el correo ya existe
     const existing = await this.prisma.user.findUnique({
       where: { correo: registerDto.correo.toLowerCase() },
@@ -77,6 +80,7 @@ export class AuthService {
     if (!user.activo) {
       throw new UnauthorizedException('Cuenta inactiva');
     }
+    this.requireGoogleForProtectedAccount(user, 'password');
 
     // Verificar contraseña con argon2id
     const isPasswordValid = await argon2.verify(
@@ -97,6 +101,32 @@ export class AuthService {
     }
   }
 
+  private protectedEmail(email: string) {
+    return protectedAdminEmails(this.configService.get<string>('PROTECTED_ADMIN_EMAILS')).has(email.trim().toLowerCase());
+  }
+
+  private requireGoogleForProtectedAccount(user: SessionUser, provider: Provider) {
+    if (provider !== 'google' && user.googleSub && this.protectedEmail(user.correo)) {
+      throw new UnauthorizedException('Inicia sesión con Google para usar esta cuenta protegida');
+    }
+  }
+
+  private isProtectedGoogleIdentity(identity: { correo: string; hostedDomain?: string }) {
+    if (!this.protectedEmail(identity.correo)) return false;
+    const domain = identity.correo.split('@')[1];
+    if (domain !== 'gmail.com' && identity.hostedDomain !== domain) {
+      throw new ForbiddenException('Selecciona tu cuenta institucional de Google para esta cuenta protegida');
+    }
+    return true;
+  }
+
+  private async auditProtectedAdmin(db: Prisma.TransactionClient, id: string, previous: Role | null) {
+    await db.auditLog.create({ data: {
+      usuarioId: id, accion: 'ASIGNAR_ADMIN_PROTEGIDO', entidad: 'usuarios', entidadId: id,
+      ...(previous && { datosPrevios: { rol: previous } }), datosNuevos: { rol: Role.ADMIN },
+    } });
+  }
+
   // Solo uso datos de identidad verificados por Google y emitidos para nuestro cliente.
   private async googleIdentity(idToken: string) {
     const audience = this.configService.get<string>('GOOGLE_WEB_CLIENT_ID')?.trim();
@@ -109,6 +139,7 @@ export class AuthService {
         return {
           sub: payload.sub,
           correo: payload.email.trim().toLowerCase(),
+          hostedDomain: payload.hd?.toLowerCase(),
           googleNombre: fullName.slice(0, 100) || null,
           googleFotoUrl: this.googlePhoto(payload.picture),
         };
@@ -133,10 +164,33 @@ export class AuthService {
 
   async googleLogin(input: GoogleLoginDto) {
     const identity = await this.googleIdentity(input.idToken);
+    const protectedAdmin = this.isProtectedGoogleIdentity(identity);
     const { googleNombre, googleFotoUrl } = identity;
     const linked = await this.prisma.user.findUnique({ where: { googleSub: identity.sub } });
     if (linked) {
       if (!linked.activo) throw new UnauthorizedException('Cuenta inactiva');
+      if ((protectedAdmin || this.protectedEmail(linked.correo)) && linked.correo !== identity.correo) {
+        throw new ForbiddenException('El correo de Google debe coincidir con el de la cuenta protegida');
+      }
+      if (protectedAdmin && linked.rol !== Role.ADMIN) {
+        const promoted = await this.prisma.$transaction(async db => {
+          await lockAdminRoleChanges(db);
+          const current = await db.user.findUnique({ where: { id: linked.id }, select: sessionUser });
+          if (!current?.activo || current.googleSub !== identity.sub || current.correo !== identity.correo) {
+            throw new UnauthorizedException('La cuenta protegida cambió; vuelve a iniciar sesión');
+          }
+          if (current.rol === Role.ADMIN) return current;
+          const user = await db.user.update({
+            where: { id: current.id, activo: true, googleSub: identity.sub },
+            data: { rol: Role.ADMIN, googleNombre, googleFotoUrl },
+            select: sessionUser,
+          });
+          await db.refreshToken.updateMany({ where: { usuarioId: user.id, revocadoEn: null }, data: { revocadoEn: new Date() } });
+          await this.auditProtectedAdmin(db, user.id, current.rol);
+          return user;
+        });
+        return this.startSession(promoted, 'google');
+      }
       // Pongo al día la foto y el nombre del proveedor. El nombre elegido en Perfil conserva prioridad.
       const user = linked.googleNombre === googleNombre && linked.googleFotoUrl === googleFotoUrl
         ? linked
@@ -154,17 +208,20 @@ export class AuthService {
     if (!input.telefono) throw new UnprocessableEntityException({ code: 'GOOGLE_PHONE_REQUIRED', message: 'Completa tu teléfono para crear la cuenta' });
 
     try {
-      const user = await this.prisma.user.create({
-        data: {
-          googleSub: identity.sub,
-          nombre: googleNombre || identity.correo.split('@')[0].slice(0, 100),
-          googleNombre,
-          googleFotoUrl,
-          correo: identity.correo,
-          telefono: input.telefono,
-          correoVerificado: true,
-        },
-      });
+      const data = {
+        googleSub: identity.sub,
+        nombre: googleNombre || identity.correo.split('@')[0].slice(0, 100),
+        googleNombre,
+        googleFotoUrl,
+        correo: identity.correo,
+        telefono: input.telefono,
+        correoVerificado: true,
+      };
+      const user = protectedAdmin ? await this.prisma.$transaction(async db => {
+        const created = await db.user.create({ data: { ...data, rol: Role.ADMIN } });
+        await this.auditProtectedAdmin(db, created.id, null);
+        return created;
+      }) : await this.prisma.user.create({ data });
       return this.startSession(user, 'google');
     } catch (error) {
       if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') throw error;
@@ -177,7 +234,9 @@ export class AuthService {
   // Vínculo explícito desde una sesión vigente. Actualizo el mismo usuario y conservo sus relaciones.
   async linkGoogle(userId: string, sessionId: string, idToken: string) {
     const identity = await this.googleIdentity(idToken);
+    const protectedAdmin = this.isProtectedGoogleIdentity(identity);
     const user = await this.prisma.$transaction(async db => {
+      if (protectedAdmin) await lockAdminRoleChanges(db);
       const session = await db.refreshToken.findFirst({
         where: { id: sessionId, usuarioId: userId, revocadoEn: null, expiraEn: { gt: new Date() } },
         select: { id: true },
@@ -192,9 +251,15 @@ export class AuthService {
       try {
         const changed = await db.user.updateMany({
           where: { id: userId, activo: true, googleSub: account.googleSub },
-          data: { googleSub: identity.sub, correoVerificado: true, ...imported },
+          data: { googleSub: identity.sub, correoVerificado: true, ...imported, ...(protectedAdmin && { rol: Role.ADMIN }) },
         });
-        if (changed.count === 1) return { ...account, ...imported };
+        if (changed.count === 1) {
+          if (protectedAdmin) {
+            await db.refreshToken.updateMany({ where: { usuarioId: account.id, revocadoEn: null }, data: { revocadoEn: new Date() } });
+            if (account.rol !== Role.ADMIN) await this.auditProtectedAdmin(db, account.id, account.rol);
+          }
+          return { ...account, ...imported, ...(protectedAdmin && { rol: Role.ADMIN }) };
+        }
       } catch (error) {
         if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') throw error;
       }
@@ -320,6 +385,7 @@ export class AuthService {
       }
 
       const provider = payload.provider === 'google' ? 'google' : 'password';
+      this.requireGoogleForProtectedAccount(user, provider);
       const newTokens = await this.generateTokens({
         sub: user.id,
         correo: user.correo,

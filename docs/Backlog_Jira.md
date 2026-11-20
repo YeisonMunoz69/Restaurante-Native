@@ -4,6 +4,8 @@
 
 **Pendiente actualizar requisitos en Drive y Word local:** RF-MEN01, selector inicial, recarga y calendario modal para fechas de servicio de la Carta en EC-22. RF-INF09, navegación de Cuenta y seguridad y grupos editables de Perfil en EC-75.
 
+**Roles desde Ajustes:** vinculamos [EC-73](https://yjmunoz.atlassian.net/browse/EC-73) y [EC-75](https://yjmunoz.atlassian.net/browse/EC-75) al alta protegida por Google y a la delegación de roles. La integración en dev y la prueba con los tres administradores reales siguen pendientes. Pendiente actualizar requisitos en Drive y Word local: RN-15 y RF-ADM15, cuentas protegidas por entorno y delegación de STAFF.
+
 **Continuidad registrada el 26 de octubre:** Alex asume EC-22/27/73 directamente en Jira, conservando En curso y backlog; EC-14 sigue En curso y EC-33/35/38 pasan de Por hacer a En curso con evidencia y comentario. Creamos [EC-74](https://yjmunoz.atlassian.net/browse/EC-74), Tarea/Por hacer asignada a Alex, para auditar y separar la práctica, preparar variables/CI/CD del repositorio original e integrar `dev` con evidencia. Creamos [EC-75](https://yjmunoz.atlassian.net/browse/EC-75), Tarea/Por hacer, Alex, backlog posterior a estabilizar dev, para conectar Google API+móvil y ordenar Ajustes. No iniciamos esos desarrollos por crear tareas. Conservamos criterios y autorías; no reabrimos Sprint 2 ni contamos puntos nuevos como aceptados. [Encargo vigente](Continuidad_Alex_2026-10-26.md). Pendiente actualizar requisitos en Drive y Word local: sección 8/responsables, RNF-14/despliegue, RF-MEN01/RNF-01, RF-ADM02, RF-ADM15/RN-15 y RF-AUT01/02/03/05/08/Ajustes. El CSV sigue siendo el importable histórico.
 
 **Ampliación del 22 de octubre, PR #16 sin integrar:** Mi Pedido, tres carruseles por bloque, calendario mensual con servicios combinables, domingos/festivos base y sin mínimo de quince; carta original de 44 productos sin fotos, todos disponibles inicialmente y editables. Actualizamos criterios EC-33/29 y comentamos EC-22. Creamos EC-73, En curso y a cargo de Yeison: mínimo inamovible de tres administradores activos. No modifica el cierre histórico de Sprint 2 ni acredita rendimiento de 100 platos o galería integral. Dos APK de ensayo separan backend PC/VPS; Google sigue pendiente de clientes e implementación. [Acta y recordatorio Word/Drive](Pedido_y_Calendario_2026-10-22.md).
@@ -288,13 +290,13 @@ Facilitar encontrar un plato en una carta larga.
 
 `Sprint 5` · `3 pts` · `Medium` · `movil` · `RF-MEN08, C-17`
 
-Que la aplicacion sirva en zona rural con senal debil.
+Que la aplicación sirva en zona rural con señal débil. [EC-60](https://yjmunoz.atlassian.net/browse/EC-60) queda en curso mientras verificamos la entrega en dev.
 
 **Criterios de aceptación**
 
-- La ultima carta consultada se guarda en MMKV
-- Sin conexion se muestra lo guardado con aviso de posible desactualizacion
-- La estrategia es solo lectura: no se encolan escrituras
+- La primera apertura como invitado permite consultar categorías, fichas y fotos propias incluidas en la instalación.
+- La última carta completa consultada se guarda en AsyncStorage por sede y servidor.
+- Sin conexión se muestran los datos de referencia y la consulta funciona en solo lectura. Los pedidos, reservas y acciones de cuenta requieren internet.
 
 ---
 
@@ -398,16 +400,17 @@ Impedir que dos solicitudes concurrentes superen la capacidad del restaurante.
 
 `Sprint 3` · `13 pts` · `Highest` · `movil` · `RF-RES03 a RF-RES06`
 
-Llevar al comensal desde la fecha hasta el envio de la solicitud. Subtareas sugeridas: paso 1 fecha y comensales; paso 2 franja; paso 3 pedido opcional; paso 4 resumen y envio.
+Organizamos la visita, el horario, el pedido y el resumen en cuatro pasos. El encabezado ofrece ayuda contextual en un cuadro con desenfoque y los avisos breves desaparecen a los tres segundos.
 
 **Criterios de aceptación**
 
 - Sin sesion, el flujo desvia al inicio de sesion y regresa conservando lo seleccionado
-- El paso 3 es opcional y ofrece Continuar sin pedido desde el primer momento
-- El paso 3 lista solo los platos habilitados para la fecha elegida
-- El paso 4 muestra el resumen, el total sin impuestos y la politica de cancelacion
+- El borrador recupera el último paso, fecha, grupo, hora, platos y nota al reabrir la app. Para grupos de menos de ocho personas se permite reservar solo mesa.
+- La selección de horario agrupa mañana y tarde en una fila horizontal. Las flechas aparecen cuando hay más franjas fuera de vista.
+- El editor separa los platos elegidos de las sugerencias disponibles para la fecha.
+- El resumen muestra fotos, cantidades y total sin impuestos. La política de cancelación se consulta desde el icono de ayuda.
 - El boton final dice Enviar solicitud, no Confirmar reserva
-- El boton fisico de retroceso de Android retrocede paso a paso, sin salir del flujo
+- Los controles del pie recorren los pasos. Atrás del encabezado y Atrás físico guardan el paso actual y preguntan si se desea seguir editando o volver a Mis reservas.
 - La interfaz no usa lenguaje ni patrones de comercio electronico: sin carrito ni checkout
 
 ### [~] Calcular el total y generar el ticket de la reserva
@@ -421,7 +424,8 @@ Producir el detalle que el dueno pegara en el grupo de cocina.
 - El total es la suma de cantidad por precio unitario, sin impuestos
 - El precio se copia en la linea al momento de solicitar, para que un cambio de carta no altere reservas emitidas
 - El ticket se genera en texto plano legible, con codigo, fecha, franja, comensales y detalle
-- Una reserva sin pedido tambien genera ticket, sin lineas
+- Mis reservas abre un ticket visual con código, estado, fecha, horario, comensales, partidas y total. Las acciones para copiar y compartir conservan el ticket de texto.
+- Una reserva sin pedido también genera ticket y muestra que es solo mesa.
 
 ### [~] Disenar la pantalla de solicitud enviada con instrucciones de pago
 
@@ -432,8 +436,10 @@ Dejar claro que la reserva todavia no esta confirmada y que falta un paso humano
 **Criterios de aceptación**
 
 - Se muestra el codigo de reserva, seleccionable y copiable
-- Se presentan las instrucciones de pago con monto, medios y numero del dueno
-- La accion principal abre WhatsApp con un mensaje prellenado que incluye el codigo
+- Las instrucciones muestran los medios publicados y el contacto del restaurante.
+- El paso 4 permite adjuntar manualmente una imagen. Desde Android, el menú Compartir acepta una captura de hasta 10 MB, la guarda y devuelve al paso activo. Sin un borrador previo, abre el paso 1 y conserva la captura para el paso 4.
+- La carga al servidor se inicia al enviar la solicitud. Si falla, se reintenta sobre la misma reserva. La captura también se puede adjuntar o reemplazar después en Mis reservas.
+- El comensal puede abrir y compartir un PNG vertical con los datos y la captura.
 - Un aviso explica que la reserva queda confirmada cuando el restaurante verifique el pago
 - El icono y el titulo comunican envio, no exito
 
@@ -496,7 +502,7 @@ Que el dueno resuelva las solicitudes desde el telefono, entre servicio y servic
 
 - Las solicitudes se listan ordenadas por fecha de reserva, con comensales, pedido y total
 - Se muestra el numero de cancelaciones previas del usuario como alerta discreta
-- Aprobar cambia el estado a CONFIRMADA y notifica al comensal
+- Aprobar requiere que el ADMIN haya abierto la captura vigente, y que el servidor valide esa versión, el estado, el calendario y el aforo.
 - Rechazar exige un motivo, cambia el estado a RECHAZADA y notifica con ese motivo
 - `RECHAZADA` es terminal; el comensal debe crear una solicitud nueva para intentarlo de nuevo
 - Las solicitudes proximas a expirar se resaltan

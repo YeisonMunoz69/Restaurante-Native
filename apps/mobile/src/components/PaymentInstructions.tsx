@@ -48,7 +48,7 @@ export function PaymentInstructions({
       return;
     }
     const message = encodeURIComponent(
-      `${codigo}\n${ticket}\n\n${current.mediosPago}\n${current.instruccionesPago}`,
+      `${[codigo, ticket, current.mediosPago, current.instruccionesPago].filter(Boolean).join("\n")}`,
     );
     const url = `https://wa.me/${current.whatsapp.slice(1)}?text=${message}`;
     try {

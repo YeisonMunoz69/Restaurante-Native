@@ -31,6 +31,9 @@ export function ReservationCalendar({
   max,
   onChange,
   onAvailability,
+  onUnavailable,
+  onLoadingChange,
+  compact = false,
   mode = 'reservation',
 }: {
   restauranteId: string;
@@ -39,6 +42,9 @@ export function ReservationCalendar({
   max?: string;
   onChange: (date: string) => void;
   onAvailability?: (available: boolean) => void;
+  onUnavailable?: (date: string) => void;
+  onLoadingChange?: (loading: boolean) => void;
+  compact?: boolean;
   mode?: 'reservation' | 'menu';
 }) {
   const { t } = useTranslation();
@@ -79,6 +85,7 @@ export function ReservationCalendar({
     };
   }, [restauranteId, dates, retry, onAvailability]);
   const day = days.find(item => item.fecha === value);
+  useEffect(() => { onLoadingChange?.(busy); }, [busy, onLoadingChange]);
   const reservable = (item?: CalendarDayResult) =>
     !!item?.abierto &&
     (item.servicios ?? ['RESTAURANTE']).includes('RESTAURANTE');
@@ -138,7 +145,7 @@ export function ReservationCalendar({
         ))}
       </View>
       {busy ? (
-        <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />
+        !compact && <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />
       ) : error ? (
         <>
           <Note live tone="error">
@@ -168,7 +175,10 @@ export function ReservationCalendar({
                 accessibilityState={{ disabled, selected }}
                 disabled={disabled}
                 testID={`calendar-date-${date}`}
-                onPress={() => onChange(date)}
+                onPress={() => {
+                  if (!available && onUnavailable) onUnavailable(date);
+                  else onChange(date);
+                }}
                 style={[
                   styles.cell,
                   {
@@ -217,10 +227,10 @@ export function ReservationCalendar({
           })}
         </View>
       )}
-      {(mode === 'reservation' || (!busy && !error)) && (
+      {!compact && (mode === 'reservation' || (!busy && !error)) && (
         <Note>{t(mode === 'menu' ? 'menu.serviceCalendarLegend' : 'discovery.calendarLegend')}</Note>
       )}
-      {mode === 'reservation' && day && !busy && (
+      {!compact && mode === 'reservation' && day && !busy && (
         <>
           <Text style={[typography.tituloM, { color: colors.texto.primario }]}>
             {formatCivilDate(value)}

@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ConfigService } from '@nestjs/config';
+import { Role } from '@prisma/client';
 import type { PrismaService } from '../src/prisma/prisma.service.js';
 import { AdminsService } from '../src/admins/admins.service.js';
 import { createMenuPostgresFixture } from './menu-postgres.fixture.js';
@@ -30,5 +32,26 @@ describe.skipIf(!url)('Administradores en PostgreSQL aislado', () => {
     await service.change(ids[0], `${ids[3]}@example.test`, false);
     expect((await service.list(ids[0])).activos).toBe(3);
     await expect(service.list(ids[3])).rejects.toThrow('administrador activo');
+  });
+
+  it('protege los ADMIN configurados y permite delegar y retirar STAFF conservando la cuenta', async () => {
+    const protectedEmail = `${ids[0]}@example.test`;
+    const configured = new AdminsService(fixture.client as unknown as PrismaService,
+      new ConfigService({ PROTECTED_ADMIN_EMAILS: protectedEmail }));
+    const staff = await fixture.client.user.create({
+      data: { nombre: 'Operador QA', correo: `${randomUUID()}@example.test`, telefono: '' },
+    });
+    const session = await fixture.client.refreshToken.create({
+      data: { usuarioId: staff.id, tokenHash: 'qa', dispositivo: 'qa', expiraEn: new Date(Date.now() + 60_000) },
+    });
+    await expect(configured.change(ids[0], protectedEmail, Role.STAFF)).rejects.toMatchObject({ status: 403 });
+    await expect(configured.change(ids[0], staff.correo, Role.STAFF)).resolves.toMatchObject({ rol: Role.STAFF });
+    expect((await configured.list(ids[0], true)).usuarios).toEqual(expect.arrayContaining([
+      expect.objectContaining({ correo: protectedEmail, protegido: true }),
+      expect.objectContaining({ correo: staff.correo, rol: Role.STAFF, protegido: false }),
+    ]));
+    expect((await fixture.client.refreshToken.findUniqueOrThrow({ where: { id: session.id } })).revocadoEn).toBeTruthy();
+    await expect(configured.change(ids[0], staff.correo, Role.COMENSAL)).resolves.toMatchObject({ id: staff.id, rol: Role.COMENSAL, activo: true });
+    await expect(configured.list(staff.id, true)).rejects.toMatchObject({ status: 403 });
   });
 });

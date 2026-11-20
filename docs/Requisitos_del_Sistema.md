@@ -13,6 +13,10 @@
 
 **Perfil y botones (19 de noviembre):** el perfil muestra el nombre y la foto de Google, admite una foto alternativa en el dispositivo y permite completar datos de contacto. Apariencia presenta vistas previas de ambos temas y la salida queda al final de Ajustes. Aplicamos variantes primaria, secundaria y terciaria desde la paleta de la app. Pendiente actualizar requisitos en Drive y Word local para RF-INF09 (perfil y Ajustes) y RNF-09 (jerarquía de botones).
 
+**Modo invitado (19 de noviembre, EC-75):** cambiamos el acceso inicial para consultar Carta y Noticias sin sesión. Ajustes muestra «Accede con Google» y Añadir abre el mismo acceso desde Carta. Después de tres minutos continuos en primer plano, mostramos un aviso de acceso que se puede cerrar y desaparece a los quince segundos. Conservamos el tema claro para el invitado y guardamos la elección manual de cada cuenta autenticada. Pendiente actualizar requisitos en Drive y Word local: RF-AUT08 y RF-INF09, acceso invitado, recordatorio y apariencia por cuenta.
+
+**Carta sin conexión y navegación (Sprint 5, EC-60 y EC-75):** incluimos la carta original de 44 platos con ocho fotos propias. La consulta sin red está disponible desde la primera apertura y muestra la copia completa más reciente cuando ya se ha guardado por sede y servidor. Los precios se muestran como referencia. Calendario, carrito, reservas, Noticias y acciones de cuenta requieren internet. Ajustes reutiliza el botón oficial del flujo de acceso y el indicador de las pestañas deriva su fondo del acento del tema y respeta la reducción de movimiento. Verificamos en el Samsung S21 la primera apertura sin red, la reapertura con una copia guardada y el botón de Google en Ajustes. Pendiente actualizar requisitos en Drive y Word local: RF-MEN08 para la primera apertura, la copia local y las fotos incluidas, además de RF-AUT08 y RF-INF09 para el botón compartido y la navegación.
+
 ---
 
 ## 1. Ficha Técnica y Alcance del Sistema
@@ -58,7 +62,7 @@
 
 | Actor                       | Descripción y Nivel de Acceso                                                                                                                                                                         | Método de Autenticación                                                         |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **Visitante**               | Usuario sin sesión. Solo puede ver la pantalla de acceso; no entra a carta, noticias, reservas ni otros servicios de la app.                                                                         | Debe iniciar sesión con Google                                                 |
+| **Visitante**               | Consulta Carta y Noticias y puede iniciar sesión desde Ajustes. Usa el tema claro y necesita Google para añadir platos, reservar o acceder a opciones de cuenta.                                      | Google al solicitar una acción con sesión                                     |
 | **Comensal**                | Cliente autenticado. Crea solicitudes de reserva con pedido, consulta su historial, cancela reservas vigentes, marca favoritos y configura preferencias de notificación.                              | Google; la API valida la identidad y emite la sesión propia                    |
 | **Personal (Staff)**        | Empleado autorizado. Consulta la agenda operativa del día, filtra reservas confirmadas y registra el check-in o inasistencia de comensales.                                                        | Google vinculado a una cuenta con rol `STAFF` asignado en servidor               |
 | **Dueño (Administrador)**   | Propietario autorizado. Aprueba o rechaza solicitudes, gestiona carta/disponibilidad/calendario/noticias y modifica parámetros operativos.                                                         | Google vinculado a rol `ADMIN`, más TOTP en acciones críticas                   |
@@ -81,12 +85,12 @@ Las siguientes reglas, acordadas en el proceso de toma de decisiones, son de cum
 - **RN-07 (Política Económica y Cambios):** No hay devoluciones de dinero. Se admiten adiciones de platos a reservas aprobadas pagando el excedente, o cambios por platos de igual o mayor valor.
 - **RN-08 (Capacidad y Agrupación):** El restaurante une mesas según necesidad física del salón (hasta mesas de 40 comensales). La validación del sistema se realiza sobre el aforo acumulado por franja horaria.
 - **RN-09 (Ciclo de Aprobación Manual):** Toda reserva inicia en estado `SOLICITADA`. Pasa a `CONFIRMADA` únicamente cuando un dueño valida el comprobante de pago externo y la aprueba en su panel.
-- **RN-10 (Canal Operativo WhatsApp):** WhatsApp actúa como canal de soporte para recepción de comprobantes de pago, coordinación de la zona VIP Mirador y envío de tickets formateados al grupo de cocina.
+- **RN-10 (Canal Operativo WhatsApp):** WhatsApp permite solicitar ayuda, coordinar la zona VIP Mirador y compartir tickets de cocina. El comensal adjunta el comprobante privado desde su solicitud en la app.
 - **RN-11 (Alerta de Inasistencias):** El panel del dueño muestra de forma visible el historial de cancelaciones e inasistencias previas asociadas a la cuenta del comensal solicitante.
 - **RN-12 (Calendario de Apertura Discontinuo, acuerdo 22/10):** domingos y festivos nacionales colombianos abren por defecto y ADMIN puede deshabilitarlos. Sábados y otros días requieren apertura explícita. Cada día combina Restaurante, Pesca y/o Motos, horario general y nota pública. Solo Restaurante permite reservar mesas. Retiramos el mínimo de quince personas entre semana: en fechas sin Restaurante se ofrece contacto por WhatsApp para coordinar, sin confirmar apertura ni reserva.
 - **RN-13 (Zona VIP Mirador):** Capacidad máxima de 10 adultos más 2 niños con tarifa de servicio adicional. Se gestiona fuera de la app mediante enlace directo a WhatsApp.
 - **RN-14 (Moneda e Impuestos):** Todos los valores monetarios se expresan en Pesos Colombianos (COP) sin decimales, con separador de miles. No se desglosa ni cobra IVA/impoconsumo en la aplicación.
-- **RN-15 (Administradores, inamovible):** mantenemos al menos tres administradores activos. Retirar permisos, desactivar o eliminar no puede reducir ese mínimo, tampoco con operaciones concurrentes. Primero designamos reemplazos con cuentas reales. Una instalación anterior con menos de tres solo puede aumentar su número. Retirar permisos conserva cuenta e historial; no se inventan administradores para cumplir el conteo.
+- **RN-15 (Administradores, inamovible):** mantenemos al menos tres administradores activos. Retirar permisos, desactivar o eliminar no puede reducir ese mínimo, tampoco con operaciones concurrentes. Primero designamos reemplazos con cuentas reales. Una instalación anterior con menos de tres solo puede aumentar su número. Configuramos las tres cuentas protegidas en el entorno de la API y activamos sus permisos tras validar la identidad de Google. El panel conserva los permisos de las cuentas protegidas mientras sigan en esa configuración.
 
 ---
 
@@ -105,7 +109,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-AUT05** | Recuperación de contraseña    | Pendiente de revisar en Jira: la contraseña pertenece a Google; no construimos una recuperación de contraseña propia mientras Google sea el único proveedor.        | **S** | Revisar | EP-02 |
 | **RF-AUT06** | Configuración de 2FA TOTP     | Vinculación de segundo factor mediante aplicación de autenticación (Google Authenticator) exclusiva para usuarios con rol de Dueño (`ADMIN`). |   **S**   | Sprint 5 | EP-10     |
 | **RF-AUT07** | Guardia de acciones sensibles | Exigencia de token TOTP válido al dueño antes de ejecutar acciones de alto impacto (modificar parámetros globales, borrar cuentas).           |   **S**   | Sprint 5 | EP-10     |
-| **RF-AUT08** | Acceso global con sesión      | Sin sesión solo se muestra el acceso Google. Las cinco pestañas, servicios y enlaces profundos esperan autenticación; cerrar sesión elimina los tokens locales y vuelve al acceso. La API conserva sus propias guardias. | **M** | Sprint 5 | EP-02 |
+| **RF-AUT08** | Acceso invitado y con sesión  | Sin sesión solo se muestran Carta, Noticias y Ajustes. Los enlaces de platos y noticias son públicos. Añadir a un pedido y las opciones privadas requieren Google. Cerrar sesión vuelve al modo invitado. La API conserva sus propias guardias. | **M** | Sprint 5 | EP-02 |
 | **RF-AUT09** | Advertencia de caducidad      | Diálogo modal interactivo que avisa 2 minutos antes de que expire la sesión si la aplicación se encuentra en primer plano activo.             |   **S**   | Sprint 5 | EP-02     |
 
 ### 4.2 Módulo de Carta Digital y Disponibilidad (MEN)
@@ -119,30 +123,30 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-MEN05** | Filtros de catálogo           | Filtrado combinado por categoría, etiquetas dietarias (vegetariano, libre de gluten) y rango de precios.                                |   **S**   | Sprint 5 | EP-03     |
 | **RF-MEN06** | Distintivo de no disponible   | Indicador visual atenuado con etiqueta "No disponible para esta fecha" cuando el plato esté desactivado para el día seleccionado.       |   **M**   | Sprint 2 | EP-03     |
 | **RF-MEN07** | Platos favoritos              | Marcado local/remoto de platos preferidos para acceso rápido desde el perfil del comensal.                                              |   **S**   | Sprint 5 | EP-03     |
-| **RF-MEN08** | Lectura de carta sin conexión | Almacenamiento local mediante MMKV de la última carta consultada para permitir exploración en zonas rurales sin cobertura de datos.     |   **S**   | Sprint 5 | EP-03     |
+| **RF-MEN08** | Lectura de carta sin conexión | Carta original y fotos propias incluidas en la instalación. Guardamos la última carta completa por sede y servidor en AsyncStorage para consulta de fichas sin conectividad. |   **S**   | Sprint 5 | EP-03     |
 
 ### 4.3 Módulo de Motor de Reservas y Pedidos (RES)
 
 | ID           | Nombre del Requisito            | Descripción y Regla Operativa                                                                                                                | Prioridad |  Sprint  | Ref. Jira |
 | ------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | :-------: | :------: | --------- |
 | **RF-RES01** | Selección de fecha hábil        | Calendario mensual con días, actividades combinables, horario y notas publicados. Solo fechas abiertas con Restaurante permiten consultar franjas para mesas; Pesca/Motos son informativas. | **M** | Sprint 3 | EP-05 |
-| **RF-RES02** | Cálculo y validación de franjas | Generación dinámica de franjas disponibles y control de aforo por franja mediante transacción con aislamiento `SERIALIZABLE`.                |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES02** | Cálculo y validación de franjas | Selección de franjas en una fila horizontal por mañana o tarde, con flechas cuando hay opciones fuera de vista. Generación dinámica y control de aforo mediante transacción con aislamiento `SERIALIZABLE`.                |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES03** | Selección de comensales         | Número de personas validado por aforo libre; sin mínimo especial entre semana. Se conserva pedido obligatorio desde ocho personas. | **M** | Sprint 3 | EP-05 |
-| **RF-RES04** | Pedido anticipado de platos     | Mi Pedido editable desde carta y reserva, con cantidades, eliminación y total estimado. Revalidamos precios/disponibilidad para la fecha elegida y al enviar. Obligatorio desde ocho; hasta siete se permite solo mesa. | **M** | Sprint 3 | EP-05 |
+| **RF-RES04** | Pedido anticipado de platos     | Mi Pedido editable desde carta y reserva, con cantidades, eliminación y total estimado. El formulario separa elegidos y sugerencias; el resumen incluye miniaturas. Revalidamos precios/disponibilidad para la fecha elegida y al enviar. Obligatorio desde ocho; hasta siete se permite solo mesa. | **M** | Sprint 3 | EP-05 |
 | **RF-RES05** | Cálculo del total del pedido    | Sumatoria automática de subtotales (`cantidad × precio_unitario_congelado`) expresada en COP sin recargos tributarios.                       |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES06** | Registro de solicitud inicial   | Inserción de la reserva en estado `SOLICITADA` generando un código alfanumérico corto y legible de 6 caracteres (ej. `ENC-482`).             |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES07** | Pantalla de pago y WhatsApp     | Resumen con monto y contacto/medios/instrucciones vigentes publicados por ADMIN, consultados también antes de abrir WhatsApp con código y ticket. Ante falta de configuración o de red, informa sin inventar cuentas ni usar datos antiguos. La solicitud sigue pendiente hasta revisión humana. | **M** | Sprint 3 | EP-05 |
+| **RF-RES06** | Registro de solicitud inicial   | Conservación local del progreso en cuatro pasos, por cuenta, restaurante y servidor. El pie cambia de paso y Atrás confirma la salida después de guardar. Al enviar, la API inserta la reserva en estado `SOLICITADA` y genera un código de seguimiento.             |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES07** | Comprobante y resumen de la reserva | El titular adjunta una captura privada JPG, PNG o WebP de hasta 10 MB desde el paso 4 o mediante Compartir en Android. La app retoma el paso activo y conserva la imagen hasta el envío. El titular puede reemplazar la captura desde su solicitud pendiente y generar un PNG vertical con el resumen y la captura íntegra. | **M** | Sprint 3 | EC-35 |
 | **RF-RES08** | Alerta al dueño por solicitud   | Notificación push y correo al teléfono de los dueños cuando entra una nueva solicitud, incluso si la app está cerrada en segundo plano.      |   **M**   | Sprint 5 | EP-09     |
-| **RF-RES09** | Aprobación y rechazo manual     | Interfaz para que el dueño acepte la reserva (pasa a `CONFIRMADA`) o la rechace (pasa a `RECHAZADA`), exigiendo motivo. El rechazo es terminal; para intentarlo otra vez, el comensal crea una solicitud nueva. |   **M**   | Sprint 3 | EP-06     |
+| **RF-RES09** | Aprobación y rechazo manual     | El ADMIN abre el comprobante y confirma la versión vigente en una revisión con aforo y horario válidos. Una solicitud sin comprobante queda pendiente. Para rechazar se exige motivo y el rechazo es terminal. | **M** | Sprint 3 | EC-36 |
 | **RF-RES10** | Notificación al comensal        | Notificación push y por correo al comensal informando la confirmación o el rechazo (con su motivo) de su solicitud.                          |   **M**   | Sprint 5 | EP-09     |
 | **RF-RES11** | Historial de reservas           | Vista para el comensal donde consulta sus solicitudes activas, confirmadas, pasadas y canceladas.                                            |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES12** | Cancelación por el comensal     | El comensal puede retirar una solicitud `SOLICITADA`; una reserva `CONFIRMADA` se puede cancelar si faltan al menos 60 minutos (incluida la igualdad exacta).              |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES13** | Expiración desatendida          | Tarea programada que pasa a `EXPIRADA` una solicitud no confirmada a las 12 horas de su creación. El comprobante se coordina por WhatsApp y el sistema solo considera la revisión/confirmación registrada por un dueño. |   **S**   | Sprint 5 | EP-06     |
+| **RF-RES13** | Expiración desatendida          | La solicitud sin confirmación expira según el plazo configurado, 12 horas por defecto. Adjuntar el comprobante inicia la revisión y conserva el plazo de la solicitud. | **S** | Sprint 5 | EP-06 |
 | **RF-RES14** | Inasistencia por tolerancia     | Tarea programada que marca `NO_ASISTIO` a las reservas confirmadas tras 30 minutos del inicio de su franja sin registro de llegada.          |   **S**   | Sprint 5 | EP-06     |
 | **RF-RES15** | Adición posterior de platos     | Opción para que el comensal agregue platos a una reserva ya confirmada, generando un saldo excedente a transferir y comprobante.             |   **S**   | Sprint 5 | EP-05     |
 | **RF-RES16** | Reemplazo de platos             | Permuta de platos confirmados por otros de igual o mayor valor sin devolución de dinero.                                                     |   **C**   | Backlog  | —         |
 | **RF-RES17** | Coordinación de otras fechas    | Sin apertura de Restaurante no se genera reserva desde la app; mostramos horarios/notas informativas y contacto WhatsApp vigente para coordinar. Sustituye la restricción de quince personas, retirada el 22/10. | **M** | Sprint 3 | EP-05 |
-| **RF-RES18** | Generación de ticket copiable   | Conversión de la reserva y su pedido en un ticket de texto plano estructurado, listo para copiar con un toque y enviar a cocina.             |   **M**   | Sprint 3 | EP-05     |
+| **RF-RES18** | Generación de ticket copiable   | Vista de ticket en Mis reservas con código, estado, visita, partidas y total. Conserva el texto estructurado para copiar o compartir con la cocina.             |   **M**   | Sprint 3 | EP-05     |
 
 ### 4.4 Módulo de Muro de Noticias (NOT)
 
@@ -173,7 +177,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-ADM12** | Copia de ticket para cocina    | Botón de acción que copia el ticket estructurado al portapapeles del móvil para pegarlo en el chat de WhatsApp de cocina.            |   **M**   | Sprint 3  | EP-06     |
 | **RF-ADM13** | Indicadores agregados          | Gráficas consolidadas de reservas atendidas, volumen de comensales y platos más solicitados.                                         |   **C**   |  Backlog  | —         |
 | **RF-ADM14** | Bitácora de auditoría          | Registro inmutable de acciones administrativas sensibles (usuario, acción, fecha, valores antes y después).                          |   **S**   | Sprint 5* | EP-10     |
-| **RF-ADM15** | Gestión compartida de administradores | Un ADMIN designa cuentas existentes o retira su rol con confirmación; conservamos mínimo de tres activos, protección concurrente en API/BD, auditoría y rechazo de JWT ADMIN con permisos retirados. No equivale a borrar la cuenta ni a implementar TOTP. | **M** | Backlog, ajuste 22/10 | Pendiente historia propia |
+| **RF-ADM15** | Gestión de usuarios y roles | Un ADMIN asigna COMENSAL, STAFF o ADMIN a cuentas existentes con confirmación. Conservamos el mínimo de tres activos, la protección concurrente en API y PostgreSQL y la auditoría del cambio. La API comprueba los permisos vigentes de ADMIN y STAFF y bloquea cambios de rol para los ADMIN protegidos por configuración. | **M** | Backlog | EC-73 y EC-75 |
 
 _\*Sujeto a capacidad disponible de Sprint 5._
 
@@ -287,7 +291,7 @@ Para RNF-03, los textos fijos se guardan en `apps/mobile/src/i18n/locales/` y se
 | **RF-AUT05**   | Recuperación de contraseña        |         C-3         |   EP-02    |  **Revisar**    | No duplicar recuperación que ofrece Google |
 | **RF-AUT06**   | 2FA TOTP para Dueño               |       ADR-007       |   EP-10    |  **Sprint 5**   | Opcional si desborda capacidad           |
 | **RF-AUT07**   | Guardia de acciones críticas      |       ADR-007       |   EP-10    |  **Sprint 5**   | Opcional si desborda capacidad           |
-| **RF-AUT08**   | Acceso global con sesión          |         A-1         |   EP-02    |  **Sprint 5**   | Sin sesión solo queda visible el acceso |
+| **RF-AUT08**   | Acceso invitado y con sesión      |         A-1         |   EP-02    |  **Sprint 5**   | Carta y Noticias públicas; acciones privadas con Google |
 | **RF-AUT09**   | Alerta caducidad de sesión        |         G-4         |   EP-02    |  **Sprint 5**   | Refinamiento de experiencia              |
 | **RF-INF09**   | Subpantallas de Ajustes           |         G-19        |   EP-02    |  **Sprint 5**   | Categorías y navegación interna; pendiente Jira |
 | **RF-MEN01**   | Carta visual por categorías       |      A-5, F-5       |   EP-03    |  **Sprint 2**   | Núcleo del sistema (No recortable)       |
@@ -297,14 +301,14 @@ Para RNF-03, los textos fijos se guardan en `apps/mobile/src/i18n/locales/` y se
 | **RF-MEN05**   | Filtros dietarios y precios       |          —          |   EP-03    |  **Sprint 5**   | Diferible a versión de estabilización    |
 | **RF-MEN06**   | Indicador no disponible por fecha |    B-12, ADR-010    |   EP-03    |  **Sprint 2**   | Núcleo del modelo de carta               |
 | **RF-MEN07**   | Gestión de favoritos              |          —          |   EP-03    |  **Sprint 5**   | Diferible a versión de estabilización    |
-| **RF-MEN08**   | Caché sin conexión (MMKV)         |        C-17         |   EP-03    |  **Sprint 5**   | Diferible a versión de estabilización    |
+| **RF-MEN08**   | Carta incluida y caché sin conexión |        C-17         |   EP-03    |  **Sprint 5**   | Solo lectura en primera apertura y visitas posteriores |
 | **RF-RES01**   | Selección de fecha hábil          |        B-12         |   EP-05    |  **Sprint 3**   | Núcleo del motor de reservas             |
 | **RF-RES02**   | Cálculo y validación aforo franja |    B-2, ADR-005     |   EP-05    |  **Sprint 3**   | Núcleo transaccional (No recortable)     |
 | **RF-RES03**   | Cantidad de personas y límites    |      B-1, B-8       |   EP-05    |  **Sprint 3**   | Núcleo del motor de reservas             |
 | **RF-RES04**   | Pedido anticipado de platos       |    B-7, Sec. I-1    |   EP-05    |  **Sprint 3**   | Obligatorio ≥ 8 comensales               |
 | **RF-RES05**   | Cálculo de total sin impuestos    |        B-14         |   EP-05    |  **Sprint 3**   | Núcleo del motor de reservas             |
 | **RF-RES06**   | Registro en estado SOLICITADA     |    B-9, Sec. I-2    |   EP-05    |  **Sprint 3**   | Núcleo del motor de reservas             |
-| **RF-RES07**   | Pantalla de pago con WhatsApp     |   B-10, Sec. I-3    |   EP-05    |  **Sprint 3**   | Núcleo del flujo operativo               |
+| **RF-RES07**   | Pago externo y comprobante privado | B-10, Sec. I-3 | EP-05 | **Sprint 3** | Carga en la solicitud y resumen en PNG |
 | **RF-RES08**   | Notificación push a Dueño         |        C-14         |   EP-09    |  **Sprint 5**   | Respaldo vía correo si falla push        |
 | **RF-RES09**   | Aprobación / Rechazo con motivo   |    B-9, Sec. I-2    |   EP-06    |  **Sprint 3**   | Núcleo operativo del dueño               |
 | **RF-RES10**   | Notificación comensal aprob/rech  |          —          |   EP-09    |  **Sprint 5**   | Consulta manual en historial             |

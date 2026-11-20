@@ -13,17 +13,24 @@ const api = jest.mocked(adminsApi);
 let tree: Renderer.ReactTestRenderer;
 beforeEach(() => {
   jest.clearAllMocks();
-  api.list.mockResolvedValue({ minimo: 3, activos: 3, usuarios: [{ id: 'b', nombre: 'QA', correo: 'qa@example.test', rol: 'ADMIN', activo: true }] });
+  api.list.mockResolvedValue({ minimo: 3, activos: 3, usuarios: [
+    { id: 'b', nombre: 'QA', correo: 'qa@example.test', rol: 'ADMIN', activo: true, protegido: false },
+    { id: 'c', nombre: 'Protegido', correo: 'owner@example.test', rol: 'ADMIN', activo: true, protegido: true },
+  ] });
 });
 afterEach(() => { Renderer.act(() => tree?.unmount()); Feedback.clear(); jest.restoreAllMocks(); });
-it('deshabilita retiros con tres y no concede permisos sin confirmar', async () => {
+it('protege administradores y permite delegar a personal tras confirmar', async () => {
   await Renderer.act(async () => { tree = Renderer.create(<ThemeProvider><AdminsScreen onBack={jest.fn()} /></ThemeProvider>); });
-  expect(tree.root.findAllByType(Action).find(node => node.props.label === 'admins.removeTitle')!.props.disabled).toBe(true);
+  const remove = tree.root.findAllByType(Action).filter(node => node.props.label === 'admins.removeTitle');
+  expect(remove).toHaveLength(1);
+  expect(remove[0].props.disabled).toBe(true);
   Renderer.act(() => tree.root.findByType(Field).props.onChangeText('new@example.test'));
   const alert = jest.spyOn(Feedback, 'alert');
-  Renderer.act(() => tree.root.findAllByType(Action).find(node => node.props.label === 'admins.grantTitle')!.props.onPress());
+  const action = (label: string) => tree.root.findAllByType(Action).find(node => node.props.label === label)!;
+  Renderer.act(() => action('admins.roles.STAFF').props.onPress());
+  Renderer.act(() => action('admins.changeTitle').props.onPress());
   expect(api.change).not.toHaveBeenCalled();
   await Renderer.act(async () => { await alert.mock.calls[0][2]!.find(button => button.text === 'admins.confirm')!.onPress!(); });
-  expect(api.change).toHaveBeenCalledWith('new@example.test', true);
+  expect(api.change).toHaveBeenCalledWith('new@example.test', 'STAFF');
   expect(api.list).toHaveBeenCalledTimes(2);
 });

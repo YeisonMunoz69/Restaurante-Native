@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Clipboard from '@react-native-clipboard/clipboard';
 import {
   ActivityIndicator,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -10,7 +8,7 @@ import {
 import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import type { ReservationResult } from '@encanto/shared';
 import { useTranslation } from 'react-i18next';
-import { CalendarCheck } from 'lucide-react-native';
+import { CalendarCheck, Ticket } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -20,9 +18,13 @@ import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { reservationsApi } from '../services/reservations.service';
 import { Feedback as Alert } from '../components/feedback/Feedback';
 import { ReservationCreateScreen } from './ReservationCreateScreen';
-import { PaymentInstructions } from '../components/PaymentInstructions';
+import { Button } from '../components/ui/Button';
+import { ReservationTicketView } from '../components/reservations/ReservationTicketView';
+import { ReservationReceiptCard } from '../components/reservations/ReservationReceipt';
 import { formatCop, formatDateDdMmYyyy } from '../utils/formatters';
 import { useOrderDraft } from '../context/OrderDraftContext';
+import { useReservationDraft } from '../context/ReservationDraftContext';
+import { LoadingOverlay } from '../components/feedback/ContextOverlay';
 
 type ReservationTab = 'upcoming' | 'history';
 const upcomingStates = new Set(['SOLICITADA', 'CONFIRMADA', 'EN_CURSO']);
@@ -47,11 +49,17 @@ export const ReservationsScreen: React.FC = () => {
   const [detailErrorId, setDetailErrorId] = useState<string | null>(null);
   const [tab, setTab] = useState<ReservationTab>('upcoming');
   const [creating, setCreating] = useState(false);
+  const [openTicket, setOpenTicket] = useState<{ id: string; owner: string } | null>(null);
   const draft = useOrderDraft();
+  const progress = useReservationDraft();
   const { pending, consume } = draft;
   useEffect(() => {
-    if (isFocused && pending) { setCreating(true); consume(); }
-  }, [isFocused, pending, consume]);
+    if (isFocused && progress.ready && (pending || progress.openRequested)) {
+      setCreating(true);
+      if (pending) consume();
+      if (progress.openRequested) progress.consumeOpen();
+    }
+  }, [isFocused, pending, consume, progress.ready, progress.openRequested, progress.consumeOpen]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestVersion = useRef(0);
@@ -62,6 +70,7 @@ export const ReservationsScreen: React.FC = () => {
     requestVersion.current += 1;
     setItems([]);
     setDetails({});
+    setOpenTicket(null);
     setDetailOpenId(null);
     setDetailErrorId(null);
     return () => { requestVersion.current += 1; };
@@ -148,6 +157,7 @@ export const ReservationsScreen: React.FC = () => {
     }
   };
 
+  const ticket = openTicket && user?.id === openTicket.owner ? items.find(item => item.id === openTicket.id) : undefined;
   const visible = items.filter(item =>
     tab === 'upcoming'
       ? upcomingStates.has(item.estado)
@@ -162,7 +172,7 @@ export const ReservationsScreen: React.FC = () => {
     return `${right.fecha}T${right.horaInicio}`.localeCompare(`${left.fecha}T${left.horaInicio}`);
   });
 
-  if (creating) {
+  if (creating && progress.ready) {
     return (
       <ReservationCreateScreen
         key={draft.requestId}
@@ -188,7 +198,7 @@ export const ReservationsScreen: React.FC = () => {
         <TabPageHeader title={t('reservations.title')} />
 
         {authLoading ? (
-          <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />
+          <LoadingOverlay visible={isFocused} />
         ) : !user ? (
           <Panel>
             <CalendarCheck size={40} color={colors.marca.primario} />
@@ -201,15 +211,20 @@ export const ReservationsScreen: React.FC = () => {
           <>
             <Action variant="primary"
               testID="reservation-new"
-              label={t('reservations.btnNewReservation')}
+              label={t(progress.saved.fields || progress.saved.receipt ? 'reservations.resumeDraft' : 'reservations.btnNewReservation')}
               onPress={() => setCreating(true)}
             />
+            {progress.saved.fields?.result && !progress.saved.receipt && (
+              <Action variant="secondary" label={t('reservations.btnNewReservation')} onPress={() => {
+                void progress.reset().then(() => setCreating(true)).catch(() => setError(t('reservations.draftSaveError')));
+              }} />
+            )}
             <View style={styles.row}>
               <View style={styles.flex}><Action label={t('reservations.tabUpcoming')} selected={tab === 'upcoming'} onPress={() => setTab('upcoming')} /></View>
               <View style={styles.flex}><Action label={t('reservations.tabHistory')} selected={tab === 'history'} onPress={() => setTab('history')} /></View>
             </View>
             {error && <Note live tone="error">{error}</Note>}
-            {loading && <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />}
+            <LoadingOverlay visible={isFocused && loading} />
             {!loading && ordered.length === 0 ? (
               <Panel>
                 <CalendarCheck size={40} color={colors.texto.secundario} />
@@ -227,6 +242,9 @@ export const ReservationsScreen: React.FC = () => {
                 <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{formatDateDdMmYyyy(reservation.fecha)} · {reservation.horaInicio}–{reservation.horaFin}</Text>
                 <Note>{t('reservations.people', { count: reservation.numComensales })} · {t(`reservations.status.${reservation.estado}`)}</Note>
                 <Note>{t('reservations.total')}: {formatCop(reservation.total)}</Note>
+                {reservation.estado === 'SOLICITADA' && <Note>
+                  {t(reservation.comprobante ? 'reservations.receiptUnderReview' : 'reservations.receiptMissing')}
+                </Note>}
                 {reservation.motivoRechazo && <Note>{t('reservations.rejectionReason')}: {reservation.motivoRechazo}</Note>}
                 {detailOpenId === reservation.id && (
                   <>
@@ -240,27 +258,35 @@ export const ReservationsScreen: React.FC = () => {
                           <Note key={line.platoId}>{t('reservations.orderLine', { quantity: line.cantidad, name: line.nombre })} · {formatCop(line.subtotal)}</Note>
                         )) : <Note>{t('reservations.noOrder')}</Note>}
                         {detail.nota && <Note>{t('reservations.note')}: {detail.nota}</Note>}
-                        {(detail.estado === 'SOLICITADA' || detail.estado === 'CONFIRMADA') && <PaymentInstructions codigo={detail.codigo} ticket={detail.ticket} />}
+                        <ReservationReceiptCard reservation={detail} active={isFocused} onUpdate={updated => {
+                          setDetails(current => ({ ...current, [updated.id]: updated }));
+                          setItems(current => current.map(item => item.id === updated.id ? updated : item));
+                        }} />
                       </>
                     )}
                   </>
                 )}
-                <Action
-                  label={detailErrorId === reservation.id ? t('reservations.retryDetails') : detailOpenId === reservation.id ? t('reservations.hideDetails') : t('reservations.viewDetails')}
-                  disabled={detailLoadingId === reservation.id}
-                  onPress={() => void toggleDetails(reservation.id)}
-                />
+                <View style={styles.cardActions}>
+                  <View style={styles.cardAction}>
+                    <Action
+                      label={detailErrorId === reservation.id ? t('reservations.retryDetails')
+                        : detailOpenId === reservation.id ? t('reservations.hideDetails')
+                          : reservation.estado === 'SOLICITADA' && !reservation.comprobante
+                            ? t('reservations.receiptAttach') : t('reservations.viewDetails')}
+                      disabled={detailLoadingId === reservation.id}
+                      onPress={() => void toggleDetails(reservation.id)}
+                    />
+                  </View>
+                  <Button style={styles.cardAction} variant="tertiary" icon={Ticket} label={t('reservations.viewTicket')}
+                    onPress={() => setOpenTicket({ id: reservation.id, owner: user.id })} />
+                </View>
                 {reservation.estado === 'SOLICITADA' || reservation.estado === 'CONFIRMADA' ? (
                   <>
                     {cancellationTooLate && <Note>{t('reservations.cancelTooLate')}</Note>}
-                    <Action tone="danger" label={t('reservations.cancelAction')} disabled={cancellationTooLate} onPress={() => cancel(reservation)} />
+                    <Action variant="tertiary" tone="danger" label={t('reservations.cancelAction')} disabled={cancellationTooLate} onPress={() => cancel(reservation)} />
                   </>
                 ) : null}
-                <Action variant="tertiary" label={t('reservations.copyTicket')} onPress={() => {
-                  Clipboard.setString(reservation.ticket);
-                  Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
-                }} />
-                <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: reservation.ticket })} />
+
               </Panel>
               );
             })}
@@ -268,6 +294,7 @@ export const ReservationsScreen: React.FC = () => {
           </>
         )}
       </KeyboardAwareScrollView>
+      {user && isFocused && ticket && <ReservationTicketView key={ticket.id} reservation={ticket} onClose={() => setOpenTicket(null)} />}
     </SafeAreaView>
   );
 };
@@ -276,6 +303,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' },
   row: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  cardActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 4 },
+  cardAction: { flexGrow: 1, flexBasis: 120 },
   flex: { flex: 1 },
 });
 

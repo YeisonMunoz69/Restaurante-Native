@@ -66,7 +66,7 @@ describe('Calendario HTTP con módulo real y Prisma simulado', () => {
     };
     admin = jwt.sign({ ...payload, rol: 'ADMIN' });
     comensal = jwt.sign({ ...payload, rol: 'COMENSAL' });
-    staff = jwt.sign({ ...payload, rol: 'STAFF' });
+    staff = jwt.sign({ ...payload, sub: 'staff-prueba', rol: 'STAFF' });
     expired = jwt.sign({ ...payload, rol: 'ADMIN' }, { expiresIn: -1 });
   });
   afterAll(async () => {
@@ -75,6 +75,9 @@ describe('Calendario HTTP con módulo real y Prisma simulado', () => {
   beforeEach(() => {
     const fresh = prismaMock();
     Object.assign(db, fresh);
+    db.user.findUnique.mockImplementation(async ({ where }) => ({
+      rol: where.id === 'staff-prueba' ? 'STAFF' : 'ADMIN', activo: true,
+    }));
     // La transacción usa el mismo doble que reciben los servicios del módulo.
     db.$transaction.mockImplementation(async (callback) => callback(db));
   });

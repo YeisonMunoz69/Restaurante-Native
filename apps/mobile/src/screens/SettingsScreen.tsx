@@ -10,6 +10,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useGuestAccess } from '../context/GuestAccessContext';
+import { useOnline } from '../context/ConnectivityContext';
 import { GoogleAccess } from '../components/GoogleAccess';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { BackButton } from '../components/navigation/BackButton';
@@ -17,6 +19,7 @@ import { TabPageHeader } from '../components/navigation/TabPageHeader';
 import { ProfileAvatar, ProfileDetails, useLocalProfilePhoto } from '../components/settings/AccountProfile';
 import { AppearancePicker } from '../components/settings/AppearancePicker';
 import { Button } from '../components/ui/Button';
+import { GoogleButton } from '../components/ui/GoogleButton';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
@@ -41,8 +44,10 @@ export const SettingsScreen: React.FC = () => {
   const route = useRoute<any>();
   const isFocused = useIsFocused();
   const { t } = useTranslation();
-  const { colors, isDark, spacing } = useTheme();
-  const { user, isAuthenticated } = useAuth();
+  const { colors, isDark, spacing, typography } = useTheme();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const online = useOnline();
+  const requestSignIn = useGuestAccess();
   const photo = useLocalProfilePhoto(user?.id);
   const insets = useSafeAreaInsets();
   const [history, setHistory] = useState<Section[]>([]);
@@ -54,21 +59,35 @@ export const SettingsScreen: React.FC = () => {
 
   // Regreso al formulario que quedó montado en Reservas después de autenticar.
   useEffect(() => {
-    if (isAuthenticated && route.params?.returnTo === 'Reservations') {
+    if (online && isAuthenticated && route.params?.returnTo === 'Reservations') {
       navigation.setParams({ returnTo: undefined });
       navigation.navigate('Reservations');
     }
-  }, [isAuthenticated, navigation, route.params?.returnTo]);
+  }, [online, isAuthenticated, navigation, route.params?.returnTo]);
 
   // Solo intercepto Atrás si el usuario está leyendo una subpantalla de esta pestaña.
   useEffect(() => {
-    if (!isFocused || !section) return;
+    if (!online || !isFocused || !section) return;
     const listener = BackHandler.addEventListener('hardwareBackPress', () => {
       setHistory(current => current.slice(0, -1));
       return true;
     });
     return () => listener.remove();
-  }, [isFocused, section]);
+  }, [online, isFocused, section]);
+
+  if (!user || !online) {
+    return (
+      <KeyboardAwareScrollView style={{ backgroundColor: colors.superficie.elevada }}
+        contentContainerStyle={[styles.content, { paddingHorizontal: spacing.margenLateral, paddingTop: insets.top + spacing.s }]}>
+        <TabPageHeader title={t('settings.title')} />
+        {!online && <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
+          {t('common.internetRequired')}
+        </Text>}
+        {!user && <GoogleButton testID="guest-settings-sign-in" label={t('auth.guestSignInTitle')}
+          disabled={!online || isLoading} busy={online && isLoading} onPress={() => requestSignIn('settings')} />}
+      </KeyboardAwareScrollView>
+    );
+  }
 
   if (adminView === 'attention' && user?.rol === 'ADMIN')
     return <AttentionScreen onBack={closeAdminView} />;

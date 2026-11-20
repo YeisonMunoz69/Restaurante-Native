@@ -55,12 +55,19 @@ describe('AuthService Google', () => {
   const sign = vi.fn();
   const getConfig = vi.fn();
   const sessionFind = vi.fn();
+  const auditCreate = vi.fn();
+  const refreshRevoke = vi.fn();
+  const executeRaw = vi.fn();
   let service: AuthService;
 
   beforeEach(() => {
     vi.resetAllMocks();
     getConfig.mockImplementation(key => key === 'GOOGLE_WEB_CLIENT_ID' ? 'web.example' : 'secret-test');
-    const db = { user: { findUnique, create, update, updateMany }, refreshToken: { create: refreshCreate, findFirst: sessionFind } };
+    const db = {
+      user: { findUnique, create, update, updateMany },
+      refreshToken: { create: refreshCreate, findFirst: sessionFind, updateMany: refreshRevoke },
+      auditLog: { create: auditCreate }, $executeRaw: executeRaw,
+    };
     const prisma = { ...db, $transaction: (callback: (client: typeof db) => unknown) => callback(db) };
     service = new AuthService({ sign } as never, { get: getConfig } as never, prisma as never);
     sign.mockReturnValue('jwt-de-prueba');
@@ -82,6 +89,43 @@ describe('AuthService Google', () => {
     findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ ...account, rol: 'ADMIN' });
     await expect(service.googleLogin({ idToken: 't' })).rejects.toMatchObject({ response: { code: 'GOOGLE_LINK_REQUIRED' } });
     expect(sign).not.toHaveBeenCalled();
+  });
+
+  it('crea ADMIN protegido solo para el correo exacto de Workspace y registra la asignación', async () => {
+    getConfig.mockImplementation(key => key === 'PROTECTED_ADMIN_EMAILS'
+      ? ' PERSONA@EXAMPLE.TEST , otra@example.test ' : 'web.example');
+    vi.mocked(OAuth2Client.prototype.verifyIdToken).mockResolvedValue({
+      getPayload: () => ({ ...identity, hd: 'example.test' }),
+    } as never);
+    findUnique.mockResolvedValue(null);
+    create.mockResolvedValue({ ...account, rol: 'ADMIN' });
+    await service.googleLogin({ idToken: 't', telefono: '3001234567' });
+    expect(create).toHaveBeenCalledWith({ data: expect.objectContaining({ rol: 'ADMIN', correo: account.correo }) });
+    expect(auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
+      accion: 'ASIGNAR_ADMIN_PROTEGIDO', entidadId: account.id, datosNuevos: { rol: 'ADMIN' },
+    }) });
+    expect(sign).toHaveBeenCalledWith(expect.objectContaining({ rol: 'ADMIN', provider: 'google' }));
+  });
+
+  it('exige confirmación del dominio institucional para una identidad configurada', async () => {
+    getConfig.mockImplementation(key => key === 'PROTECTED_ADMIN_EMAILS' ? account.correo : 'web.example');
+    await expect(service.googleLogin({ idToken: 't', telefono: '3001234567' })).rejects.toMatchObject({ status: 403 });
+    expect(create).not.toHaveBeenCalled();
+    expect(sign).not.toHaveBeenCalled();
+  });
+
+  it('actualiza a ADMIN una cuenta Google ya vinculada y revoca su sesión anterior', async () => {
+    getConfig.mockImplementation(key => key === 'PROTECTED_ADMIN_EMAILS' ? account.correo : 'web.example');
+    vi.mocked(OAuth2Client.prototype.verifyIdToken).mockResolvedValue({
+      getPayload: () => ({ ...identity, hd: 'example.test' }),
+    } as never);
+    findUnique.mockResolvedValue({ ...account, googleSub: identity.sub });
+    update.mockResolvedValue({ ...account, rol: 'ADMIN', googleSub: identity.sub });
+    await service.googleLogin({ idToken: 't' });
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ rol: 'ADMIN' }) }));
+    expect(refreshRevoke).toHaveBeenCalledWith(expect.objectContaining({ where: { usuarioId: account.id, revocadoEn: null } }));
+    expect(auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ datosPrevios: { rol: 'COMENSAL' } }) });
+    expect(sign).toHaveBeenCalledWith(expect.objectContaining({ sub: account.id, rol: 'ADMIN' }));
   });
 
   it('vincula un administrador con su sesión vigente y conserva su ID y rol', async () => {

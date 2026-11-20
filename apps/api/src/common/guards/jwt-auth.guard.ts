@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { Role } from '@prisma/client';
 import type { Request } from 'express';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { protectedAdminEmails } from '../../admins/protected-admins.js';
 
 export interface AuthenticatedUser {
   sub: string;
@@ -62,10 +63,18 @@ export class JwtAuthGuard implements CanActivate {
         );
       }
 
-      // Un JWT ADMIN antiguo no conserva privilegios después de retirar el rol o desactivar la cuenta.
-      if (payload.rol === Role.ADMIN) {
-        const current = await this.prisma.user.findUnique({ where: { id: payload.sub }, select: { rol: true, activo: true } });
-        if (!current?.activo || current.rol !== Role.ADMIN) throw new UnauthorizedException('Los permisos de administración cambiaron; inicie sesión nuevamente');
+      // Compruebo los privilegios vigentes aunque el JWT de ADMIN o STAFF aún no haya vencido.
+      if (payload.rol !== Role.COMENSAL) {
+        const current = await this.prisma.user.findUnique({
+          where: { id: payload.sub }, select: { rol: true, activo: true, correo: true, googleSub: true },
+        });
+        if (!current?.activo || current.rol !== payload.rol) {
+          throw new UnauthorizedException('Los permisos de la cuenta cambiaron; inicie sesión nuevamente');
+        }
+        if (payload.provider !== 'google' && current.googleSub &&
+          protectedAdminEmails(this.config?.get<string>('PROTECTED_ADMIN_EMAILS')).has(current.correo)) {
+          throw new UnauthorizedException('Inicia sesión con Google para usar esta cuenta protegida');
+        }
       }
       request.user = payload;
       return true;

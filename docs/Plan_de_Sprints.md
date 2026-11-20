@@ -175,9 +175,9 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 | :-------: | ---------------------------------------------------------------------------- | -------------------------- | :----: | ----------- |
 |    [~]    | Cálculo de franjas a partir del calendario, la duración y la granularidad    | RF-RES01, 02, 17           |   8    | Fabián      |
 |    [~]    | Validación de aforo en transacción serializable                              | RF-RES02, ADR-005          |   5    | Fabián      |
-|    [~]    | Flujo de reserva en cuatro pasos: fecha, franja, pedido opcional, resumen    | RF-RES03–06                |   13   | Alex        |
+|    [~]    | Reserva en cuatro pasos, navegación en el pie y borrador persistente                         | RF-RES03–06                |   13   | Alex        |
 |    [~]    | Cálculo del total y generación del ticket copiable                           | RF-RES05, RF-RES18         |   5    | Fabián      |
-|    [~]    | Pantalla de solicitud enviada con instrucciones de pago y acción de WhatsApp | RF-RES07                   |   3    | Alex        |
+|    [~]    | Comprobante privado en el paso 4, compartir desde Android y resumen en PNG                      | RF-RES07                   |   3    | Alex        |
 |    [~]    | Bandeja de solicitudes con aprobación y rechazo con motivo                   | RF-RES09, RF-ADM08, 11, 12 |   8    | Yeison      |
 |    [~]    | Máquina de estados con validación de transiciones                            | §9.4                       |   5    | Yeison      |
 |    [~]    | Mis reservas, detalle y cancelación                                          | RF-RES11, RF-RES12         |   5    | Alex        |
@@ -187,7 +187,7 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 
 **Situación al 16 de octubre:** implementamos motor de franjas, reglas de duración/anticipación, aforo transaccional, solicitud y líneas con precio congelado, ticket, historial/cancelación, aprobación/rechazo, estado terminal, agenda, llegada, no-show manual y cierre. Shared, API y móvil compilan; pasan las pruebas API con PostgreSQL temporal y 47 pruebas móviles. S21 completó el recorrido reserva → aprobación → llegada → cierre con datos ficticios; el smoke HTTP también verificó permisos y cancelación. No probamos físicamente el límite exacto 59/60 minutos ni una inasistencia después de tolerancia. El trabajo está en la rama indicada, sin merge ni aceptación del equipo. Las responsabilidades originales siguen en la tabla: implementarlo aquí no cambia la autoría ni marca Jira por los compañeros.
 
-**Límites:** no incluimos notificaciones ni recordatorios. Las solicitudes vencen al consultar/escribir tras 12 horas; no hay tarea programada que las expire en segundo plano. El personal registra inasistencia manualmente una vez cumplida la tolerancia configurada. Automatizar vencimiento/inasistencia permanece en Sprint 5. No creamos pasarela de pago ni carga de comprobantes; el pago sigue externo y verificado por ADMIN.
+**Límites:** no incluimos notificaciones ni recordatorios. Las solicitudes vencen al consultar/escribir tras 12 horas; no hay tarea programada que las expire en segundo plano. El personal registra inasistencia manualmente una vez cumplida la tolerancia configurada. Automatizar vencimiento/inasistencia permanece en Sprint 5. El pago sigue siendo externo. La app adjunta un comprobante privado y ADMIN lo verifica antes de confirmar.
 
 **Riesgos.** La generación asistida tiende a producir verificaciones de aforo en memoria que fallan bajo concurrencia: revisar de forma explícita que la lectura y la inserción ocurran en la misma transacción con aislamiento serializable. Y el paso de pedido debe filtrar por la fecha elegida, no por la del día actual: es un error fácil y conviene cubrirlo con una prueba.
 
@@ -239,7 +239,7 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 |    [ ]    | Segundo factor TOTP y guardia de acciones sensibles                      | RF-AUT06, RF-AUT07 |   8    | Fabián      |
 |    [ ]    | Verificación de correo y recuperación de contraseña con Resend           | RF-AUT02, RF-AUT05 |   5    | Alex        |
 |    [ ]    | Búsqueda, filtros y favoritos                                            | RF-MEN04, 05, 07   |   8    | Yeison      |
-|    [ ]    | Caché de carta sin conexión con MMKV                                     | RF-MEN08           |   3    | Yeison      |
+|    [ ]    | Carta incluida y copia local de solo lectura por sede (EC-60)             | RF-MEN08           |   3    | Yeison      |
 |    [ ]    | Adición de platos a reserva aprobada                                     | RF-RES15           |   5    | Yeison      |
 |    [ ]    | Estados vacíos, de carga (esqueleto) y de error en toda la aplicación    | RNF-09             |   5    | Yeison      |
 | **Total** |                                                                          |                    | **63** |             |

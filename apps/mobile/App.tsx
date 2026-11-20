@@ -1,40 +1,36 @@
-import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, Linking, StatusBar } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   NavigationContainer,
   DefaultTheme,
   DarkTheme,
+  useNavigationContainerRef,
 } from '@react-navigation/native';
 import './src/i18n'; // cargamos la configuracion de internacionalizacion
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FeedbackHost } from './src/components/feedback/Feedback';
-import { BottomTabNavigator } from './src/navigation/BottomTabNavigator';
-import { isAppLink, WEB_LINKING } from './src/navigation/app-links';
-import { WEB_ORIGIN } from './src/config/web-links';
-import { GoogleAccess } from './src/components/GoogleAccess';
+import { BottomTabNavigator, TAB_BAR_HEIGHT, type RootTabParamList } from './src/navigation/BottomTabNavigator';
+import { WEB_LINKING } from './src/navigation/app-links';
+import { GuestAccessProvider } from './src/context/GuestAccessContext';
 import { ConnectionProvider } from './src/context/ConnectionContext';
 import { useConnection } from './src/context/ConnectionContext';
 import { OrderDraftProvider } from './src/context/OrderDraftContext';
+import { connectionUrl } from './src/config/connection';
+import { ConnectivityProvider, useOnline } from './src/context/ConnectivityContext';
+import { ReservationDraftProvider } from './src/context/ReservationDraftContext';
 
 // componente interno que conecta el tema de React Navigation con nuestro ThemeContext
 const AppContent: React.FC = () => {
-  const { isDark, isThemeReady, colors } = useTheme();
+  const { isDark, colors } = useTheme();
   const { user, isLoading } = useAuth();
   const { settings } = useConnection();
-  const pendingLink = useRef<string | null>(null);
-  const readInitialLink = useRef(false);
-
-  // Guardo el enlace válido recibido mientras la puerta de acceso está abierta.
-  useEffect(() => {
-    if (user || !WEB_ORIGIN) return;
-    const origin = WEB_ORIGIN;
-    const listener = Linking.addEventListener('url', ({ url }) => {
-      if (isAppLink(url, origin)) pendingLink.current = url;
-    });
-    return () => listener.remove();
-  }, [user]);
+  const online = useOnline();
+  const navigation = useNavigationContainerRef<RootTabParamList>();
+  const [navigationReady, setNavigationReady] = useState(false);
+  const accountScope = user ? `${connectionUrl(settings)}/${settings.restauranteId}/${user.id}` : null;
+  const openReservation = useCallback(() => { if (navigation.isReady()) navigation.navigate('Reservations'); }, [navigation]);
 
   // adaptamos el tema de navegacion para que coincida con nuestros tokens
   const navTheme = isDark
@@ -61,43 +57,44 @@ const AppContent: React.FC = () => {
         },
       };
 
-  const linking = WEB_LINKING && {
-    ...WEB_LINKING,
-    getInitialURL: async () => {
-      const waiting = pendingLink.current;
-      pendingLink.current = null;
-      const url = waiting ?? (readInitialLink.current ? null : await Linking.getInitialURL());
-      readInitialLink.current = true;
-      return url && WEB_ORIGIN && isAppLink(url, WEB_ORIGIN) ? url : null;
-    },
-  };
-
   return (
     <>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      {!isThemeReady || (!user && isLoading) ? (
-        <ActivityIndicator color={colors.marca.primario} style={{ flex: 1, backgroundColor: colors.superficie.fondo }} />
-      ) : user ? (
-        <NavigationContainer theme={navTheme} linking={linking}>
-          <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user.id}>
-            <BottomTabNavigator />
-          </OrderDraftProvider>
-        </NavigationContainer>
-      ) : <GoogleAccess />}
+      <GuestAccessProvider authenticated={!!user} reminderOffset={TAB_BAR_HEIGHT}>
+        <ReservationDraftProvider scope={accountScope} authLoading={isLoading}
+          canOpen={!!user && online && navigationReady} onOpen={openReservation}>
+          <NavigationContainer ref={navigation} onReady={() => setNavigationReady(true)} theme={navTheme} linking={WEB_LINKING}>
+            <OrderDraftProvider scope={`${settings.environment}/${settings.localUrl}/${settings.restauranteId}`} ownerId={user?.id}>
+              <BottomTabNavigator />
+            </OrderDraftProvider>
+          </NavigationContainer>
+        </ReservationDraftProvider>
+      </GuestAccessProvider>
       <FeedbackHost scope={user?.id} />
     </>
   );
 };
 
+// Aplico el claro fijo al invitado y guardo preferencias por cuenta y servidor.
+function ThemedApp() {
+  const { user } = useAuth();
+  const { settings } = useConnection();
+  return (
+    <ThemeProvider accountKey={user ? `${connectionUrl(settings)}/${user.id}` : null}>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
 // componente raiz con los proveedores de area segura, tema dinamico y autenticacion segura
 const App: React.FC = () => {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
+      <ConnectivityProvider>
         <ConnectionProvider><AuthProvider>
-          <AppContent />
+          <ThemedApp />
         </AuthProvider></ConnectionProvider>
-      </ThemeProvider>
+      </ConnectivityProvider>
     </SafeAreaProvider>
   );
 };

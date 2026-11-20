@@ -1,16 +1,19 @@
 {
-  "title": "Administradores",
-  "help": "Conservamos al menos tres administradores activos. Primero designa a otra persona registrada si necesitas retirar permisos. Retirar permisos no elimina su cuenta ni su historial.",
+  "title": "Usuarios y roles",
+  "help": "Asigna permisos por el correo de una cuenta registrada. El cambio se registra y conserva su historial.",
   "count": "Administradores activos: {{count}}. Mínimo: {{minimo}}.",
   "email": "Correo de una cuenta registrada",
-  "grantTitle": "Designar administrador",
-  "removeTitle": "Retirar permisos de administrador",
-  "confirmBody": "Cambiarás los permisos de {{correo}}. Esta acción afecta su acceso al panel y quedará registrada.",
+  "roles": { "COMENSAL": "Comensal", "STAFF": "Personal", "ADMIN": "Administrador" },
+  "changeTitle": "Cambiar rol",
+  "removeTitle": "Quitar acceso operativo",
+  "confirmBody": "El nuevo rol de {{correo}} será {{role}}. La persona tendrá que iniciar sesión de nuevo.",
+  "protected": "Administrador protegido por la configuración del servidor.",
+  "minReached": "Deben quedar al menos tres administradores activos.",
   "confirm": "Confirmar cambio",
   "active": "Cuenta activa",
   "inactive": "Cuenta inactiva; no cuenta para el mínimo",
   "saved": "Permisos actualizados.",
   "loadError": "No pudimos consultar los administradores. Reintenta.",
   "saveError": "No pudimos cambiar los permisos. Revisa la conexión y vuelve a consultar.",
-  "relogin": "Retiraste tus permisos. Cierra sesión e ingresa nuevamente para continuar como comensal."
+  "relogin": "Cambiaste tu rol. Cierra sesión e ingresa de nuevo para continuar."
 }

@@ -1,20 +1,24 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '../theme/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { useOnline } from '../context/ConnectivityContext';
+import { SlidingPillTabBar } from '../components/navigation/SlidingPillTabBar';
 import { MenuScreen } from '../screens/MenuScreen';
 import { ReservationsScreen } from '../screens/ReservationsScreen';
 import { NewsScreen } from '../screens/NewsScreen';
 import { UpcomingScreen } from '../screens/UpcomingScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { OperationsScreen } from '../screens/OperationsScreen';
 import {
   UtensilsCrossed,
   CalendarDays,
   Newspaper,
   Sparkles,
   Settings,
+  Crown,
+  ClipboardCheck,
 } from 'lucide-react-native';
 
 export type RootTabParamList = {
@@ -22,38 +26,27 @@ export type RootTabParamList = {
   Reservations: undefined;
   News: { id?: string } | undefined;
   Upcoming: undefined;
+  Operations: undefined;
   Settings: { returnTo?: 'Reservations' } | undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
+export const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 64 : 80;
 
-// navegador principal con cinco destinos y boton central de noticias elevado
+// Uso un único indicador elevado para todos los destinos visibles.
 export const BottomTabNavigator: React.FC = () => {
   const { t } = useTranslation();
-  const { colors, typography } = useTheme();
-  const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const online = useOnline();
+  const canUsePrivateTabs = !!user && online;
+  const isAdmin = user?.rol === 'ADMIN';
+  const hasOperations = canUsePrivateTabs && (isAdmin || user?.rol === 'STAFF');
 
   return (
     <Tab.Navigator
       initialRouteName="Menu"
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.marca.primario,
-        tabBarInactiveTintColor: colors.texto.secundario,
-        tabBarStyle: {
-          backgroundColor: colors.superficie.fondo,
-          borderTopColor: colors.superficie.borde,
-          // Reservo el espacio de los botones o gestos del sistema sin tapar las pestañas.
-          height: (Platform.OS === 'android' ? 64 : 80) + insets.bottom,
-          paddingBottom: 8 + insets.bottom,
-          paddingTop: 6,
-          elevation: 8, // sombra en Android
-        },
-        tabBarLabelStyle: {
-          ...typography.pie,
-          fontWeight: '600',
-        },
-      }}
+      screenOptions={{ headerShown: false }}
+      tabBar={props => <SlidingPillTabBar {...props} height={TAB_BAR_HEIGHT} />}
     >
       {/* 1. Carta */}
       <Tab.Screen
@@ -68,7 +61,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
 
       {/* 2. Reservas */}
-      <Tab.Screen
+      {canUsePrivateTabs && <Tab.Screen
         name="Reservations"
         component={ReservationsScreen}
         options={{
@@ -77,53 +70,42 @@ export const BottomTabNavigator: React.FC = () => {
             <CalendarDays color={color} size={size} />
           ),
         }}
-      />
+      />}
 
-      {/* 3. Noticias - boton central destacado del diseno C-10 */}
+      {/* 3. Noticias */}
       <Tab.Screen
         name="News"
         component={NewsScreen}
         options={{
           tabBarLabel: t('tabs.news'),
-          tabBarIcon: ({
-            focused,
-          }: {
-            color: string;
-            focused: boolean;
-          }) => (
-            <View
-              style={[
-                styles.botonCentral,
-                {
-                  backgroundColor: focused
-                    ? colors.marca.primario
-                    : colors.marca.primarioSuave,
-                  borderColor: colors.superficie.fondo,
-                },
-              ]}
-            >
-              <Newspaper
-                color={focused ? colors.texto.inverso : colors.marca.primario}
-                size={22}
-              />
-            </View>
+          tabBarIcon: ({ color, size }) => (
+            <Newspaper color={color} size={size} />
           ),
         }}
       />
 
       {/* 4. Proximamente */}
-      <Tab.Screen
+      {canUsePrivateTabs && <Tab.Screen
         name="Upcoming"
         component={UpcomingScreen}
         options={{
-          tabBarLabel: t('tabs.upcoming'),
+          tabBarLabel: t(hasOperations ? 'tabs.upcomingShort' : 'tabs.upcoming'),
+          tabBarAccessibilityLabel: t('tabs.upcoming'),
           tabBarIcon: ({ color, size }: { color: string; size: number }) => (
             <Sparkles color={color} size={size} />
           ),
         }}
-      />
+      />}
 
-      {/* 5. Ajustes */}
+      {hasOperations && <Tab.Screen name="Operations" component={OperationsScreen}
+        options={{
+          tabBarLabel: t(isAdmin ? 'tabs.adminPanel' : 'tabs.staffAgenda'),
+          tabBarIcon: ({ color, size }) => isAdmin
+            ? <Crown color={color} size={size} />
+            : <ClipboardCheck color={color} size={size} />,
+        }} />}
+
+      {/* Ajustes */}
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
@@ -137,15 +119,3 @@ export const BottomTabNavigator: React.FC = () => {
     </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  botonCentral: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-    borderWidth: 2,
-  },
-});

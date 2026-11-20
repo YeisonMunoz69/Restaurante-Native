@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { Text } from 'react-native';
+import { Image, Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DEV_API_URL } from '../../config/connection';
+import { offlineMenuKey } from '../../services/offline-menu';
 import { useConnection } from '../../context/ConnectionContext';
 import { menuApi } from '../../services/menu.service';
 import { MenuScreen } from '../MenuScreen';
@@ -19,6 +22,9 @@ jest.mock('react-i18next', () => ({
 jest.mock('../../context/ConnectionContext', () => ({
   useConnection: jest.fn(),
 }));
+
+let mockOnline = true;
+jest.mock('../../context/ConnectivityContext', () => ({ useOnline: () => mockOnline }));
 
 jest.mock('../../services/menu.service', () => ({
   menuApi: {
@@ -80,8 +86,10 @@ function textValues(tree: ReactTestRenderer.ReactTestRenderer) {
 }
 
 describe('MenuScreen', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+    mockOnline = true;
+    await AsyncStorage.removeItem(offlineMenuKey(DEV_API_URL, restaurantId));
     jest.mocked(useConnection).mockReturnValue({
       settings: {
         environment: 'dev',
@@ -165,6 +173,49 @@ describe('MenuScreen', () => {
     expect(textValues(tree!)).toContain('Descripción completa');
     expect(textValues(tree!)).toContain('menu.badgeUnavailable');
     ReactTestRenderer.act(() => tree!.unmount());
+  });
+
+  it('abre la carta y una foto incluida en el primer arranque sin red', async () => {
+    mockOnline = false;
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(<ThemeProvider><MenuScreen /></ThemeProvider>);
+    });
+    expect(textValues(tree)).toEqual(expect.arrayContaining(['menu.offlineBundled', 'Costilla Ahumada']));
+    expect(tree.root.findAllByProps({ testID: 'menu-add-costilla-ahumada' })).toHaveLength(0);
+    expect(tree.root.findAllByProps({ testID: 'menu-open-calendar' })).toHaveLength(0);
+    await ReactTestRenderer.act(async () => {
+      tree.root.findByProps({ testID: 'menu-open-detail-costilla-ahumada' }).props.onPress();
+    });
+    expect(textValues(tree)).toContain('Porción de arroz, ensalada y papa criolla.');
+    expect(textValues(tree)).toContain('menu.offlinePrice');
+    const detailPhoto = tree.root.findAllByType(Image).find(image => image.props.accessibilityLabel === 'menu.photoLabel' &&
+      image.props.resizeMode === 'contain');
+    expect(detailPhoto?.props.source).toEqual(require('../../assets/carta/costilla-ahumada-01.webp'));
+    expect(api.categories).not.toHaveBeenCalled();
+    expect(api.dishes).not.toHaveBeenCalled();
+    expect(api.dish).not.toHaveBeenCalled();
+    ReactTestRenderer.act(() => tree.unmount());
+  });
+
+  it('usa la copia de la sede después de reiniciar sin red y conserva el detalle', async () => {
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    const page = <ThemeProvider><MenuScreen /></ThemeProvider>;
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(page); });
+    ReactTestRenderer.act(() => tree.unmount());
+    mockOnline = false;
+    api.dishes.mockClear();
+    await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(page); });
+
+    expect(textValues(tree)).toEqual(expect.arrayContaining(['menu.offlineSaved', 'Sopa de prueba']));
+    expect(tree.root.findAllByProps({ testID: `menu-add-${dishId}` })).toHaveLength(0);
+    await ReactTestRenderer.act(async () => {
+      tree.root.findByProps({ testID: `menu-open-detail-${dishId}` }).props.onPress();
+    });
+    expect(textValues(tree)).toEqual(expect.arrayContaining(['Descripción completa', 'menu.offlineNoPhotos']));
+    expect(api.dishes).not.toHaveBeenCalled();
+    expect(api.dish).not.toHaveBeenCalled();
+    ReactTestRenderer.act(() => tree.unmount());
   });
 
   it('keeps a compact date only after the full header scrolls away', async () => {

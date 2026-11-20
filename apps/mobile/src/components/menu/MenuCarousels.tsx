@@ -41,6 +41,8 @@ export function MenuCarousels({
   onMore,
   onRefresh,
   onDetail,
+  onRequireSignIn,
+  readOnly = false,
 }: {
   header?: React.ReactElement;
   onHeaderLayout?: (event: LayoutChangeEvent) => void;
@@ -55,6 +57,8 @@ export function MenuCarousels({
   onMore: () => void;
   onRefresh: () => void;
   onDetail: (id: string) => void;
+  onRequireSignIn?: () => void;
+  readOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const { colors, typography } = useTheme();
@@ -141,7 +145,7 @@ export function MenuCarousels({
       onScroll={onScroll}
       scrollEventThrottle={16}
       refreshControl={
-        <RefreshControl
+        readOnly ? undefined : <RefreshControl
           refreshing={false}
           onRefresh={onRefresh}
           tintColor={colors.marca.primario}
@@ -150,7 +154,7 @@ export function MenuCarousels({
       contentContainerStyle={[styles.content, { paddingBottom: bottomInset }]}
       renderItem={({ item: section }) => {
         // Solo reservo el espacio de una foto cuando la categoría tiene portadas.
-        const sectionHasPhotos = section.data.some(dish => menuGallery(dish).length > 0);
+        const sectionHasPhotos = section.data.some(dish => menuGallery(dish, readOnly).length > 0);
         return (
           <View style={styles.section}>
             <Text
@@ -179,7 +183,7 @@ export function MenuCarousels({
               windowSize={5}
               ListEmptyComponent={<Note>{t('discovery.emptyCategory')}</Note>}
               renderItem={({ item: dish }) => {
-                const photo = menuGallery(dish)[0]?.source;
+                const photo = menuGallery(dish, readOnly)[0]?.source;
                 const localPhoto = typeof photo === 'number' ? Image.resolveAssetSource(photo) : null;
                 const portrait = (localPhoto?.height ?? 0) > (localPhoto?.width ?? 0);
                 const count =
@@ -252,7 +256,7 @@ export function MenuCarousels({
                         >
                           {formatCop(dish.precio)}
                         </Text>
-                        <Text
+                        {!readOnly && <Text
                           style={[
                             typography.pie,
                             { color: colors.texto.secundario },
@@ -263,18 +267,18 @@ export function MenuCarousels({
                               ? 'menu.badgeAvailable'
                               : 'menu.badgeUnavailable',
                           )}
-                        </Text>
+                        </Text>}
                       </View>
                     </Pressable>
-                    <Button
+                    {!readOnly && <Button
                       testID={`menu-add-${dish.id}`}
                       accessibilityLabel={t('discovery.addDish', { name: dish.nombre })}
                       label={t('discovery.addShort') + (count ? ` · ${count}` : '')}
                       icon={Plus}
                       disabled={!canAdd}
-                      onPress={() => draft.setQuantity(dish, count + 1, fecha)}
+                      onPress={onRequireSignIn ?? (() => draft.setQuantity(dish, count + 1, fecha))}
                       style={styles.add}
-                    />
+                    />}
                   </View>
                 );
               }}
@@ -290,7 +294,7 @@ export function MenuCarousels({
         )
       }
       ListFooterComponent={
-        <View style={styles.footer}>
+        readOnly ? undefined : <View style={styles.footer}>
           {awaitingCategory && !loadMoreFailed ? (
             <ActivityIndicator
               testID="menu-loading-more"

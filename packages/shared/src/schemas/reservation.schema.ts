@@ -48,6 +48,9 @@ export const ReservationRejectSchema = z
   .object({ motivo: z.string().trim().min(3).max(500) })
   .strict();
 
+export const ReservationApproveSchema = z.object({ comprobanteId: z.string().uuid().optional() }).strict();
+export const RESERVATION_RECEIPT_MAX_BYTES = 10 * 1024 * 1024;
+
 export const ReservationListQuerySchema = z
   .object({
     fecha: CalendarDateSchema.optional(),
@@ -75,6 +78,19 @@ export interface ReservationLineResult {
   subtotal: number;
 }
 
+export interface ReservationReceipt {
+  id: string;
+  ancho: number;
+  alto: number;
+  subidoEn: string;
+}
+
+export interface ReservationReceiptImage {
+  imagen: string;
+  ancho: number;
+  alto: number;
+}
+
 export interface ReservationResult {
   id: string;
   codigo: string;
@@ -95,4 +111,5 @@ export interface ReservationResult {
   completadaEn: string | null;
   lineas: ReservationLineResult[];
   ticket: string;
+  comprobante?: ReservationReceipt | null;
 }

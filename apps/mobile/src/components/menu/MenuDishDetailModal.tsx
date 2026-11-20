@@ -29,6 +29,7 @@ export function MenuDishDetailModal({
   fecha,
   dishId,
   slug,
+  offlineDish,
   onClose,
 }: {
   visible: boolean;
@@ -36,29 +37,33 @@ export function MenuDishDetailModal({
   fecha: string;
   dishId: string | null;
   slug?: string;
+  offlineDish?: MenuDish | null;
   onClose: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, typography, spacing, radii } = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const [dish, setDish] = useState<MenuDish | null>(null);
+  const [onlineDish, setDish] = useState<MenuDish | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const shareUrl = dish?.disponible ? dishLink(dish.slug, fecha) : null;
-  const photos = dish ? menuGallery(dish) : [];
+  const readOnly = offlineDish !== undefined;
+  const dish = readOnly ? offlineDish : onlineDish;
+  const shareUrl = !readOnly && dish?.disponible ? dishLink(dish.slug, fecha) : null;
+  const photos = dish ? menuGallery(dish, readOnly) : [];
   const galleryWidth = Math.min(520, width - spacing.margenLateral * 2);
   const photoHeight = Math.min(360, Math.round(galleryWidth * 0.85));
   const description = dish?.descripcion?.trim() || dish?.descripcionBreve?.trim();
 
   // Vuelvo a la primera foto cuando cambia el plato y descarto respuestas de una ficha cerrada.
   useEffect(() => {
-    if (!visible || (!dishId && !slug) || !restauranteId) return;
+    if (!visible || (!dishId && !slug)) return;
+    setPhotoIndex(0);
+    if (readOnly || !restauranteId) return;
     let current = true;
     setDish(null);
-    setPhotoIndex(0);
     setError(false);
     setLoading(true);
 
@@ -79,7 +84,7 @@ export function MenuDishDetailModal({
     return () => {
       current = false;
     };
-  }, [visible, restauranteId, fecha, dishId, slug, attempt]);
+  }, [visible, restauranteId, fecha, dishId, slug, attempt, readOnly]);
 
   return (
     <Modal
@@ -118,14 +123,18 @@ export function MenuDishDetailModal({
           )}
         </View>
 
-        {loading ? (
+        {!readOnly && loading ? (
           <View style={styles.centered}>
             <ActivityIndicator testID="menu-detail-loading" color={colors.marca.primario} />
             <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
               {t('menu.loadingDetail')}
             </Text>
           </View>
-        ) : error ? (
+        ) : readOnly && !dish ? (
+          <View style={styles.centered}>
+            <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>{t('menu.offlineDetailMissing')}</Text>
+          </View>
+        ) : !readOnly && error ? (
           <View style={styles.centered}>
             <Text testID="menu-detail-error" style={[typography.cuerpoM, { color: colors.estado.error }]}>
               {t('menu.detailError')}
@@ -148,7 +157,7 @@ export function MenuDishDetailModal({
                   <Text style={[typography.precio, { color: colors.marca.acento }]}>
                     {formatCop(dish.precio)}
                   </Text>
-                  <View style={[styles.availability, {
+                  {!readOnly && <View style={[styles.availability, {
                     backgroundColor: dish.disponible ? colors.marca.primarioSuave : colors.superficie.elevada,
                     borderRadius: radii.completo,
                   }]}>
@@ -158,8 +167,11 @@ export function MenuDishDetailModal({
                     }]}>
                       {t(dish.disponible ? 'menu.badgeAvailable' : 'menu.badgeUnavailable')}
                     </Text>
-                  </View>
+                  </View>}
                 </View>
+                {readOnly && <Text style={[typography.pie, { color: colors.texto.secundario }]}>
+                  {t('menu.offlinePrice')}
+                </Text>}
               </View>
               {photos.length ? (
                 <View>
@@ -198,7 +210,7 @@ export function MenuDishDetailModal({
                 <View style={[styles.noPhotos, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
                   <UtensilsCrossed size={25} color={colors.texto.secundario} />
                   <Text style={[typography.pie, { color: colors.texto.secundario, textAlign: 'center' }]}>
-                    {t('menu.noPhotos')}
+                    {t(readOnly ? 'menu.offlineNoPhotos' : 'menu.noPhotos')}
                   </Text>
                 </View>
               )}

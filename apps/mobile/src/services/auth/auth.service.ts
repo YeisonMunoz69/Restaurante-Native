@@ -156,9 +156,9 @@ export const restoreSession = async (): Promise<AuthSession | null> => {
     }
 
     return await acceptSession(response.data);
-  } catch {
-    console.log('No se pudo restaurar la sesion previa, se iniciara como invitado.');
-    await clearTokens();
+  } catch (error) {
+    const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+    if (status === 401 || status === 403) await clearTokens();
     return null;
   }
 };

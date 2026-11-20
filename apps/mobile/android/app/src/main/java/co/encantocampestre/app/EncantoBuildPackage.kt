@@ -75,7 +75,8 @@ class EncantoBuildModule(context: ReactApplicationContext) : ReactContextBaseJav
 }
 
 class EncantoBuildPackage : ReactPackage {
-    override fun createNativeModules(context: ReactApplicationContext): List<NativeModule> = listOf(EncantoBuildModule(context))
+    override fun createNativeModules(context: ReactApplicationContext): List<NativeModule> =
+        listOf(EncantoBuildModule(context), ReceiptShareModule(context))
     override fun createViewManagers(context: ReactApplicationContext): List<ViewManager<*, *>> =
         listOf(EncantoBackdropManager())
 }

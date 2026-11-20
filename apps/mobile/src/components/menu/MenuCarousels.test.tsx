@@ -35,7 +35,7 @@ it('ofrece acceso a la última categoría desde el selector inicial y permite vo
   await Renderer.act(async () => {
     tree = Renderer.create(
       <ThemeProvider>
-        <OrderDraftProvider scope="local/r1">
+        <OrderDraftProvider scope="local/r1" ownerId="u1">
           <Observe />
           <MenuCarousels
             sections={sections}
@@ -98,6 +98,27 @@ it('busca una categoría de páginas posteriores sin anunciar que está vacía',
   expect(tree.root.findAllByProps({ testID: 'menu-empty' })).toHaveLength(0);
   Renderer.act(() => tree.update(render(sections, false)));
   expect(tree.root.findAllByType(Text).map(node => node.props.children)).toContain('Plato de la última categoría');
+  Renderer.act(() => tree.unmount());
+});
+
+it('solicita Google al pulsar Añadir sin guardar un plato de invitado', async () => {
+  const signIn = jest.fn();
+  let tree!: Renderer.ReactTestRenderer;
+  await Renderer.act(async () => {
+    tree = Renderer.create(
+      <ThemeProvider>
+        <OrderDraftProvider scope="local/r1">
+          <Observe />
+          <MenuCarousels sections={sections} fecha="2026-10-25" open loadingMore={false}
+            hasMore={false} onMore={jest.fn()} onRefresh={jest.fn()} onDetail={jest.fn()}
+            onRequireSignIn={signIn} />
+        </OrderDraftProvider>
+      </ThemeProvider>,
+    );
+  });
+  Renderer.act(() => tree.root.findByProps({ testID: 'menu-add-d1' }).props.onPress());
+  expect(signIn).toHaveBeenCalledTimes(1);
+  expect(draft.lines).toEqual([]);
   Renderer.act(() => tree.unmount());
 });
 
