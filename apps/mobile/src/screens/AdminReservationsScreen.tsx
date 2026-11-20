@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
+import { Share, StyleSheet, Text, View } from 'react-native';
 import { CalendarDays, ClipboardCheck, FileCheck2 } from 'lucide-react-native';
 import { CalendarDateSchema } from '@encanto/shared';
 import { Feedback as Alert } from '../components/feedback/Feedback';
@@ -15,6 +15,7 @@ import { reservationsApi, type ReceiptPreview, type ReservationWithCustomer } fr
 import { formatCivilDate, todayInBogota } from '../utils/formatters';
 import { BackButton } from '../components/navigation/BackButton';
 import { ReservationImagePreview } from '../components/reservations/ReservationReceipt';
+import { ContextHelp, LoadingOverlay } from '../components/feedback/ContextOverlay';
 
 type Tab = 'requests' | 'agenda';
 
@@ -160,6 +161,8 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
           <Text accessibilityRole="header" style={[typography.tituloL, styles.flex, {
             color: isAdmin ? LightColors.texto.inverso : colors.texto.primario,
           }]}>{t(isAdmin ? 'reservations.adminTitle' : 'reservations.staffWorkspace')}</Text>
+          <ContextHelp onDark={isAdmin} title={t(isAdmin ? 'reservations.adminTitle' : 'reservations.staffWorkspace')}
+            text={t(isAdmin ? 'reservations.adminProofHelp' : 'reservations.staffWorkspaceDescription')} />
         </View>
         {isAdmin && (
           <View style={styles.row}>
@@ -182,7 +185,6 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
           </View>
         )}
         {error && <Note live tone="error">{error}</Note>}
-        {loading && <ActivityIndicator accessibilityLabel={t('common.loading')} color={colors.marca.primario} />}
         {!loading && tab === 'requests' && isAdmin && requests.length === 0 && <Note>{t('reservations.noRequests')}</Note>}
         {!loading && tab === 'agenda' && agenda.length === 0 && <Note>{t('reservations.noAgenda')}</Note>}
 
@@ -218,7 +220,7 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
               {!!receipt && (
                 <Action label={t('reservations.receiptReview')} disabled={reading} onPress={() => void inspectReceipt(reservation.id)} />
               )}
-              {!!receipt && <Note>{t(checked ? 'reservations.receiptReviewed' : 'reservations.receiptReviewNeeded')}</Note>}
+              {checked && <Text style={[typography.pie, { color: colors.marca.primario }]}>{t('reservations.receiptReviewed')}</Text>}
               <Action variant="primary" label={t('reservations.approve')} disabled={!checked || !!busyId || expires}
                 onPress={() => { if (receipt && checked) act(reservation.id,
                   () => reservationsApi.approve(reservation.id, receipt.id), t('reservations.approve')); }} />
@@ -255,6 +257,7 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
         ))}
         <Action label={t('common.retry')} disabled={loading} onPress={() => void load()} />
       </KeyboardAwareScrollView>
+      <LoadingOverlay visible={(loading || reading || !!busyId) && !preview} />
       {isAdmin && !!preview && <ReservationImagePreview image={preview.image} title={t('reservations.receiptReview')}
         onViewed={() => setReviewed(current => ({ ...current, [preview.id]: preview.image.id }))}
         onClose={() => setPreview(null)} />}

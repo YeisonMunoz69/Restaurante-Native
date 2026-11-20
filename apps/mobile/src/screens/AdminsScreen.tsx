@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, BackHandler, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
 import { BackButton } from '../components/navigation/BackButton';
 import { Action, Field, Note, Panel } from '../components/attention/Controls';
+import { ContextHelp, LoadingOverlay } from '../components/feedback/ContextOverlay';
 import { Feedback } from '../components/feedback/Feedback';
 import { adminsApi, type AccountRole } from '../services/admins.service';
 
@@ -68,9 +69,10 @@ export function AdminsScreen({ onBack }: { onBack: () => void }) {
   return <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.superficie.fondo }]}>
     <KeyboardAwareScrollView contentContainerStyle={styles.content}>
       <BackButton onPress={onBack} disabled={busy} />
-      <Text style={[typography.display, { color: colors.texto.primario }]}>{t('admins.title')}</Text>
-      <Note>{t('admins.help')}</Note>
-      {busy && <ActivityIndicator accessibilityLabel={t('common.loading')} />}
+      <View style={styles.heading}>
+        <Text accessibilityRole="header" style={[typography.display, styles.title, { color: colors.texto.primario }]}>{t('admins.title')}</Text>
+        <ContextHelp title={t('admins.title')} text={t('admins.help')} />
+      </View>
       {!!message && <Note live tone={message === t('admins.saved') ? 'success' : 'error'}>{message}</Note>}
       {!data && <Action label={t('common.retry')} disabled={busy} onPress={() => void load()} />}
       {data && <>
@@ -100,10 +102,13 @@ export function AdminsScreen({ onBack }: { onBack: () => void }) {
         </Panel>)}
       </>}
     </KeyboardAwareScrollView>
+    <LoadingOverlay visible={busy} />
   </SafeAreaView>;
 }
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' },
+  heading: { flexDirection: 'row', alignItems: 'center' },
+  title: { flex: 1 },
   roles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

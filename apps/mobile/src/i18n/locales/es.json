@@ -110,6 +110,7 @@
       "visit": "Tu visita",
       "review": "Revisa y envía"
     },
+    "adminProofHelp": "Abre el comprobante vigente y verifica el pago antes de aprobar. Si el cliente reemplaza la imagen, deberás revisar la nueva captura.",
     "visitTimes": "Horarios disponibles",
     "continueReview": "Continuar al resumen",
     "editOrder": "Agregar o cambiar platos",
@@ -426,6 +427,7 @@
     "retry": "Reintentar",
     "internetRequired": "Conéctate a internet para usar esta sección.",
     "back": "Atrás",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "helpFor": "Ayuda sobre {{title}}"
   }
 }

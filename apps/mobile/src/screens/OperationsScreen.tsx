@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { LightColors } from '../theme/tokens';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
+import { ContextHelp } from '../components/feedback/ContextOverlay';
 import { AdminReservationsScreen } from './AdminReservationsScreen';
 import { AttentionScreen } from './AttentionScreen';
 import { MenuAdminScreen } from './MenuAdminScreen';
@@ -55,11 +56,13 @@ function AdminHub() {
     <SafeAreaView edges={['top']} style={[styles.screen, { backgroundColor: colors.superficie.fondo }]}>
       <KeyboardAwareScrollView contentContainerStyle={[styles.content, { paddingHorizontal: spacing.margenLateral }]}>
         <View style={[styles.hero, { backgroundColor: colors.admin.encabezado, borderRadius: radii.l }]}>
-          <Crown size={30} color={onBanner} />
+          <View style={styles.heroRow}>
+            <Crown size={30} color={onBanner} />
+            <ContextHelp title={t('reservations.adminWorkspace')} text={t('reservations.adminWorkspaceDescription')} onDark />
+          </View>
           <Text accessibilityRole="header" style={[typography.display, { color: onBanner }]}>
             {t('reservations.adminWorkspace')}
           </Text>
-          <Text style={[typography.cuerpoM, { color: onBanner }]}>{t('reservations.adminWorkspaceDescription')}</Text>
         </View>
         {destinations.map(destination => {
           const Icon = destination.icon;
@@ -85,6 +88,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { width: '100%', maxWidth: 760, alignSelf: 'center', gap: 10, paddingTop: 10, paddingBottom: 32 },
   hero: { padding: 20, gap: 10, marginBottom: 6 },
+  heroRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   destination: { minHeight: 58, padding: 15, flexDirection: 'row', alignItems: 'center', gap: 12 },
   label: { flex: 1 },
 });
