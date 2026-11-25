@@ -1,5 +1,8 @@
 import { webUrl } from '../../lib/content';
 
+// Leo la URL al servir la página para poder configurar el APK desde el entorno de ejecución.
+export const dynamic = 'force-dynamic';
+
 export default function Download() {
   const apk = webUrl(process.env.ENCANTO_ANDROID_DOWNLOAD_URL);
   return (
