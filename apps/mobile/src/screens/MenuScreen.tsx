@@ -84,9 +84,16 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
   const headerHeight = useRef(Infinity);
   const requestNumber = useRef(0);
   const loadingMoreRef = useRef(false);
-  const readOnly = !online || (isAxiosError(error) &&
-    (!error.response || error.response.status >= 500));
+  const unavailableAfterRequest = online && isAxiosError(error) &&
+    (!error.response || error.response.status >= 500);
+  const readOnly = !online || unavailableAfterRequest;
   const cachedMenu = cached?.key === cacheKey ? cached.menu : null;
+  let readOnlyMessageKey: string;
+  if (unavailableAfterRequest) {
+    readOnlyMessageKey = cachedMenu ? 'menu.requestFallbackSaved' : 'menu.requestFallbackBundled';
+  } else {
+    readOnlyMessageKey = cachedMenu ? 'menu.offlineSaved' : 'menu.offlineBundled';
+  }
 
   useEffect(() => {
     if (!isFocused || readOnly) setShowCalendar(false);
@@ -300,10 +307,10 @@ export const MenuScreen: React.FC<{ route?: RouteProp<RootTabParamList, 'Menu'> 
       {readOnly && (
         <View style={[styles.date, { backgroundColor: colors.superficie.elevada, borderRadius: radii.l }]}>
           <Text accessibilityRole="header" style={[typography.etiqueta, { color: colors.texto.primario }]}>
-            {t('menu.offlineTitle')}
+            {t(unavailableAfterRequest ? 'menu.requestFallbackTitle' : 'menu.offlineTitle')}
           </Text>
           <Text style={[typography.pie, { color: colors.texto.secundario }]}>
-            {t(cachedMenu ? 'menu.offlineSaved' : 'menu.offlineBundled')}
+            {t(readOnlyMessageKey)}
           </Text>
           {online && <Button testID="menu-retry" label={t('common.retry')} variant="tertiary"
             onPress={() => void loadInitial()} style={styles.nextOpen} />}
