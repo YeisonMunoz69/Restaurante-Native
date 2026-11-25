@@ -213,6 +213,7 @@ describe.skipIf(!url)(
         fecha,
         horaInicio: '12:00',
         numComensales: 2,
+        telefono: '3001234567',
         lineas: [],
         nota: null,
       });
