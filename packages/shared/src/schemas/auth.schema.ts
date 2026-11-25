@@ -78,7 +78,7 @@ export type ProfileUpdateDto = z.infer<typeof ProfileUpdateSchema>;
 
 export interface AccountProfile {
   nombre: string;
-  telefono: string;
+  telefono: string | null;
   ciudad: string | null;
   region: string | null;
   nacionalidad: string;

@@ -74,11 +74,13 @@ describe('AuthService Google', () => {
     vi.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({ getPayload: () => identity } as never);
   });
 
-  it('pide teléfono para un alta nueva y evita que el cliente asigne su propio rol', async () => {
+  it('permite el alta Google sin teléfono y evita que el cliente asigne su propio rol', async () => {
     expect(GoogleLoginSchema.safeParse({ idToken: 't', rol: 'ADMIN' }).success).toBe(false);
     findUnique.mockResolvedValue(null);
-    await expect(service.googleLogin({ idToken: 't' })).rejects.toMatchObject({ response: { code: 'GOOGLE_PHONE_REQUIRED' } });
-    expect(create).not.toHaveBeenCalled();
+    create.mockResolvedValue({ ...account, telefono: null });
+    await service.googleLogin({ idToken: 't' });
+    expect(create).toHaveBeenCalledWith({ data: expect.objectContaining({ googleSub: identity.sub, telefono: null }) });
+    create.mockClear();
     create.mockResolvedValue(account);
     await service.googleLogin({ idToken: 't', telefono: '3001234567' });
     expect(create).toHaveBeenCalledWith({ data: expect.objectContaining({ googleSub: identity.sub, telefono: '3001234567' }) });

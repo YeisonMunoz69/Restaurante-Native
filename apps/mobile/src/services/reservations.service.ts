@@ -23,7 +23,7 @@ export interface ReservationWithCustomer extends ReservationResult {
   cliente: {
     id: string;
     nombre: string;
-    telefono: string;
+    telefono: string | null;
     cancelaciones: number;
     inasistencias: number;
   };

@@ -7,6 +7,7 @@ import { CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, Clock3, 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useConnection } from '../context/ConnectionContext';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { Action, Field, Note } from '../components/attention/Controls';
 import { KeyboardAwareScrollView } from '../components/KeyboardAwareScrollView';
@@ -52,6 +53,7 @@ export function ReservationCreateScreen({
 }) {
   const { t } = useTranslation();
   const { settings } = useConnection();
+  const { user, updateProfile } = useAuth();
   const cart = useOrderDraft();
   const { saved, saveFields, saveReceipt, clearReceipt, reset } = useReservationDraft();
   const { colors, typography, radii } = useTheme();
@@ -69,6 +71,7 @@ export function ReservationCreateScreen({
   }));
   const quantitiesRef = useRef(quantities);
   const [note, setNote] = useState(initial?.note ?? '');
+  const [telefono, setTelefono] = useState(user?.perfil?.telefono ?? '');
   const [result, setResult] = useState<CreateReservationResult | null>(initial?.result ?? null);
   const [step, setStep] = useState<ReservationStep>(mustChooseDate ? 'visit' : initial?.step ?? 'visit');
   const [available, setAvailable] = useState(false);
@@ -250,8 +253,15 @@ export function ReservationCreateScreen({
   const submit = async () => {
     if (submitting.current || busy || !slot || result) return;
     if (!isAuthenticated) { onRequireLogin(); return; }
+    const requiereTelefono = !user?.perfil?.telefono?.trim();
+    const telefonoLimpio = telefono.trim();
+    if (requiereTelefono && !/^\d{10}$/.test(telefonoLimpio)) {
+      setError(t('auth.googlePhoneInvalid'));
+      return;
+    }
     const data = ReservationCreateSchema.safeParse({ fecha: date, horaInicio: slot.horaInicio,
-      numComensales: people, lineas: requested.map(([platoId, cantidad]) => ({ platoId, cantidad })), nota: note.trim() || null });
+      numComensales: people, lineas: requested.map(([platoId, cantidad]) => ({ platoId, cantidad })), nota: note.trim() || null,
+      ...(requiereTelefono ? { telefono: telefonoLimpio } : {}) });
     if (!data.success) { setError(t('reservations.invalidRequest')); return; }
     submitting.current = true;
     setBusy(true);
@@ -259,6 +269,7 @@ export function ReservationCreateScreen({
     setNotice(null);
     try {
       const created = await reservationsApi.create(data.data);
+      if (requiereTelefono) await updateProfile({ telefono: telefonoLimpio }).catch(() => undefined);
       setResult(created);
       setStep('sent');
       cart.clear();
@@ -375,6 +386,11 @@ export function ReservationCreateScreen({
         </>}
         {step === 'review' && <>
           {summary}
+          {!user?.perfil?.telefono?.trim() && <View style={[styles.surface, { backgroundColor: colors.superficie.elevada }]}>
+            <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>{t('auth.googlePhonePrompt')}</Text>
+            <Field label={t('auth.phone')} keyboardType="phone-pad" value={telefono}
+              onChangeText={value => setTelefono(value.replace(/\D/g, '').slice(0, 10))} maxLength={10} />
+          </View>}
           <Text accessibilityRole="header" style={[typography.tituloM, { color: colors.texto.primario }]}>{t('reservations.selectedDishes')}</Text>
           {selected.map(dish => <DishRow key={dish.id} dish={dish} count={quantities[dish.id]} />)}
           {!selected.length && !busy && <Note>{t('reservations.noOrder')}</Note>}

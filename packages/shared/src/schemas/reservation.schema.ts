@@ -34,6 +34,7 @@ export const ReservationCreateSchema = z
     fecha: CalendarDateSchema,
     horaInicio: CalendarTimeSchema,
     numComensales: z.number().int().min(1).max(120),
+    telefono: z.string().trim().regex(/^\d{10}$/).optional(),
     lineas: z.array(ReservationLineInputSchema).max(50).default([]),
     nota: z.string().trim().max(500).nullable().default(null),
   })
