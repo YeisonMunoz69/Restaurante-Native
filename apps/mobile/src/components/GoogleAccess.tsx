@@ -57,6 +57,15 @@ export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
     } catch (failure) {
       const apiFailure = isAxiosError(failure);
       const response = apiFailure ? failure.response : undefined;
+      if (__DEV__ && BUILD_ENVIRONMENT === 'dev') {
+        console.warn('[EC-75][google] sign-in failed', {
+          stage: apiFailure ? 'api' : 'credential',
+          name: failure instanceof Error ? failure.name : 'Unknown',
+          message: failure instanceof Error ? failure.message.slice(0, 120) : 'Unknown',
+          code: apiFailure ? failure.code : undefined,
+          status: typeof response?.status === 'number' ? response.status : undefined,
+        });
+      }
       if (response?.data?.code === 'GOOGLE_PHONE_REQUIRED' && token && !link) {
         setPendingToken(token);
       } else {

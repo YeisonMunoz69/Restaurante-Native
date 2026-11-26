@@ -12,6 +12,7 @@ import { Feedback } from '../components/feedback/Feedback';
 import { useConnection } from '../context/ConnectionContext';
 import { useOnline } from '../context/ConnectivityContext';
 import { connectionUrl } from '../config/connection';
+import { BUILD_ENVIRONMENT } from '../config/build-variant';
 import { useTheme } from '../theme/ThemeContext';
 import { newsImageUrl, readNews } from '../services/news.service';
 import { newsLink } from '../config/web-links';
@@ -65,8 +66,19 @@ function NewsFeed({ base, restaurant, linkedId, clearLink }: {
       setPosts(result.posts);
       setCached(result.cached);
       setStatus('ready');
-    }).catch(() => {
+    }).catch(error => {
       if (controller.signal.aborted) return;
+      if (__DEV__ && BUILD_ENVIRONMENT === 'dev') {
+        const detail = error && typeof error === 'object' ? error as {
+          name?: unknown; message?: unknown; code?: unknown; response?: { status?: unknown };
+        } : {};
+        console.warn('[EC-75][news] request failed', {
+          name: typeof detail.name === 'string' ? detail.name : 'Unknown',
+          message: typeof detail.message === 'string' ? detail.message.slice(0, 120) : 'Unknown',
+          code: typeof detail.code === 'string' ? detail.code : undefined,
+          status: typeof detail.response?.status === 'number' ? detail.response.status : undefined,
+        });
+      }
       setPosts([]);
       setCached(false);
       setStatus('error');
