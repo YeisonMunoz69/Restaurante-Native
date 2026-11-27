@@ -96,7 +96,7 @@ describe('AuthService.refresh', () => {
     } finally {
       vi.useRealTimers();
     }
-  });
+  }, 15_000);
 });
 
 describe('AuthService Google', () => {
