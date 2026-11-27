@@ -1,5 +1,7 @@
 # Plan de sprints — 28 de agosto al 13 de noviembre de 2026
 
+**Entrega del 27 de noviembre.** La [matriz de entrega](Entrega_2026-11-27.md) registra las pruebas en PostgreSQL de QA, el APK de referencia y los pendientes de aceptación física, Jira y Drive. La evidencia del 19 de noviembre queda como referencia del alcance y de los estados registrados entonces.
+
 **Trabajo local de Sprint 4 del 19 de noviembre.** Avanzamos EC-41/42/43/44/46/47/48 y registramos las comprobaciones en Jira. Validamos 282 pruebas API, 99 móviles, la compilación de Next.js y el runtime Docker con diez migraciones. Conservamos los cortes con tags locales y la integración queda pendiente del bloqueo de Actions. [Detalle y tags](Continuidad_Local_Sprint4_2026-11-19.md).
 
 **Seguimiento del 19 de noviembre.** Verificamos EC-32 y EC-34 y quedaron Listo en Jira. Actualizamos EC-22/31/36/37/38/39/40 con evidencia. En el S21 validamos 100 platos sintéticos, el rechazo de una solicitud futura y el logo de ambas variantes Android. Conservamos las fechas de los sprints. [Pruebas y pendientes](evidencias/sprint-3-s21-2026-11-19/README.md).
