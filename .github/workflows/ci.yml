@@ -164,7 +164,7 @@ jobs:
         env:
           DEPLOY_BRANCH: ${{ secrets.MAIN_BRANCH }}
           DEPLOY_SHA: ${{ github.sha }}
-          RESTAURANT_WHATSAPP: ${{ vars.RESTAURANT_WHATSAPP }}
+          RESTAURANT_WHATSAPP: ${{ secrets.RESTAURANT_WHATSAPP }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
