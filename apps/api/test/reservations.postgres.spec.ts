@@ -120,6 +120,29 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     }
   });
 
+  it('guarda el teléfono al crear la primera reserva y lo reutiliza en la siguiente', async () => {
+    const id = '30000000-0000-4000-8000-000000000005';
+    const correo = 'primera-reserva@example.test';
+    await prisma.user.create({ data: { id, correo, nombre: 'Comensal de prueba' } });
+    const token = app.get(JwtService).sign({ sub: id, correo, rol: 'COMENSAL', sid: 'qa-primera-reserva' });
+    const submit = (payload: Record<string, unknown>) =>
+      request(app.getHttpServer()).post('/api/v1/reservas').set('Authorization', 'Bearer ' + token).send(payload);
+    const readPhone = async () => (await prisma.user.findUniqueOrThrow({ where: { id } })).telefono;
+    const payload = { fecha, horaInicio: '10:00', numComensales: 2, lineas: [], nota: null };
+    const telefono = '3001234567';
+
+    const missing = await submit(payload).expect(400);
+    expect(missing.body.code).toBe('RESERVATION_PHONE_REQUIRED');
+    // Si la franja no existe, la transacción tampoco guarda el teléfono en el perfil.
+    await submit({ ...payload, horaInicio: '09:00', telefono }).expect(409);
+    expect(await readPhone()).toBeNull();
+
+    await submit({ ...payload, telefono }).expect(201);
+    expect(await readPhone()).toBe(telefono);
+    await submit({ ...payload, horaInicio: '11:30' }).expect(201);
+    expect(await prisma.reservation.count({ where: { usuarioId: id } })).toBe(2);
+  });
+
   it('conserva el código al reintentar el comprobante y confirma la misma reserva solo como ADMIN', async () => {
     const jwt = app.get(JwtService);
     const diner = jwt.sign({ sub: dinerId, correo: 'usuario1@example.test', rol: 'COMENSAL', sid: 'qa-comensal' });
