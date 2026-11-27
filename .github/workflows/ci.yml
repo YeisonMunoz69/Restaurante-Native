@@ -139,6 +139,7 @@ jobs:
           done
           [[ "$(docker inspect --format '{{.State.Health.Status}}' "$api")" == healthy ]]
           curl --fail --show-error http://127.0.0.1:18080/api/v1/health
+          curl --fail --show-error --silent --output /dev/null http://127.0.0.1:18080/api/v1/carta-fotos/sancocho-de-gallina-01.webp
           docker exec "$api" node -e "fetch('http://127.0.0.1:3000/api/v1/health').then(async r => { if (!r.ok) process.exit(1); console.log(await r.text()) }).catch(() => process.exit(1))"
 
           image_id=$(docker image inspect --format '{{.Id}}' "$runtime_image")
