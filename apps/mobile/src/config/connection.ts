@@ -52,16 +52,28 @@ function activate(settings: ConnectionSettings) {
   API_CONFIG.baseUrl = connectionUrl(settings);
   apiClient.defaults.baseURL = API_CONFIG.baseUrl;
 }
+
+// Guardo la conexión en el llavero antes de usarla para autenticar.
+async function persistConnection(settings: ConnectionSettings) {
+  const saved = await Keychain.setGenericPassword(
+    'connection',
+    JSON.stringify(settings),
+    { service: SERVICE },
+  );
+  if (!saved) throw new Error('No pudimos guardar la conexión');
+}
 export async function loadConnection(): Promise<ConnectionSettings> {
   const stored = await Keychain.getGenericPassword({ service: SERVICE });
   const previous = stored ? JSON.parse(stored.password) : null;
   const wrongVariant = Boolean(previous && BUILD_ENVIRONMENT && previous.environment !== BUILD_ENVIRONMENT);
-  // Al convertir el APK anterior en VPS no envío su refresh token local al servidor compartido.
-  if (wrongVariant) await clearTokens();
-  // Una actualización del APK original a VPS no debe heredar la conexión local antigua.
   const settings = previous && !wrongVariant
     ? validateConnection(previous)
     : DEFAULT_CONNECTION;
+  if (wrongVariant) {
+    // Descarto la sesión del servidor anterior y guardo el cambio para hacerlo solo una vez.
+    await clearTokens();
+    await persistConnection(settings);
+  }
   activate(settings);
   return settings;
 }
@@ -75,14 +87,7 @@ export async function saveConnection(
   if (authenticated && changed)
     throw new Error('Cierre la sesión antes de cambiar el entorno');
   if (changed) await clearTokens();
-  const saved = await Keychain.setGenericPassword(
-    'connection',
-    JSON.stringify(settings),
-    {
-      service: SERVICE,
-    },
-  );
-  if (!saved) throw new Error('No pudimos guardar la conexión');
+  await persistConnection(settings);
   activate(settings);
   return settings;
 }
