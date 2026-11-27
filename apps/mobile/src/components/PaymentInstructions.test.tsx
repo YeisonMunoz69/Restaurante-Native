@@ -1,11 +1,12 @@
 import React from 'react';
 import Renderer from 'react-test-renderer';
-import { Linking, Text } from 'react-native';
+import { Linking, NativeModules, Text } from 'react-native';
 import { ThemeProvider } from '../theme/ThemeContext';
 import { paymentApi } from '../services/payment.service';
 import { Action } from './attention/Controls';
 import { PaymentInstructions } from './PaymentInstructions';
-const mockTranslate = (key: string) => key;
+const mockTranslate = (key: string, values?: { name?: string }) =>
+  values?.name ? `${key}: ${values.name}` : key;
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: mockTranslate }),
 }));
@@ -31,6 +32,7 @@ beforeEach(() => {
 afterEach(() => {
   Renderer.act(() => tree?.unmount());
   jest.restoreAllMocks();
+  delete NativeModules.EncantoPaymentApps;
 });
 async function mount() {
   await Renderer.act(async () => {
@@ -105,4 +107,39 @@ it('recarga el contacto y abre una consulta aunque los datos de pago estén pend
   expect(current).toHaveBeenCalledTimes(3);
   expect(open).toHaveBeenCalledWith('https://wa.me/573000000001?text=EC-QA%0ATicket%20QA%0Apayments.whatsappInquiry');
   expect(texts()).not.toContain('payments.whatsappNotPublished');
+});
+
+it('ofrece solo las apps detectadas y abre exclusivamente la que el usuario eligió', async () => {
+  const available = jest.fn().mockResolvedValue([
+    { packageName: 'com.nequi.MobileApp', name: 'Nequi' },
+    { packageName: 'co.com.bancolombia.personas.superapp', name: 'Mi Bancolombia' },
+  ]);
+  const open = jest.fn().mockResolvedValue(undefined);
+  NativeModules.EncantoPaymentApps = { available, open };
+  await mount();
+
+  expect(available).not.toHaveBeenCalled();
+  await Renderer.act(async () => action('payments.openPaymentApps').props.onPress());
+  expect(action('payments.openPaymentApp: Nequi')).toBeDefined();
+  expect(action('payments.openPaymentApp: DaviPlata')).toBeUndefined();
+  expect(open).not.toHaveBeenCalled();
+  await Renderer.act(async () => action('payments.openPaymentApp: Mi Bancolombia').props.onPress());
+  expect(open).toHaveBeenCalledWith('co.com.bancolombia.personas.superapp');
+  expect(texts()).toContain('payments.shareAfterPayment');
+});
+
+it('mantiene los datos visibles si Android no encuentra apps o falla al abrir una disponible', async () => {
+  const available = jest.fn().mockResolvedValueOnce([]).mockResolvedValueOnce([
+    { packageName: 'com.davivienda.daviplataapp', name: 'DaviPlata' },
+  ]);
+  const open = jest.fn().mockRejectedValue(new Error('Ya no está instalada'));
+  NativeModules.EncantoPaymentApps = { available, open };
+  await mount();
+
+  await Renderer.act(async () => action('payments.openPaymentApps').props.onPress());
+  expect(texts()).toContain('payments.noPaymentApps');
+  await Renderer.act(async () => action('payments.openPaymentApps').props.onPress());
+  await Renderer.act(async () => action('payments.openPaymentApp: DaviPlata').props.onPress());
+  expect(texts()).toContain('payments.paymentAppOpenError: DaviPlata');
+  expect(texts()).toContain(data.mediosPago);
 });

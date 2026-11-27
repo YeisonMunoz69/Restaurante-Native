@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -76,6 +76,10 @@ export function ReservationReceiptCard({ reservation, onUpdate, active = true, d
   const [preview, setPreview] = useState<ReservationReceiptImage | null>(null);
   const pending = reservation.estado === 'SOLICITADA';
   const receipt = reservation.comprobante;
+  const sharedFile = draftReceipt?.fileName;
+  useEffect(() => {
+    if (sharedFile) setShowPayment(false);
+  }, [sharedFile]);
   if (!pending && !receipt) return null;
 
   const run = async (task: () => Promise<void>, fallback: string) => {

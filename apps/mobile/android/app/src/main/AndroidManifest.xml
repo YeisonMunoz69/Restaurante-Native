@@ -2,6 +2,17 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Apps bancarias sugeridas en PaymentAppsModule. -->
+    <queries>
+        <package android:name="com.nequi.MobileApp" />
+        <package android:name="com.davivienda.daviplataapp" />
+        <package android:name="co.com.bancolombia.personas.superapp" />
+        <package android:name="com.davivienda.daviviendaapp" />
+        <package android:name="com.bancodebogota.bancamovil" />
+        <package android:name="co.com.bbva.mb" />
+        <package android:name="com.bcs.retail" />
+    </queries>
+
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
