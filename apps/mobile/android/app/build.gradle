@@ -123,6 +123,9 @@ android {
         }
         vps {
             dimension "environment"
+            // Identifico la entrega de Android conectada a dev.
+            versionCode 2
+            versionName "1.0.1"
             buildConfigField "String", "BACKEND_ENV", '"dev"'
             def web = new java.net.URI(System.getenv("ENCANTO_WEB_URL") ?: "")
             def validOrigin = web.scheme == "https" && web.host && web.port == -1 &&
