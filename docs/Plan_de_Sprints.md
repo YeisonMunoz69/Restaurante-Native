@@ -1,6 +1,6 @@
 # Plan de sprints — 28 de agosto al 13 de noviembre de 2026
 
-**Entrega del 27 de noviembre.** La [matriz de entrega](Entrega_2026-11-27.md) registra las pruebas en PostgreSQL de QA, el APK de referencia y los pendientes de aceptación física, Jira y Drive. La evidencia del 19 de noviembre queda como referencia del alcance y de los estados registrados entonces.
+**Entrega del 27 de noviembre.** La [matriz de entrega](Entrega_2026-11-27.md) reúne la reserva física con dos cuentas, las pruebas en PostgreSQL de QA, el APK exacto y la evidencia de las 74 actividades accesibles en Jira. EC-60 quedó Listo tras conciliar RF-MEN08 con la ERS de Drive. Consultamos allí los pendientes de aceptación y conservamos el cierre histórico del Sprint 2.
 
 **Trabajo local de Sprint 4 del 19 de noviembre.** Avanzamos EC-41/42/43/44/46/47/48 y registramos las comprobaciones en Jira. Validamos 282 pruebas API, 99 móviles, la compilación de Next.js y el runtime Docker con diez migraciones. Conservamos los cortes con tags locales y la integración queda pendiente del bloqueo de Actions. [Detalle y tags](Continuidad_Local_Sprint4_2026-11-19.md).
 
@@ -241,7 +241,7 @@ EC-21 no aparece en la lista ni es accesible con nuestra sesión. Registramos la
 |    [ ]    | Segundo factor TOTP y guardia de acciones sensibles                      | RF-AUT06, RF-AUT07 |   8    | Fabián      |
 |    [ ]    | Verificación de correo y recuperación de contraseña con Resend           | RF-AUT02, RF-AUT05 |   5    | Alex        |
 |    [ ]    | Búsqueda, filtros y favoritos                                            | RF-MEN04, 05, 07   |   8    | Yeison      |
-|    [ ]    | Carta incluida y copia local de solo lectura por sede (EC-60)             | RF-MEN08           |   3    | Yeison      |
+|    [x]    | Carta incluida y copia local de solo lectura por sede y servidor (EC-60)   | RF-MEN08           |   3    | Yeison      |
 |    [ ]    | Adición de platos a reserva aprobada                                     | RF-RES15           |   5    | Yeison      |
 |    [ ]    | Estados vacíos, de carga (esqueleto) y de error en toda la aplicación    | RNF-09             |   5    | Yeison      |
 | **Total** |                                                                          |                    | **63** |             |

@@ -30,7 +30,7 @@
 | **Plataforma Cliente**   | Android nativo (bare React Native 0.87, Nueva Arquitectura, motor Hermes). Orientación vertical fija                 |
 | **Arquitectura Backend** | API REST modular en NestJS (`/api/v1`), TypeScript, PostgreSQL en Supabase, ORM Prisma, contenedor Docker en VPS     |
 | **Capa Web**             | Next.js en Vercel con Server-Side Rendering para Open Graph y Android App Links                                      |
-| **Persistencia Móvil**   | MMKV (lectura sin conexión) y Android Keystore mediante `react-native-keychain` (tokens seguros)                     |
+| **Persistencia Móvil**   | AsyncStorage para la última carta completa por sede y servidor, y Android Keystore mediante `react-native-keychain` para el token de renovación. |
 | **Diseño Visual**        | Sistema de diseño propio (verde militar `#4A5D3A`, acento `#A2632E`, fondo `#F6F5F1`), WCAG AA, 5 tabs de navegación |
 
 ### 1.2 Delimitación del Alcance
@@ -41,7 +41,7 @@
 - Motor de reservas con cálculo de franjas horarias y control de aforo por franja en transacción serializable.
 - Módulo de pedido anticipado integrado a la reserva (obligatorio para grupos de 8 o más personas; opcional para menores).
 - Generación de ticket de reserva formateado para copia directa a la cocina.
-- Flujo de confirmación manual por el dueño tras verificación de pago externo enviado por WhatsApp.
+- Confirmación manual tras verificar el pago externo y revisar el comprobante vigente adjunto a la solicitud.
 - Muro de noticias y novedades del restaurante con opción de fijado.
 - Pantalla informativa "Próximamente" para pista de motos y zona de pesca deportiva.
 - Difusión de platos hacia WhatsApp con tarjeta interactiva (Open Graph) y apertura nativa por Android App Links.
@@ -104,7 +104,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | ------------ | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | :-------: | :------: | --------- |
 | **RF-AUT01** | Alta o vínculo de cuenta       | Crear o vincular la cuenta a partir de la identidad Google verificada. No se registra ni almacena una contraseña propia; el teléfono se completa cuando sea necesario para reservar.                |   **M**   | Sprint 5 | EP-02     |
 | **RF-AUT02** | Verificación de correo        | Pendiente de revisar en Jira: no añadimos verificación propia si la identidad Google ya quedó verificada; cualquier comprobación se basa en la respuesta de Google. | **S** | Revisar | EP-02 |
-| **RF-AUT03** | Inicio Google y tokens        | Aceptar Google como único proveedor; la API verifica el token de identidad y emite JWT de acceso (15 min) y refresco rotatorio (7 días), resguardado en Keystore. No confiamos identidad ni rol enviados por el cliente. | **M** | Sprint 5 | EP-02 |
+| **RF-AUT03** | Inicio Google y tokens        | Google es el proveedor objetivo. La API valida su token y emite JWT de acceso (15 minutos) y renovación rotatoria (7 días), protegida en Keystore. Al recuperar la conexión se restaura la cuenta y el rol vigentes si la sesión sigue válida. La transición permite vincular cuentas heredadas. | **M** | Sprint 5 | EP-02 |
 | **RF-AUT04** | Cierre de sesión              | Revocación inmediata del token de refresco en la base de datos y eliminación del almacenamiento seguro en el dispositivo móvil.               |   **M**   | Sprint 1 | EP-02     |
 | **RF-AUT05** | Recuperación de contraseña    | Pendiente de revisar en Jira: la contraseña pertenece a Google; no construimos una recuperación de contraseña propia mientras Google sea el único proveedor.        | **S** | Revisar | EP-02 |
 | **RF-AUT06** | Configuración de 2FA TOTP     | Vinculación de segundo factor mediante aplicación de autenticación (Google Authenticator) exclusiva para usuarios con rol de Dueño (`ADMIN`). |   **S**   | Sprint 5 | EP-10     |
@@ -123,7 +123,7 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-MEN05** | Filtros de catálogo           | Filtrado combinado por categoría, etiquetas dietarias (vegetariano, libre de gluten) y rango de precios.                                |   **S**   | Sprint 5 | EP-03     |
 | **RF-MEN06** | Distintivo de no disponible   | Indicador visual atenuado con etiqueta "No disponible para esta fecha" cuando el plato esté desactivado para el día seleccionado.       |   **M**   | Sprint 2 | EP-03     |
 | **RF-MEN07** | Platos favoritos              | Marcado local/remoto de platos preferidos para acceso rápido desde el perfil del comensal.                                              |   **S**   | Sprint 5 | EP-03     |
-| **RF-MEN08** | Lectura de carta sin conexión | Carta original y fotos propias incluidas en la instalación. Guardamos la última carta completa por sede y servidor en AsyncStorage para consulta de fichas sin conectividad. |   **S**   | Sprint 5 | EP-03     |
+| **RF-MEN08** | Lectura de carta sin conexión | Lectura sin conexión desde la primera apertura con 44 platos y ocho fotos incluidas. Se usa la última copia completa disponible por sede y servidor, guardada en AsyncStorage. Los precios sin red son de referencia. Pedidos, calendario, reservas, Noticias y cuenta requieren red. |   **S**   | Sprint 5 | EP-03     |
 
 ### 4.3 Módulo de Motor de Reservas y Pedidos (RES)
 
@@ -135,9 +135,9 @@ _Priorización MoSCoW: **[M]** Must have (Imprescindible) · **[S]** Should have
 | **RF-RES04** | Pedido anticipado de platos     | Mi Pedido editable desde carta y reserva, con cantidades, eliminación y total estimado. El formulario separa elegidos y sugerencias; el resumen incluye miniaturas. Revalidamos precios/disponibilidad para la fecha elegida y al enviar. Obligatorio desde ocho; hasta siete se permite solo mesa. | **M** | Sprint 3 | EP-05 |
 | **RF-RES05** | Cálculo del total del pedido    | Sumatoria automática de subtotales (`cantidad × precio_unitario_congelado`) expresada en COP sin recargos tributarios.                       |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES06** | Registro de solicitud inicial   | Conservación local del progreso en cuatro pasos, por cuenta, restaurante y servidor. El pie cambia de paso y Atrás confirma la salida después de guardar. Al enviar, la API inserta la reserva en estado `SOLICITADA` y genera un código de seguimiento.             |   **M**   | Sprint 3 | EP-05     |
-| **RF-RES07** | Comprobante y resumen de la reserva | El titular adjunta una captura privada JPG, PNG o WebP de hasta 10 MB desde el paso 4 o mediante Compartir en Android. La app retoma el paso activo y conserva la imagen hasta el envío. El titular puede reemplazar la captura desde su solicitud pendiente y generar un PNG vertical con el resumen y la captura íntegra. | **M** | Sprint 3 | EC-35 |
+| **RF-RES07** | Comprobante y resumen de la reserva | El titular adjunta JPG, PNG o WebP de hasta 10 MB desde el paso 4 o Compartir en Android. La app conserva el paso y la captura. Si falla la carga, se reintenta sobre el mismo código de solicitud. El titular puede reemplazarla mientras esté pendiente y generar un PNG con el resumen y la captura. | **M** | Sprint 3 | EC-35 |
 | **RF-RES08** | Alerta al dueño por solicitud   | Notificación push y correo al teléfono de los dueños cuando entra una nueva solicitud, incluso si la app está cerrada en segundo plano.      |   **M**   | Sprint 5 | EP-09     |
-| **RF-RES09** | Aprobación y rechazo manual     | El ADMIN abre el comprobante y confirma la versión vigente en una revisión con aforo y horario válidos. Una solicitud sin comprobante queda pendiente. Para rechazar se exige motivo y el rechazo es terminal. | **M** | Sprint 3 | EC-36 |
+| **RF-RES09** | Aprobación y rechazo manual     | ADMIN revisa el comprobante vigente y aprueba si aforo y horario siguen disponibles. El mismo código pasa de SOLICITADA a CONFIRMADA. La solicitud sin comprobante permanece pendiente. Rechazar exige motivo y deja la solicitud en un estado terminal. | **M** | Sprint 3 | EC-36 |
 | **RF-RES10** | Notificación al comensal        | Notificación push y por correo al comensal informando la confirmación o el rechazo (con su motivo) de su solicitud.                          |   **M**   | Sprint 5 | EP-09     |
 | **RF-RES11** | Historial de reservas           | Vista para el comensal donde consulta sus solicitudes activas, confirmadas, pasadas y canceladas.                                            |   **M**   | Sprint 3 | EP-05     |
 | **RF-RES12** | Cancelación por el comensal     | El comensal puede retirar una solicitud `SOLICITADA`; una reserva `CONFIRMADA` se puede cancelar si faltan al menos 60 minutos (incluida la igualdad exacta).              |   **M**   | Sprint 3 | EP-05     |
@@ -423,6 +423,10 @@ Dada la capacidad de ~52 horas por sprint (3 integrantes), los Sprints 3 y 5 tie
    - **`RF-ADM13`**: Tablero analítico e indicadores estadísticos agregados.
 
 ## 10. Registro de ajustes y sincronización del documento
+
+Corte del 26 de noviembre. En dev, con el APK 2419119 y un Galaxy S20 FE (Android 13), recuperamos las sesiones de COMENSAL y ADMIN. La reserva de QA EC-20261206-D5873592 conservó su código tras reintentar la imagen. ADMIN revisó el comprobante y aprobó. COMENSAL vio el mismo código confirmado. Siguen pendientes la recepción de EC-53 y la validación en el APK corregido del PR #24. [Matriz y capturas](Entrega_2026-11-27.md).
+
+Actualizamos RF-AUT03, RF-RES07, RF-RES09 y el registro de revisión en el Word local y en la misma ficha de Drive. Confirmamos que ambas copias tienen el mismo SHA-256. RF-MEN08 ya especificaba AsyncStorage en el Word y quedó conciliado en EC-60. [ERS en Drive](https://docs.google.com/document/d/1PADHpVVQQwRVPjE0rzYHX-c075SOWEm-/edit) · [EC-60](https://yjmunoz.atlassian.net/browse/EC-60).
 
 El 15 de octubre acordamos que podemos modificar tareas, alcance y distribución durante el desarrollo, dejando la corrección directamente en Jira y en los documentos afectados. Seguimos [Reglas.md, sección 7](../Reglas.md#7-ajustes-de-alcance-y-sincronización-de-requisitos): indicamos decisión, motivo, criterios vigentes, responsable, sprint y referencias a archivos/commit. El 16 de octubre confirmamos rechazo terminal, expiración a las 12 horas, reglas de duración/anticipación y el límite exacto de cancelación; también fijamos el identificador Android y el comportamiento del teclado. Estos acuerdos no significan que las historias de reserva ya estén implementadas.
 
