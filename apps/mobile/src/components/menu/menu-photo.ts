@@ -1,4 +1,4 @@
-import { menuNameSlug, type MenuDish } from '@encanto/shared';
+import { isDemoMenuPhoto, originalMenuPhotoKey, type MenuDish } from '@encanto/shared';
 import type { ImageSourcePropType } from 'react-native';
 
 const originalPhotos = new Map<string, readonly ImageSourcePropType[]>([
@@ -11,7 +11,6 @@ const originalPhotos = new Map<string, readonly ImageSourcePropType[]>([
   ['sancocho-de-gallina', [require('../../assets/carta/sancocho-de-gallina-01.webp')]],
   ['tilapia-ahumada', [require('../../assets/carta/tilapia-ahumada-01.webp')]],
 ]);
-const restaurantPrefix = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}-/i;
 const maxPhotos = 10;
 
 // Solo uso una ruta pública HTTPS completa; no supongo el bucket de Storage.
@@ -24,21 +23,23 @@ export function publicMenuPhotoUrl(path: string | null | undefined) {
   }
 }
 
-// Uso la galería de ADMIN si está publicada. Las fotos incluidas cubren platos todavía sin galería.
+// Uso las fotos cargadas desde ADMIN, luego las originales incluidas y por último las del seed.
 export function menuGallery(
-  { slug = '', fotos, nombre }: Pick<MenuDish, 'slug' | 'fotos'> & Partial<Pick<MenuDish, 'nombre'>>,
+  { slug = '', fotos, nombre }: Partial<Pick<MenuDish, 'slug' | 'nombre'>> & {
+    fotos: readonly Pick<MenuDish['fotos'][number], 'id' | 'path' | 'pathOg'>[];
+  },
   bundledOnly = false,
 ) {
-  const published: { id: string; source: ImageSourcePropType }[] = bundledOnly ? [] : fotos.flatMap(photo => {
+  const published: { id: string; source: ImageSourcePropType; demo: boolean }[] = bundledOnly ? [] : fotos.flatMap(photo => {
     const uri = publicMenuPhotoUrl(photo.path) ?? publicMenuPhotoUrl(photo.pathOg);
-    return uri ? [{ id: photo.id, source: { uri } }] : [];
+    return uri ? [{ id: photo.id, source: { uri }, demo: isDemoMenuPhoto(uri) }] : [];
   });
-  if (published.length) return published.slice(0, maxPhotos);
 
   // Quito el UUID del importador sin depender del nombre o precio que edite el dueño.
-  const key = slug.replace(restaurantPrefix, '');
-  const originalSlug = key === 'sancocho-de-gallina-criolla-a-la-lena' ? 'sancocho-de-gallina' : key;
-  const localPhotos = originalPhotos.get(originalSlug) ?? originalPhotos.get(menuNameSlug(nombre ?? ''));
+  const originalSlug = originalMenuPhotoKey(slug, nombre);
+  const localPhotos = originalSlug ? originalPhotos.get(originalSlug) : undefined;
+  const gallery = localPhotos ? published.filter(photo => !photo.demo) : published;
+  if (gallery.length) return gallery.slice(0, maxPhotos).map(({ id, source }) => ({ id, source }));
   return (localPhotos ?? []).slice(0, maxPhotos).map((source, index) => ({
     id: originalSlug + '/' + (index + 1),
     source,

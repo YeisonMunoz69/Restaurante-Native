@@ -25,6 +25,7 @@ import {
   canReserveRestaurant,
 } from '../calendar/calendar.service.js';
 import { canTransitionReservation } from './reservation-state.js';
+import { publicDishPhotos } from '../menu/original-menu-photos.js';
 import { paymentConfig, paymentInstructions } from '../payments/payments.service.js';
 import { normalizeReservationReceipt, renderReservationTicketImage } from './reservation-receipt.js';
 
@@ -49,6 +50,26 @@ const reservationAdminInclude = {
       telefono: true,
       cancelaciones: true,
       inasistencias: true,
+    },
+  },
+} satisfies Prisma.ReservationInclude;
+const reservationAgendaInclude = {
+  ...reservationAdminInclude,
+  lines: {
+    ...reservationAdminInclude.lines,
+    include: {
+      plato: {
+        select: {
+          id: true,
+          nombre: true,
+          slug: true,
+          photos: {
+            select: { id: true, path: true, pathOg: true, principal: true, orden: true },
+            orderBy: [{ principal: 'desc' }, { orden: 'asc' }, { id: 'asc' }],
+            take: 10,
+          },
+        },
+      },
     },
   },
 } satisfies Prisma.ReservationInclude;
@@ -805,37 +826,50 @@ export class ReservationsService {
     });
   }
 
-  async agenda(fecha: string) {
+  async agenda(fecha?: string) {
     return this.prisma.$transaction(async (db) => {
       const restaurant = await this.restaurant(db);
       const now = new Date();
       await this.expirePending(db, restaurant.horasExpiracionSolicitud);
       const rows = await db.reservation.findMany({
         where: {
-          fecha: calendarDate(fecha),
+          fecha: fecha
+            ? calendarDate(fecha)
+            : { gte: calendarDate(todayInBogota(now)) },
           estado: {
-            in: [
-              ReservationStatus.CONFIRMADA,
-              ReservationStatus.EN_CURSO,
-              ReservationStatus.COMPLETADA,
-              ReservationStatus.NO_ASISTIO,
-            ],
+            // Muestro el historial del servicio cuando el personal elige una fecha.
+            in: fecha
+              ? [
+                  ReservationStatus.CONFIRMADA,
+                  ReservationStatus.EN_CURSO,
+                  ReservationStatus.COMPLETADA,
+                  ReservationStatus.NO_ASISTIO,
+                ]
+              : [ReservationStatus.CONFIRMADA, ReservationStatus.EN_CURSO],
           },
         },
-        include: reservationAdminInclude,
-        orderBy: [{ horaInicio: 'asc' }, { createdAt: 'asc' }],
+        include: reservationAgendaInclude,
+        orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }, { createdAt: 'asc' }],
       });
-      return rows.map((row) => ({
-        ...serialize(row, false),
-        cliente: row.usuario,
-        puedeMarcarInasistencia:
-          row.estado === ReservationStatus.CONFIRMADA &&
-          canMarkNoShow(
-            localInstant(dateKey(row.fecha), row.horaInicio),
-            now,
-            restaurant.toleranciaMin,
-          ),
-      }));
+      return rows.map((row) => {
+        const reservation = serialize(row, false);
+        return {
+          ...reservation,
+          lineas: reservation.lineas.map((line, index) => {
+            const dish = row.lines[index].plato;
+            const cover = publicDishPhotos(dish)[0];
+            return { ...line, platoSlug: dish.slug, fotoUrl: cover?.path || cover?.pathOg || null };
+          }),
+          cliente: row.usuario,
+          puedeMarcarInasistencia:
+            row.estado === ReservationStatus.CONFIRMADA &&
+            canMarkNoShow(
+              localInstant(dateKey(row.fecha), row.horaInicio),
+              now,
+              restaurant.toleranciaMin,
+            ),
+        };
+      });
     });
   }
 

@@ -29,3 +29,4 @@ export * from './schemas/payment.schema';
 export * from './schemas/news.schema';
 
 export * from './data/carta-original';
+export * from './data/carta-fotos';

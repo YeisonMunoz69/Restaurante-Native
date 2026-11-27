@@ -21,7 +21,8 @@ out
 # Cosas que la API no necesita para construirse
 .git
 .agents
-apps/mobile
+apps/mobile/**
+!apps/mobile/src/assets/carta/*.webp
 design
 docs
 logs

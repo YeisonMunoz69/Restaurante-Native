@@ -72,6 +72,8 @@ export interface ReservationSlot {
 
 export interface ReservationLineResult {
   platoId: string;
+  platoSlug?: string;
+  fotoUrl?: string | null;
   nombre: string;
   cantidad: number;
   precioUnitario: number;

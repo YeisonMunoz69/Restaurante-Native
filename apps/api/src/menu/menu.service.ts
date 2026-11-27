@@ -12,6 +12,7 @@ import type {
   MenuTag,
 } from '@encanto/shared';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { publicDishPhotos } from './original-menu-photos.js';
 
 // Selecciono solo datos públicos y limito las fotos sin cargar relaciones de reservas.
 const dishSelect = (fecha: string) =>
@@ -69,7 +70,7 @@ function serializeDish(dish: PublicDish): MenuDish {
     orden: dish.orden,
     disponible: override?.disponible ?? dish.disponible,
     disponibilidadOrigen: override ? 'FECHA' : 'GENERAL',
-    fotos: dish.photos,
+    fotos: publicDishPhotos(dish),
     etiquetas: dish.dietaryTags.map(({ tag }) => tag),
   };
 }

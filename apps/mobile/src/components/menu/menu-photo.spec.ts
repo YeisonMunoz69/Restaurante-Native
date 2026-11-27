@@ -33,6 +33,29 @@ describe('menuGallery', () => {
     expect(menuGallery({ slug: sede + '-cafe-negro', fotos: [] })).toEqual([]);
   });
 
+  it('sustituye la portada del seed cuando tenemos una foto original', () => {
+    const demo = {
+      id: 'demo',
+      path: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=800&q=80',
+      pathOg: null,
+    };
+    expect(menuGallery({ slug: 'sancocho-de-gallina-criolla-a-la-lena', fotos: [demo] }))
+      .toEqual([{ id: 'sancocho-de-gallina/1', source: expect.anything() }]);
+    expect(menuGallery({ slug: 'cafe-negro', fotos: [demo] }))
+      .toEqual([{ id: 'demo', source: { uri: demo.path } }]);
+  });
+
+  it('prefiere una foto publicada por ADMIN y excluye la muestra del seed', () => {
+    const demo = {
+      id: 'demo',
+      path: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=800&q=80',
+      pathOg: null,
+    };
+    const uploaded = { id: 'propia', path: 'https://sede.example.test/storage/ajiaco.webp', pathOg: null };
+    expect(menuGallery({ slug: 'ajiaco', fotos: [demo, uploaded] }))
+      .toEqual([{ id: 'propia', source: { uri: uploaded.path } }]);
+  });
+
   it('conserva el orden de la galería publicada al agregar variantes', () => {
     const fotos = ['principal', 'variacion'].map((id, orden) => ({
       id, orden, principal: orden === 0,

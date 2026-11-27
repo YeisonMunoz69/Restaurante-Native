@@ -299,6 +299,37 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     expect(after.cancelaciones).toBe(before.cancelaciones + 1);
   });
 
+  it('ofrece próximas reservas por fecha y hora sin cambiar la consulta diaria', async () => {
+    const today = calendarDate(todayInBogota());
+    const earlier = new Date(today.getTime() - 86_400_000);
+    const later = new Date(today.getTime() + 86_400_000);
+    await prisma.reservation.createMany({
+      data: [
+        { fecha: later, codigo: 'QA-AGENDA-TOMORROW', horaInicio: '10:00', estado: ReservationStatus.CONFIRMADA },
+        { fecha: today, codigo: 'QA-AGENDA-TODAY-LATE', horaInicio: '12:00', estado: ReservationStatus.CONFIRMADA },
+        { fecha: today, codigo: 'QA-AGENDA-TODAY-EARLY', horaInicio: '10:00', estado: ReservationStatus.EN_CURSO },
+        { fecha: today, codigo: 'QA-AGENDA-TODAY-DONE', horaInicio: '09:00', estado: ReservationStatus.COMPLETADA },
+        { fecha: earlier, codigo: 'QA-AGENDA-YESTERDAY', horaInicio: '10:00', estado: ReservationStatus.CONFIRMADA },
+        { fecha: later, codigo: 'QA-AGENDA-PENDING', horaInicio: '14:00', estado: ReservationStatus.SOLICITADA },
+      ].map(value => ({ ...value, usuarioId: dinerId, horaFin: '16:00', numComensales: 2, total: 0 })),
+    });
+    const jwt = app.get(JwtService);
+    const staff = jwt.sign({ sub: staffId, correo: 'usuario4@example.test', rol: 'STAFF', sid: 'qa-staff' });
+    const diner = jwt.sign({ sub: dinerId, correo: 'usuario1@example.test', rol: 'COMENSAL', sid: 'qa-comensal' });
+    const server = app.getHttpServer();
+    const endpoint = '/api/v1/admin/reservas/agenda';
+
+    await request(server).get(endpoint + '/proximas').set('Authorization', 'Bearer ' + diner).expect(403);
+    const upcoming = await request(server).get(endpoint + '/proximas').set('Authorization', 'Bearer ' + staff).expect(200);
+    expect(upcoming.body.map((row: { codigo: string }) => row.codigo))
+      .toEqual(['QA-AGENDA-TODAY-EARLY', 'QA-AGENDA-TODAY-LATE', 'QA-AGENDA-TOMORROW']);
+    await request(server).get(endpoint).set('Authorization', 'Bearer ' + staff).expect(400);
+    const daily = await request(server).get(endpoint).query({ fecha: dateKey(today) })
+      .set('Authorization', 'Bearer ' + staff).expect(200);
+    expect(daily.body.map((row: { codigo: string }) => row.codigo))
+      .toEqual(['QA-AGENDA-TODAY-DONE', 'QA-AGENDA-TODAY-EARLY', 'QA-AGENDA-TODAY-LATE']);
+  });
+
   it('registra llegada y cierre de atención con sus responsables', async () => {
     const created = await service.create(dinerId, {
       fecha,

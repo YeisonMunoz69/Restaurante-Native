@@ -59,6 +59,15 @@ describe('Landing pública', () => {
       .expect('Content-Type', /image\/svg\+xml/);
   });
 
+  it('sirve las fotos originales por la API sin consultar la base', async () => {
+    for (const key of ['ajiaco', 'chicharron-crocante', 'churrasco', 'costilla-ahumada',
+      'picada-para-compartir', 'porcion-de-empanadas', 'sancocho-de-gallina', 'tilapia-ahumada']) {
+      await request(app.getHttpServer()).get(`/api/v1/carta-fotos/${key}-01.webp`)
+        .expect(200).expect('Content-Type', /image\/webp/);
+    }
+    expect(query).not.toHaveBeenCalled();
+  });
+
   it('conserva la respuesta de la raíz de la API', async () => {
     await request(app.getHttpServer())
       .get('/api/v1')
