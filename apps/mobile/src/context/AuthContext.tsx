@@ -138,7 +138,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         recoveryPending,
         login: handleLogin,
         register: handleRegister,
-        loginWithGoogle: async (data, link) => setUser((await googleSession(data, link)).user),
+        loginWithGoogle: async (data, link) => {
+          const session = await googleSession(data, link);
+          setRecoveryPending(false);
+          setUser(session.user);
+        },
         updateProfile,
         logout: handleLogout,
         checkSession,

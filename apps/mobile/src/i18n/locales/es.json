@@ -456,6 +456,7 @@
     "googleTestSettings": "Configuración de prueba",
     "googlePhoneInvalid": "Ingresa un teléfono de 10 dígitos.",
     "googleLinkRequired": "Este correo ya tiene cuenta en Encanto. Vincula Google desde una sesión anterior o contacta al equipo.",
+    "googleStorageError": "El teléfono no pudo guardar la sesión. Vuelve a intentar con el dispositivo desbloqueado.",
     "googleSecureConnection": "Para entrar con Google usa HTTPS o la conexión local por USB.",
     "googleUnavailable": "El acceso con Google todavía no está configurado en esta instalación.",
     "googleError": "No pudimos iniciar sesión con Google. Inténtalo de nuevo.",

@@ -58,6 +58,7 @@ export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
       let errorKey = link ? 'auth.googleLinkError' : 'auth.googleError';
       if (response?.data?.code === 'GOOGLE_LINK_REQUIRED') errorKey = 'auth.googleLinkRequired';
       else if (failure instanceof Error && failure.message === 'GOOGLE_INSECURE_CONNECTION') errorKey = 'auth.googleSecureConnection';
+      else if (failure instanceof Error && failure.message === 'SESSION_STORAGE_WRITE_FAILED') errorKey = 'auth.googleStorageError';
       else if (apiFailure && !response) errorKey = 'auth.googleConnectionError';
       else if (response?.status === 503) errorKey = 'auth.googleUnavailable';
       else if (response?.status === 401 && !link) errorKey = 'auth.googleVerifyError';
