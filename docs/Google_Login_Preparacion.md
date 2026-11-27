@@ -82,7 +82,7 @@ El .env de NestJS **no configura un APK automáticamente**. Antes de compilar, n
 $env:ENCANTO_GOOGLE_WEB_CLIENT_ID='ID_WEB_REAL.apps.googleusercontent.com'
 ```
 
-Lo exponemos como `NativeModules.EncantoBuild.googleWebClientId` para la futura selección nativa de cuenta. Cambiarlo exige recompilar/reinstalar. No necesitamos otro .env en la raíz ni google-services.json para esta preparación con Cloud y NestJS. Firebase para notificaciones es independiente.
+Lo exponemos como `NativeModules.EncantoBuild.googleWebClientId` para la selección nativa de cuenta. Gradle acepta `ENCANTO_GOOGLE_WEB_CLIENT_ID` y, como alias, `GOOGLE_WEB_CLIENT_ID`; hay que exportar una de esas variables en la terminal que compila, porque el `.env` de NestJS no se carga automáticamente en Android. Cambiarlo exige recompilar/reinstalar. No necesitamos otro .env en la raíz ni google-services.json para esta integración con Cloud y NestJS. Firebase para notificaciones es independiente.
 
 Cuando termines, avisa «clientes Google creados y guardados en apps/api/.env». No envíes secretos o tokens. Después implementaremos selección/cancelación/errores, validación de firma, audiencia, emisor y caducidad, y sesión propia. Recibir un correo escrito por el teléfono no autentica al usuario. [Validación oficial en backend](https://developers.google.com/identity/sign-in/web/backend-auth).
 
@@ -109,7 +109,19 @@ En Ajustes de Local guardamos `http://localhost:3000/api/v1` y el UUID de la sed
 
 EncantoApp VPS solo necesita Internet. **Instalar el APK no despliega la API:** primero hay que revisar/integrar la rama en dev, pasar CI/CD/migraciones y comprobar salud HTTPS. La [carga del catálogo](Carta_Original_2026-10-22.md) se ejecuta una sola vez tras revisar su previsualización. No usamos esa base para escrituras de QA.
 
-## 7. Fotos y pendientes manuales
+## 7. Comprobar la sesión en Android para EC-75
+
+Registramos el modelo, la versión de Android, la variante, el entorno y el SHA-256 del APK. Para reproducir el fallo usamos primero la instalación que lo mostró. Repetimos con la corrección cuando esté disponible, con cuentas de QA COMENSAL y ADMIN.
+
+1. Entramos con Google, anotamos la cuenta de QA y el rol de **Ajustes → Cuenta y seguridad**. Forzamos el cierre y abrimos el mismo APK con red. La cuenta y el rol se restauran sin abrir el selector de Google.
+2. Repetimos el cierre forzado, desactivamos la red y abrimos. Podemos consultar la Carta incluida. Al reconectar, la app valida la sesión contra la API y recupera la misma cuenta y rol. Si el servidor aún no responde, Ajustes permite reintentar y la app vuelve a intentarlo automáticamente.
+3. Con un token de acceso vencido y el de renovación vigente, repetimos una operación privada. Debe completar tras renovar. Cerramos desde Ajustes, comprobamos modo invitado y reabrimos. Para comprobar la revocación en QA, la API debe rechazar la renovación de la sesión que se cerró.
+
+Guardamos el token de renovación nuevo antes de activar la sesión. El arranque y los 401 de peticiones privadas comparten esa renovación. Un fallo de red o del servidor conserva el token seguro y solo un rechazo de autenticación lo invalida. El selector de Google queda disponible cuando la app determina que falta una sesión válida.
+
+[Evidencia del Xiaomi y diagnóstico de Alex](https://github.com/YeisonMunoz69/Restaurante-Native/pull/23).
+
+## 8. Fotos y pendientes manuales
 
 En la API VPS deben estar SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y SUPABASE_STORAGE_BUCKET=platos, además de PostgreSQL y JWT actuales. La clave privada solo vive en backend. Entramos con una cuenta ADMIN real, editamos cada producto y cargamos sus fotos desde el panel. Comprobar que existe el bucket no completa por sí solo EC-27.
 

@@ -13,8 +13,9 @@ const reminderInterval = 3 * 60 * 1000;
 const reminderDuration = 15 * 1000;
 
 // Mantengo la misma Carta o Ajustes detrás del acceso, incluso al completar la sesión.
-export function GuestAccessProvider({ authenticated, children, reminderOffset = 0 }: {
+export function GuestAccessProvider({ authenticated, authPending = false, children, reminderOffset = 0 }: {
   authenticated: boolean;
+  authPending?: boolean;
   children: React.ReactNode;
   reminderOffset?: number;
 }) {
@@ -23,8 +24,8 @@ export function GuestAccessProvider({ authenticated, children, reminderOffset = 
   const [reminder, setReminder] = useState(false);
   const online = useOnline();
   useEffect(() => {
-    if (authenticated || !online) setEntry(null);
-  }, [authenticated, online]);
+    if (authenticated || authPending || !online) setEntry(null);
+  }, [authenticated, authPending, online]);
 
   useEffect(() => {
     const listener = AppState.addEventListener('change', state => setForeground(state === 'active'));
@@ -34,7 +35,7 @@ export function GuestAccessProvider({ authenticated, children, reminderOffset = 
   // Reinicio la cuenta cuando el invitado vuelve a la app o cierra el acceso.
   useEffect(() => {
     setReminder(false);
-    if (authenticated || entry || !foreground || !online) return;
+    if (authenticated || authPending || entry || !foreground || !online) return;
     let hide: ReturnType<typeof setTimeout> | undefined;
     const interval = setInterval(() => {
       setReminder(true);
@@ -44,16 +45,17 @@ export function GuestAccessProvider({ authenticated, children, reminderOffset = 
       clearInterval(interval);
       if (hide !== undefined) clearTimeout(hide);
     };
-  }, [authenticated, entry, foreground, online]);
+  }, [authenticated, authPending, entry, foreground, online]);
 
+  const canSignIn = !authenticated && !authPending && online;
   return (
     <GuestAccessContext.Provider value={setEntry}>
       {children}
-      {reminder && !authenticated && !entry && foreground && online && (
+      {reminder && canSignIn && !entry && foreground && (
         <GuestReminder bottomOffset={reminderOffset} onOpen={() => setEntry('settings')}
           onDismiss={() => setReminder(false)} />
       )}
-      {!authenticated && entry && online && <GoogleAccess entry={entry} onClose={() => setEntry(null)} />}
+      {canSignIn && entry && <GoogleAccess entry={entry} onClose={() => setEntry(null)} />}
     </GuestAccessContext.Provider>
   );
 }

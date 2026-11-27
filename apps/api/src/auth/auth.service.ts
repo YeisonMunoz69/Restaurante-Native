@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, ServiceUnavailableException, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
@@ -205,8 +205,6 @@ export class AuthService {
     // Un correo coincidente nunca transfiere por sí solo una cuenta ni sus privilegios.
     const existing = await this.prisma.user.findUnique({ where: { correo: identity.correo } });
     if (existing) throw new ConflictException({ code: 'GOOGLE_LINK_REQUIRED', message: 'Esta cuenta de Encanto requiere un vínculo previo' });
-    if (!input.telefono) throw new UnprocessableEntityException({ code: 'GOOGLE_PHONE_REQUIRED', message: 'Completa tu teléfono para crear la cuenta' });
-
     try {
       const data = {
         googleSub: identity.sub,
@@ -214,7 +212,7 @@ export class AuthService {
         googleNombre,
         googleFotoUrl,
         correo: identity.correo,
-        telefono: input.telefono,
+        telefono: input.telefono ?? null,
         correoVerificado: true,
       };
       const user = protectedAdmin ? await this.prisma.$transaction(async db => {
@@ -336,89 +334,83 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
+    const secret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+    let payload: { sub: string; provider?: string; sid?: string };
     try {
-      const secret = this.configService.get<string>('JWT_REFRESH_SECRET');
-      const payload = this.jwtService.verify(refreshToken, { secret });
-      if (payload.provider !== 'google') this.requirePasswordEnabled();
-
-      // Buscar registros activos (no revocados, no expirados) para el usuario
-      const storedTokens = await this.prisma.refreshToken.findMany({
-        where: {
-          usuarioId: payload.sub,
-          revocadoEn: null,
-          expiraEn: { gt: new Date() },
-        },
-      });
-
-      if (!storedTokens.length) {
-        throw new UnauthorizedException('Refresh token no encontrado');
-      }
-
-      // Verificar cuál hash coincide
-      let stored = null;
-      for (const t of storedTokens) {
-        const hashValid = await argon2.verify(t.tokenHash, refreshToken);
-        if (hashValid) {
-          stored = t;
-          break;
-        }
-      }
-
-      if (!stored) {
-        throw new UnauthorizedException('Refresh token inválido');
-      }
-
-      // Generar nuevos tokens y actualizar la fila (rotación)
-      if (payload.sid && payload.sid !== stored.id) {
-        throw new UnauthorizedException(
-          'La sesión del refresh token no coincide',
-        );
-      }
-
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-        select: sessionUser,
-      });
-
-      if (!user || !user.activo) {
-        throw new UnauthorizedException('La cuenta no está activa');
-      }
-
-      const provider = payload.provider === 'google' ? 'google' : 'password';
-      this.requireGoogleForProtectedAccount(user, provider);
-      const newTokens = await this.generateTokens({
-        sub: user.id,
-        correo: user.correo,
-        rol: user.rol,
-        sid: stored.id,
-        provider,
-      });
-      const newHash = await argon2.hash(newTokens.refreshToken, {
-        type: argon2.argon2id,
-      });
-
-      const rotacion = await this.prisma.refreshToken.updateMany({
-        where: {
-          id: stored.id,
-          tokenHash: stored.tokenHash,
-          revocadoEn: null,
-          expiraEn: { gt: new Date() },
-        },
-        data: {
-          tokenHash: newHash,
-          expiraEn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        },
-      });
-
-      if (rotacion.count !== 1) {
-        throw new UnauthorizedException('El refresh token ya fue utilizado');
-      }
-
-      return { ...newTokens, perfil: this.profile(user, provider) };
-    } catch (error) {
-      console.error('Error en refresh:', error);
+      payload = this.jwtService.verify(refreshToken, { secret });
+    } catch {
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
+    if (payload.provider !== 'google') this.requirePasswordEnabled();
+
+    // Consulto las sesiones activas. Si falla PostgreSQL, dejo que el error llegue como 5xx.
+    const storedTokens = await this.prisma.refreshToken.findMany({
+      where: {
+        usuarioId: payload.sub,
+        revocadoEn: null,
+        expiraEn: { gt: new Date() },
+      },
+    });
+
+    if (!storedTokens.length) {
+      throw new UnauthorizedException('Refresh token no encontrado');
+    }
+
+    // Verifico cuál hash coincide con el token.
+    let stored = null;
+    for (const t of storedTokens) {
+      if (await argon2.verify(t.tokenHash, refreshToken)) {
+        stored = t;
+        break;
+      }
+    }
+
+    if (!stored) throw new UnauthorizedException('Refresh token inválido');
+    if (payload.sid && payload.sid !== stored.id) {
+      throw new UnauthorizedException('La sesión del refresh token no coincide');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: sessionUser,
+    });
+
+    if (!user || !user.activo) {
+      throw new UnauthorizedException('La cuenta no está activa');
+    }
+
+    const provider = payload.provider === 'google' ? 'google' : 'password';
+    this.requireGoogleForProtectedAccount(user, provider);
+    const newTokens = await this.generateTokens({
+      sub: user.id,
+      correo: user.correo,
+      rol: user.rol,
+      sid: stored.id,
+      provider,
+    });
+    const newHash = await argon2.hash(newTokens.refreshToken, {
+      type: argon2.argon2id,
+    });
+
+    // Solo roto la fila si conserva el mismo hash y sigue activa.
+    const rotacion = await this.prisma.refreshToken.updateMany({
+      where: {
+        id: stored.id,
+        tokenHash: stored.tokenHash,
+        revocadoEn: null,
+        expiraEn: { gt: new Date() },
+      },
+      data: {
+        tokenHash: newHash,
+        expiraEn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    if (rotacion.count !== 1) {
+      throw new UnauthorizedException('El refresh token ya fue utilizado');
+    }
+
+    return { ...newTokens, perfil: this.profile(user, provider) };
   }
 
   async logout(userId: string, sessionId: string) {
@@ -437,6 +429,8 @@ export class AuthService {
     // Emito un Refresh Token rotatorio
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      // Distingo dos renovaciones aunque los JWT se firmen en el mismo segundo.
+      jwtid: randomUUID(),
       expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRATION') ||
         '7d') as any,
     });

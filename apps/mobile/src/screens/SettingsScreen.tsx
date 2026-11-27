@@ -45,7 +45,7 @@ export const SettingsScreen: React.FC = () => {
   const isFocused = useIsFocused();
   const { t } = useTranslation();
   const { colors, isDark, spacing, typography } = useTheme();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, recoveryPending, checkSession } = useAuth();
   const online = useOnline();
   const requestSignIn = useGuestAccess();
   const photo = useLocalProfilePhoto(user?.id);
@@ -83,8 +83,13 @@ export const SettingsScreen: React.FC = () => {
         {!online && <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
           {t('common.internetRequired')}
         </Text>}
-        {!user && <GoogleButton testID="guest-settings-sign-in" label={t('auth.guestSignInTitle')}
-          disabled={!online || isLoading} busy={online && isLoading} onPress={() => requestSignIn('settings')} />}
+        {!user && (recoveryPending ? (
+          <Button label={t('auth.retrySession')} disabled={!online || isLoading}
+            busy={online && isLoading} onPress={() => void checkSession()} />
+        ) : (
+          <GoogleButton testID="guest-settings-sign-in" label={t('auth.guestSignInTitle')}
+            disabled={!online || isLoading} busy={online && isLoading} onPress={() => requestSignIn('settings')} />
+        ))}
       </KeyboardAwareScrollView>
     );
   }

@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from './auth.service.js';
 import { OAuth2Client } from 'google-auth-library';
+import * as argon2 from 'argon2';
 import { ageInColombia, GoogleLoginSchema, ProfileUpdateSchema } from '@encanto/shared';
 
 describe('AuthService.logout', () => {
@@ -35,6 +36,67 @@ describe('AuthService.logout', () => {
       data: { revocadoEn: expect.any(Date) },
     });
   });
+});
+
+describe('AuthService.refresh', () => {
+  const verify = vi.fn();
+  const findMany = vi.fn();
+  const service = new AuthService(
+    { verify } as never,
+    { get: () => 'jwt-de-prueba', getOrThrow: () => 'jwt-de-prueba' } as never,
+    { refreshToken: { findMany } } as never,
+  );
+
+  it('propaga un fallo de PostgreSQL en vez de invalidar una sesión Google válida', async () => {
+    verify.mockReturnValueOnce({ sub: 'usuario-google', provider: 'google' });
+    const databaseError = new Error('No se pudo conectar con PostgreSQL');
+    findMany.mockRejectedValueOnce(databaseError);
+    await expect(service.refresh('refresh-token')).rejects.toBe(databaseError);
+  });
+
+  it('responde 401 cuando los tokens activos ya fueron revocados', async () => {
+    verify.mockReturnValueOnce({ sub: 'usuario-google', provider: 'google' });
+    findMany.mockResolvedValueOnce([]);
+    await expect(service.refresh('refresh-revocado')).rejects.toMatchObject({ status: 401 });
+  });
+
+  it('rota un JWT de Google en el mismo segundo y revoca la sesión que lo emitió', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      const secret = 'jwt-refresh-exclusivo-de-la-prueba';
+      const jwt = new JwtService({ secret: 'jwt-access-exclusivo-de-la-prueba' });
+      const identity = { sub: 'google-user', sid: 'google-session', correo: 'qa@example.test', rol: 'ADMIN', provider: 'google' };
+      const original = jwt.sign(identity, { secret, expiresIn: '7d' });
+      let tokenHash = await argon2.hash(original);
+      let active = true;
+      const db = {
+        user: { findUnique: async () => ({ id: identity.sub, correo: identity.correo, rol: identity.rol, activo: true }) },
+        refreshToken: {
+          findMany: async () => active ? [{ id: identity.sid, tokenHash }] : [],
+          updateMany: async ({ data }: { data: { tokenHash?: string; revocadoEn?: Date } }) => {
+            if (data.tokenHash) tokenHash = data.tokenHash;
+            if (data.revocadoEn) active = false;
+            return { count: 1 };
+          },
+        },
+      };
+      const auth = new AuthService(jwt, {
+        get: (key: string) => key === 'JWT_REFRESH_SECRET' ? secret : undefined,
+        getOrThrow: () => secret,
+      } as never, db as never);
+
+      const first = await auth.refresh(original);
+      expect(jwt.decode(first.accessToken)).toMatchObject(identity);
+      const next = await auth.refresh(first.refreshToken);
+      expect(next.refreshToken).not.toBe(first.refreshToken);
+      await expect(auth.refresh(first.refreshToken)).rejects.toMatchObject({ status: 401 });
+
+      await auth.logout(identity.sub, identity.sid);
+      await expect(auth.refresh(next.refreshToken)).rejects.toMatchObject({ status: 401 });
+    } finally {
+      vi.useRealTimers();
+    }
+  }, 15_000);
 });
 
 describe('AuthService Google', () => {
@@ -74,11 +136,13 @@ describe('AuthService Google', () => {
     vi.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({ getPayload: () => identity } as never);
   });
 
-  it('pide teléfono para un alta nueva y evita que el cliente asigne su propio rol', async () => {
+  it('permite el alta Google sin teléfono y evita que el cliente asigne su propio rol', async () => {
     expect(GoogleLoginSchema.safeParse({ idToken: 't', rol: 'ADMIN' }).success).toBe(false);
     findUnique.mockResolvedValue(null);
-    await expect(service.googleLogin({ idToken: 't' })).rejects.toMatchObject({ response: { code: 'GOOGLE_PHONE_REQUIRED' } });
-    expect(create).not.toHaveBeenCalled();
+    create.mockResolvedValue({ ...account, telefono: null });
+    await service.googleLogin({ idToken: 't' });
+    expect(create).toHaveBeenCalledWith({ data: expect.objectContaining({ googleSub: identity.sub, telefono: null }) });
+    create.mockClear();
     create.mockResolvedValue(account);
     await service.googleLogin({ idToken: 't', telefono: '3001234567' });
     expect(create).toHaveBeenCalledWith({ data: expect.objectContaining({ googleSub: identity.sub, telefono: '3001234567' }) });

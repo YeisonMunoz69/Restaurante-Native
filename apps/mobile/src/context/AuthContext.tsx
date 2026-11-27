@@ -16,6 +16,7 @@ interface AuthContextData {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  recoveryPending?: boolean;
   login: (credentials: LoginDto) => Promise<void>;
   register: (data: RegisterDto) => Promise<void>;
   loginWithGoogle: (data: GoogleLoginDto, link?: boolean) => Promise<void>;
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [recoveryPending, setRecoveryPending] = useState(false);
   const online = useOnline();
   const restoration = useRef<Promise<void> | null>(null);
   const wasOnline = useRef(false);
@@ -39,8 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (restoration.current) return restoration.current;
     setIsLoading(true);
     restoration.current = apiRestoreSession()
-      .then(session => setUser(session?.user ?? null))
-      .catch(() => setUser(null))
+      .then(session => {
+        setUser(session?.user ?? null);
+        setRecoveryPending(false);
+      })
+      .catch(error => {
+        if (!(error instanceof Error && error.message === 'SESSION_CHANGED')) {
+          setRecoveryPending(true);
+        }
+      })
       .finally(() => {
         setIsLoading(false);
         restoration.current = null;
@@ -77,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       await apiLogout();
+      setRecoveryPending(false);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -99,10 +109,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!online && !restoration.current) setIsLoading(false);
   }, [checkSession, online, user]);
 
+  // Reintento si la red volvió antes que la API o falló temporalmente el almacén seguro.
+  useEffect(() => {
+    if (!online || !recoveryPending || isLoading) return;
+    const retry = setTimeout(() => void checkSession(), 10000);
+    return () => clearTimeout(retry);
+  }, [checkSession, isLoading, online, recoveryPending]);
+
   useEffect(() => {
     // escuchamos si el interceptor de Axios detecta que el refresh token ya no es valido
     const unsubscribe = onSessionExpired(() => {
       console.log('Sesion expirada detectada por el cliente HTTP, limpiando estado de usuario.');
+      setRecoveryPending(false);
       setUser(null);
     });
 
@@ -117,9 +135,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isAuthenticated: !!user,
         isLoading,
+        recoveryPending,
         login: handleLogin,
         register: handleRegister,
-        loginWithGoogle: async (data, link) => setUser((await googleSession(data, link)).user),
+        loginWithGoogle: async (data, link) => {
+          const session = await googleSession(data, link);
+          setRecoveryPending(false);
+          setUser(session.user);
+        },
         updateProfile,
         logout: handleLogout,
         checkSession,

@@ -8,16 +8,15 @@ import { BUILD_ENVIRONMENT, GOOGLE_WEB_CLIENT_ID } from '../config/build-variant
 import { useAuth } from '../context/AuthContext';
 import { useConnection } from '../context/ConnectionContext';
 import { useTheme } from '../theme/ThemeContext';
-import { Field, Note } from './attention/Controls';
+import { Note } from './attention/Controls';
 import { ConnectionForm } from './ConnectionForm';
 import { OverlayModal } from './feedback/OverlayModal';
 import { KeyboardAwareScrollView } from './KeyboardAwareScrollView';
-import { Button } from './ui/Button';
 import { GoogleButton } from './ui/GoogleButton';
 
 const sello = require('../../android/app/src/main/res/drawable-xxxhdpi/ic_launcher_art.png');
 
-// Mantengo el ID token solo mientras se completa el alta y lo limpio al cancelar o terminar.
+// Inicio sesión con Google sin pedir datos que corresponden al primer paso de reserva.
 export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
   link?: boolean;
   entry?: 'cart' | 'settings';
@@ -30,46 +29,40 @@ export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
   const { colors, typography } = useTheme();
   const { isSaving } = useConnection();
   const running = useRef(false);
-  const [pendingToken, setPendingToken] = useState<string | null>(null);
-  const [phone, setPhone] = useState('');
   const [busy, setBusy] = useState(false);
   const [showConnection, setShowConnection] = useState(false);
   const [error, setError] = useState('');
-  const clearSignup = () => { setPendingToken(null); setPhone(''); };
   const closeConnection = () => setShowConnection(false);
   const disabled = busy || isSaving || !supported;
 
   const submit = async () => {
     if (running.current || isSaving || !supported) return;
-    if (pendingToken && !/^\d{10}$/.test(phone.trim())) {
-      setError(t('auth.googlePhoneInvalid'));
-      return;
-    }
     running.current = true;
     setBusy(true);
     setError('');
-    let token = pendingToken;
     try {
-      token ??= await NativeModules.EncantoBuild.googleIdToken();
+      const token = await NativeModules.EncantoBuild.googleIdToken();
       if (!token) return;
-      await loginWithGoogle(pendingToken ? { idToken: token, telefono: phone.trim() } : { idToken: token }, link);
-      clearSignup();
+      await loginWithGoogle({ idToken: token }, link);
     } catch (failure) {
       const apiFailure = isAxiosError(failure);
       const response = apiFailure ? failure.response : undefined;
-      if (response?.data?.code === 'GOOGLE_PHONE_REQUIRED' && token && !link) {
-        setPendingToken(token);
-      } else {
-        if (response?.status === 401 || response?.status === 409) clearSignup();
-        // Distingo si falló nuestra conexión, la validación o el vínculo de una cuenta previa.
-        let errorKey = link ? 'auth.googleLinkError' : 'auth.googleError';
-        if (response?.data?.code === 'GOOGLE_LINK_REQUIRED') errorKey = 'auth.googleLinkRequired';
-        else if (failure instanceof Error && failure.message === 'GOOGLE_INSECURE_CONNECTION') errorKey = 'auth.googleSecureConnection';
-        else if (apiFailure && !response) errorKey = 'auth.googleConnectionError';
-        else if (response?.status === 503) errorKey = 'auth.googleUnavailable';
-        else if (response?.status === 401 && !link) errorKey = 'auth.googleVerifyError';
-        setError(t(errorKey));
+      if (__DEV__ && BUILD_ENVIRONMENT === 'dev') {
+        // Registro la etapa y el estado sin copiar el error que devolvió el proveedor.
+        console.warn('[EC-75][google] sign-in failed', {
+          stage: apiFailure ? 'api' : 'credential',
+          status: response?.status,
+        });
       }
+      // Distingo si falló nuestra conexión, la validación o el vínculo de una cuenta previa.
+      let errorKey = link ? 'auth.googleLinkError' : 'auth.googleError';
+      if (response?.data?.code === 'GOOGLE_LINK_REQUIRED') errorKey = 'auth.googleLinkRequired';
+      else if (failure instanceof Error && failure.message === 'GOOGLE_INSECURE_CONNECTION') errorKey = 'auth.googleSecureConnection';
+      else if (failure instanceof Error && failure.message === 'SESSION_STORAGE_WRITE_FAILED') errorKey = 'auth.googleStorageError';
+      else if (apiFailure && !response) errorKey = 'auth.googleConnectionError';
+      else if (response?.status === 503) errorKey = 'auth.googleUnavailable';
+      else if (response?.status === 401 && !link) errorKey = 'auth.googleVerifyError';
+      setError(t(errorKey));
     } finally {
       setBusy(false);
       running.current = false;
@@ -80,34 +73,13 @@ export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
     <View testID={link ? 'google-link' : 'google-access'} style={styles.actions}>
       {!supported && <Note>{t('auth.googleUnavailable')}</Note>}
       {!!error && <Note live tone="error">{error}</Note>}
-      {pendingToken && (
-        <Field label={t('auth.phone')} keyboardType="phone-pad" maxLength={10} value={phone}
-          editable={!busy} onChangeText={setPhone} autoComplete="tel" />
-      )}
-      {pendingToken ? (
-        <Button
-          testID="google-submit"
-          variant="primary"
-          label={t('auth.googleComplete')}
-          onPress={() => void submit()}
-          disabled={disabled}
-          busy={busy}
-        />
-      ) : <GoogleButton
+      <GoogleButton
         testID="google-submit"
         label={t(link ? 'auth.googleLink' : 'auth.googleSignIn')}
         disabled={disabled}
         busy={busy}
         onPress={() => void submit()}
-      />}
-      {pendingToken && (
-        <Button
-          variant="tertiary"
-          label={t('auth.googleChooseAnother')}
-          onPress={() => { clearSignup(); setError(''); }}
-          disabled={busy}
-        />
-      )}
+      />
     </View>
   );
 
@@ -120,14 +92,14 @@ export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
       <SafeAreaView style={styles.modalFrame}>
         <Pressable accessible={false} onPress={closeAccess} style={StyleSheet.absoluteFill} />
         <View testID="guest-access-modal" accessibilityViewIsModal
-          style={[styles.accessCard, { height: pendingToken ? 390 : 285, backgroundColor: colors.superficie.fondo }]}>
+          style={[styles.accessCard, { height: 285, backgroundColor: colors.superficie.fondo }]}>
           <KeyboardAwareScrollView contentContainerStyle={styles.modalContent}>
             <View style={styles.top}>
               <View style={[styles.brand, { backgroundColor: colors.marca.primarioSuave }]} accessibilityElementsHidden>
                 <Image source={sello} style={styles.sello} resizeMode="contain" />
               </View>
               <View style={styles.filler} />
-              {BUILD_ENVIRONMENT === 'local' && !pendingToken && (
+              {BUILD_ENVIRONMENT === 'local' && (
                 <Pressable accessibilityRole="button" accessibilityLabel={t('auth.googleTestSettings')}
                   disabled={busy} onPress={() => setShowConnection(true)} style={styles.iconButton}>
                   <SlidersHorizontal size={19} color={colors.texto.secundario} />
@@ -139,10 +111,10 @@ export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
               </Pressable>
             </View>
             <Text accessibilityRole="header" style={[typography.tituloL, { color: colors.texto.primario }]}>
-              {t(pendingToken ? 'auth.googlePhoneHeading' : 'auth.guestSignInTitle')}
+              {t('auth.guestSignInTitle')}
             </Text>
             <Text style={[typography.cuerpoM, { color: colors.texto.secundario }]}>
-              {t(pendingToken ? 'auth.googlePhonePrompt' : entry === 'cart' ? 'auth.guestCartSignIn' : 'auth.guestSettingsSignIn')}
+              {t(entry === 'cart' ? 'auth.guestCartSignIn' : 'auth.guestSettingsSignIn')}
             </Text>
             {actions}
           </KeyboardAwareScrollView>

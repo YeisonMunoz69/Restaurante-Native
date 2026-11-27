@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Linking, Modal, ScrollView, Share, StyleSheet, Text } from 'react-native';
 import { useFocusEffect, type RouteProp } from '@react-navigation/native';
@@ -12,6 +13,7 @@ import { Feedback } from '../components/feedback/Feedback';
 import { useConnection } from '../context/ConnectionContext';
 import { useOnline } from '../context/ConnectivityContext';
 import { connectionUrl } from '../config/connection';
+import { BUILD_ENVIRONMENT } from '../config/build-variant';
 import { useTheme } from '../theme/ThemeContext';
 import { newsImageUrl, readNews } from '../services/news.service';
 import { newsLink } from '../config/web-links';
@@ -65,8 +67,14 @@ function NewsFeed({ base, restaurant, linkedId, clearLink }: {
       setPosts(result.posts);
       setCached(result.cached);
       setStatus('ready');
-    }).catch(() => {
+    }).catch(error => {
       if (controller.signal.aborted) return;
+      if (__DEV__ && BUILD_ENVIRONMENT === 'dev') {
+        // Limito el diagnóstico al estado HTTP; el error puede contener datos de la petición.
+        console.warn('[EC-75][news] request failed', {
+          status: isAxiosError(error) ? error.response?.status : undefined,
+        });
+      }
       setPosts([]);
       setCached(false);
       setStatus('error');

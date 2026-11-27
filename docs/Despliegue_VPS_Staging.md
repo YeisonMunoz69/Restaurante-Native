@@ -1,5 +1,19 @@
 # Despliegue del equipo 7 y CI/CD de dev
 
+## Actualización EC-74 · variables privadas de desarrollo
+
+En un despliegue normal usamos el archivo privado `apps/api/.env.vps` que ya está en el servidor. Para restaurarlo desde GitHub abrimos el workflow **CI/CD dev**, seleccionamos la rama `dev` y activamos `restore_vps_env`. Antes cargamos `VPS_API_ENV_FILE_B64` en el entorno **dev** con el archivo aprobado del servidor en una sola línea base64. Los secretos SSH conectan Actions con la VPS.
+
+El instalador valida `DATABASE_URL`, `DIRECT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_STORAGE_BUCKET`. Si activamos la restauración y falta el secreto, su formato es inválido o el archivo actual falta, el paso se detiene antes de reemplazarlo.
+
+Antes de reemplazar, el instalador guarda una copia privada en `/root/backups/elev-d-e-7-dev/env/` con permisos `600`; el directorio queda en `700`. El temporal se escribe junto al destino, también en `600`, y se cambia de forma atómica. Para recuperar una copia concreta:
+
+```bash
+install -m 600 /root/backups/elev-d-e-7-dev/env/<copia> /root/projects/equipo-7/apps/api/.env.vps
+```
+
+Podemos fijar la huella SSH verificada de la VPS con `SSH_HOST_FINGERPRINT` en el entorno **dev**. Los secretos existentes pueden seguir a nivel del repositorio.
+
 ## 1. Donde quedamos y que seguimos del docente
 
 **Corte del 19 de noviembre:** publicamos `dev` en `1d2351e`. GitHub bloqueó el job por facturación antes de asignar un runner. Yeison ejecutó el despliegue manual de la sección 10; la salida confirma siete migraciones aplicadas, la imagen validada y el runtime en `1d2351e`. Tras ese despliegue comprobamos `/api/v1/noticias` con HTTP 200 sin sesión. El APK `vpsDebug` incluye el bundle Android y apunta al dominio dev. Comprueba Google con un token de diagnóstico inválido. HTTP 503 indica que la API aún necesita el identificador Web público `GOOGLE_WEB_CLIENT_ID` en `apps/api/.env.vps`; HTTP 401 indica que la API ya intentó validarlo. [Ejecución de GitHub Actions](https://github.com/YeisonMunoz69/Restaurante-Native/actions/runs/44604377375).

@@ -108,7 +108,9 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
-        buildConfigField "String", "GOOGLE_WEB_CLIENT_ID", '"' + (System.getenv("ENCANTO_GOOGLE_WEB_CLIENT_ID") ?: "") + '"'
+        // Acepto el nombre específico del cliente móvil y el nombre de la API; ambos contienen el ID Web público.
+        def googleWebClientId = System.getenv("ENCANTO_GOOGLE_WEB_CLIENT_ID") ?: System.getenv("GOOGLE_WEB_CLIENT_ID") ?: ""
+        buildConfigField "String", "GOOGLE_WEB_CLIENT_ID", groovy.json.JsonOutput.toJson(googleWebClientId)
         buildConfigField "String", "WEB_ORIGIN", groovy.json.JsonOutput.toJson(System.getenv("ENCANTO_WEB_URL") ?: "")
     }
     // Dos instalaciones separadas, con almacenamiento y sesiones independientes.
@@ -121,6 +123,9 @@ android {
         }
         vps {
             dimension "environment"
+            // Identifico la entrega de Android conectada a dev.
+            versionCode 2
+            versionName "1.0.1"
             buildConfigField "String", "BACKEND_ENV", '"dev"'
             def web = new java.net.URI(System.getenv("ENCANTO_WEB_URL") ?: "")
             def validOrigin = web.scheme == "https" && web.host && web.port == -1 &&

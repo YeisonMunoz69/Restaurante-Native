@@ -3,10 +3,19 @@ import * as Keychain from 'react-native-keychain';
 // identificador de servicio para separar nuestras credenciales en el Keystore de Android o Keychain de iOS
 const KEYCHAIN_SERVICE = 'com.encanto.auth.refreshtoken';
 
-// guardo el access token estrictamente en memoria RAM
-// esta variable se destruye al cerrar la app, lo que reduce a cero el riesgo de extraccion
-// del access token mediante volcados de almacenamiento o analisis forense del dispositivo
+// Guardo el access token en memoria y ordeno las escrituras al almacén seguro.
 let inMemoryAccessToken: string | null = null;
+let unpersistedRefreshToken: string | null = null;
+let sessionRevision = 0;
+let pendingWrite = Promise.resolve();
+
+export const getSessionRevision = () => sessionRevision;
+
+function writeInOrder(write: () => Promise<void>) {
+  const result = pendingWrite.then(write);
+  pendingWrite = result.catch(() => {});
+  return result;
+}
 
 // funcion para actualizar o limpiar el access token en memoria
 export const setInMemoryAccessToken = (token: string | null): void => {
@@ -29,38 +38,43 @@ export const saveRefreshToken = async (token: string): Promise<boolean> => {
     };
 
     // guardamos como 'refreshToken' el username y el token como password
-    await Keychain.setGenericPassword('refreshToken', token, options);
-    return true;
-  } catch (error) {
-    console.error('No se pudo guardar el refresh token en el Keychain seguro:', error);
+    return Boolean(await Keychain.setGenericPassword('refreshToken', token, options));
+  } catch {
     return false;
   }
 };
 
-// leo el refresh token almacenado de forma segura
+// Distingo una lectura fallida de una sesión que nunca se guardó.
 export const getRefreshToken = async (): Promise<string | null> => {
-  try {
-    const credentials = await Keychain.getGenericPassword({
-      service: KEYCHAIN_SERVICE,
-    });
-
-    if (credentials && credentials.password) {
-      return credentials.password;
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Error al recuperar el refresh token desde el Keychain:', error);
-    return null;
-  }
+  await pendingWrite;
+  if (unpersistedRefreshToken) return unpersistedRefreshToken;
+  const credentials = await Keychain.getGenericPassword({ service: KEYCHAIN_SERVICE });
+  return credentials && credentials.password ? credentials.password : null;
 };
 
-// borro las credenciales guardadas en el Keychain y el token en memoria
-export const clearTokens = async (): Promise<void> => {
-  try {
-    inMemoryAccessToken = null;
+// Publico el access token solo cuando el refresh está guardado para la próxima apertura.
+export function persistSessionTokens(accessToken: string, refreshToken: string, revision?: number) {
+  const expectedRevision = revision ?? ++sessionRevision;
+  return writeInOrder(async () => {
+    if (expectedRevision !== sessionRevision) throw new Error('SESSION_CHANGED');
+    const saved = await saveRefreshToken(refreshToken);
+    if (expectedRevision !== sessionRevision) throw new Error('SESSION_CHANGED');
+    if (!saved) {
+      // Si la API ya rotó el token, conservo el más reciente para reintentar mientras la app siga abierta.
+      if (revision !== undefined) unpersistedRefreshToken = refreshToken;
+      throw new Error('SESSION_STORAGE_WRITE_FAILED');
+    }
+    unpersistedRefreshToken = null;
+    setInMemoryAccessToken(accessToken);
+  });
+}
+
+// Invalido renovaciones previas antes de encolar la limpieza del almacén seguro.
+export const clearTokens = (): Promise<void> => {
+  sessionRevision += 1;
+  inMemoryAccessToken = null;
+  unpersistedRefreshToken = null;
+  return writeInOrder(async () => {
     await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
-  } catch (error) {
-    console.error('Error al eliminar las credenciales del Keychain:', error);
-  }
+  });
 };

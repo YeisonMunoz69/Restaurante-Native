@@ -120,19 +120,47 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     }
   });
 
-  it('exige una captura privada y permite aprobar únicamente su revisión vigente como ADMIN', async () => {
+  it('guarda el teléfono al crear la primera reserva y lo reutiliza en la siguiente', async () => {
+    const id = '30000000-0000-4000-8000-000000000005';
+    const correo = 'primera-reserva@example.test';
+    await prisma.user.create({ data: { id, correo, nombre: 'Comensal de prueba' } });
+    const token = app.get(JwtService).sign({ sub: id, correo, rol: 'COMENSAL', sid: 'qa-primera-reserva' });
+    const submit = (payload: Record<string, unknown>) =>
+      request(app.getHttpServer()).post('/api/v1/reservas').set('Authorization', 'Bearer ' + token).send(payload);
+    const readPhone = async () => (await prisma.user.findUniqueOrThrow({ where: { id } })).telefono;
+    const payload = { fecha, horaInicio: '10:00', numComensales: 2, lineas: [], nota: null };
+    const telefono = '3001234567';
+
+    const missing = await submit(payload).expect(400);
+    expect(missing.body.code).toBe('RESERVATION_PHONE_REQUIRED');
+    // Si la franja no existe, la transacción tampoco guarda el teléfono en el perfil.
+    await submit({ ...payload, horaInicio: '09:00', telefono }).expect(409);
+    expect(await readPhone()).toBeNull();
+
+    await submit({ ...payload, telefono }).expect(201);
+    expect(await readPhone()).toBe(telefono);
+    await submit({ ...payload, horaInicio: '11:30' }).expect(201);
+    expect(await prisma.reservation.count({ where: { usuarioId: id } })).toBe(2);
+  });
+
+  it('conserva el código al reintentar el comprobante y confirma la misma reserva solo como ADMIN', async () => {
     const jwt = app.get(JwtService);
     const diner = jwt.sign({ sub: dinerId, correo: 'usuario1@example.test', rol: 'COMENSAL', sid: 'qa-comensal' });
     const admin = jwt.sign({ sub: adminId, correo: 'usuario3@example.test', rol: 'ADMIN', sid: 'qa-admin' });
     const other = jwt.sign({ sub: secondDinerId, correo: 'usuario2@example.test', rol: 'COMENSAL', sid: 'qa-otro' });
     const staff = jwt.sign({ sub: staffId, correo: 'usuario4@example.test', rol: 'STAFF', sid: 'qa-staff' });
     const server = request(app.getHttpServer());
-    const payload = { fecha, horaInicio: '10:00', numComensales: 2, lineas: [], nota: null };
+    const payload = {
+      fecha, horaInicio: '10:00', numComensales: 2,
+      lineas: [{ platoId: dishId, cantidad: 1 }], nota: null,
+    };
 
     await server.post('/api/v1/reservas').send(payload).expect(401);
     const { body } = await server.post('/api/v1/reservas').auth(diner, { type: 'bearer' }).send(payload).expect(201);
-    expect(body.reserva).toMatchObject({ estado: 'SOLICITADA', total: 0, lineas: [] });
-    expect(body.reserva.ticket).toContain(body.reserva.codigo);
+    const { id, codigo } = body.reserva;
+    expect(body.reserva).toMatchObject({ estado: 'SOLICITADA', total: 32000 });
+    expect(body.reserva.lineas).toHaveLength(1);
+    expect(body.reserva.ticket).toContain(codigo);
 
     const approval = `/api/v1/admin/reservas/${body.reserva.id}/aprobar`;
     const proof = `/api/v1/reservas/mias/${body.reserva.id}/comprobante`;
@@ -144,7 +172,11 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     await server.patch(approval).auth(admin, { type: 'bearer' }).expect(409);
     await attach(other).expect(404);
     await attach(diner, Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>')).expect(400);
+    const detail = `/api/v1/reservas/mias/${id}`;
+    const stillRequested = await server.get(detail).auth(diner, { type: 'bearer' }).expect(200);
+    expect(stillRequested.body).toMatchObject({ id, codigo, estado: 'SOLICITADA', comprobante: null });
     const first = await attach(diner).expect(200);
+    expect(first.body).toMatchObject({ id, codigo, estado: 'SOLICITADA' });
     expect(first.body.comprobante).toMatchObject({ ancho: 220, alto: 490 });
     expect(first.body.comprobante.imagen).toBeUndefined();
     await server.get(proof).auth(other, { type: 'bearer' }).expect(404);
@@ -163,6 +195,9 @@ describe.skipIf(!shouldRun)('reservas contra PostgreSQL aislado', () => {
     const second = await attach(diner).expect(200);
     await server.patch(approval).auth(admin, { type: 'bearer' }).send({ comprobanteId: first.body.comprobante.id }).expect(409);
     await server.patch(approval).auth(admin, { type: 'bearer' }).send({ comprobanteId: second.body.comprobante.id }).expect(200);
+    const confirmed = await server.get(detail).auth(diner, { type: 'bearer' }).expect(200);
+    expect(confirmed.body).toMatchObject({ id, codigo, estado: 'CONFIRMADA' });
+    expect(await prisma.reservation.count()).toBe(1);
     await server.patch(approval).auth(admin, { type: 'bearer' }).expect(409);
     await attach(diner).expect(409);
     const row = await prisma.reservation.findUniqueOrThrow({ where: { id: body.reserva.id } });

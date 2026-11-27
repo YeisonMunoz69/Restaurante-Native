@@ -4,13 +4,8 @@ import axios, {
   AxiosError,
 } from 'axios';
 import { API_CONFIG } from '../../config/api.config';
-import {
-  getInMemoryAccessToken,
-  setInMemoryAccessToken,
-  getRefreshToken,
-  saveRefreshToken,
-  clearTokens,
-} from '../auth/token-storage';
+import { getInMemoryAccessToken, getSessionRevision } from '../auth/token-storage';
+import { refreshSessionTokens } from '../auth/session-refresh';
 
 // creo la instancia base de Axios apuntando al backend de NestJS
 export const apiClient: AxiosInstance = axios.create({
@@ -46,33 +41,22 @@ const notifySessionExpired = () => {
   });
 };
 
-// variables para controlar el estado de refresco concurrente y evitar llamadas repetidas
-let isRefreshing = false;
-interface QueueItem {
-  resolve: (token: string) => void;
-  reject: (error: any) => void;
+interface SessionRequest extends InternalAxiosRequestConfig {
+  _sessionRevision?: number;
+  _retry?: boolean;
 }
-let failedQueue: QueueItem[] = [];
-
-// proceso todas las peticiones que quedaron esperando mientras se renovaba el token
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else if (token) {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
 
 // INTERCEPTOR DE PETICIONES:
 // inyectamos el access token que tenemos en memoria en el header Authorization
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config: SessionRequest) => {
+    if (config._retry && config._sessionRevision !== getSessionRevision()) {
+      throw new Error('SESSION_CHANGED');
+    }
     const token = getInMemoryAccessToken();
-    if (token && config.headers) {
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      config._sessionRevision = getSessionRevision();
     }
     return config;
   },
@@ -84,12 +68,15 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    const originalRequest = error.config as SessionRequest | undefined;
 
-    // si no hay configuracion de peticion o la respuesta no es 401, lo dejamos pasar
-    if (!originalRequest || error.response?.status !== 401) {
+    // Solo recupero peticiones autenticadas de la sesión que originó el 401.
+    if (
+      !originalRequest ||
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      originalRequest._sessionRevision !== getSessionRevision()
+    ) {
       return Promise.reject(error);
     }
 
@@ -103,83 +90,17 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // evitamos bucles infinitos si la misma peticion ya fue reintentada una vez
-    if (originalRequest._retry) {
+    originalRequest._retry = true;
+    const currentToken = getInMemoryAccessToken();
+    // Si el 401 llegó tarde, reutilizo la renovación que ya terminó.
+    if (currentToken && originalRequest.headers.Authorization !== `Bearer ${currentToken}`) {
+      return apiClient(originalRequest);
+    }
+    const renewed = await refreshSessionTokens();
+    if (!renewed) {
+      notifySessionExpired();
       return Promise.reject(error);
     }
-
-    // si ya hay un refresco en marcha, encolamos esta peticion para reintentarla apenas termine
-    if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      })
-        .then((newAccessToken) => {
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          }
-          return apiClient(originalRequest);
-        })
-        .catch((err) => Promise.reject(err));
-    }
-
-    // marcamos que iniciamos el proceso de renovacion para que otras peticiones esperen
-    originalRequest._retry = true;
-    isRefreshing = true;
-
-    try {
-      // leemos el refresh token que guardamos de forma segura en el hardware del celular
-      const storedRefreshToken = await getRefreshToken();
-
-      if (!storedRefreshToken) {
-        // si no tenemos refresh token, cerramos la sesion limpiamente
-        await clearTokens();
-        notifySessionExpired();
-        processQueue(new Error('No hay refresh token almacenado en Keychain'), null);
-        return Promise.reject(error);
-      }
-
-      // llamamos al endpoint de refresh usando axios plano (sin pasar por este interceptor)
-      const refreshResponse = await axios.post(
-        `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.refresh}`,
-        { refreshToken: storedRefreshToken },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: API_CONFIG.timeoutMs,
-        }
-      );
-
-      const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-        refreshResponse.data;
-
-      // actualizamos el access token en la memoria RAM
-      setInMemoryAccessToken(newAccessToken);
-
-      // actualizamos el nuevo refresh token en el Keychain (rotacion de seguridad)
-      if (newRefreshToken) {
-        await saveRefreshToken(newRefreshToken);
-      }
-
-      // actualizamos el header de la peticion original y la reintentamos
-      if (originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-      }
-
-      // reanudamos y resolvemos todas las peticiones que se quedaron esperando en la cola
-      processQueue(null, newAccessToken);
-
-      return apiClient(originalRequest);
-    } catch (refreshError) {
-      // Conservo el refresh token si se cayó la conexión durante la renovación.
-      const status = axios.isAxiosError(refreshError) ? refreshError.response?.status : undefined;
-      if (status === 401 || status === 403) {
-        await clearTokens();
-        notifySessionExpired();
-      }
-      processQueue(refreshError, null);
-      return Promise.reject(refreshError);
-    } finally {
-      // liberamos la bandera de refresco para futuras peticiones
-      isRefreshing = false;
-    }
+    return apiClient(originalRequest);
   }
 );

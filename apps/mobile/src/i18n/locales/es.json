@@ -14,6 +14,9 @@
     "offlineTitle": "Carta sin conexión",
     "offlineBundled": "Estás viendo la carta incluida en la app. Conéctate para confirmar precios y disponibilidad.",
     "offlineSaved": "Estás viendo la última carta guardada. Conéctate para confirmar precios y disponibilidad.",
+    "requestFallbackTitle": "No pudimos actualizar la carta",
+    "requestFallbackBundled": "No pudimos consultar la carta. Estás viendo la versión incluida en la app, que puede estar desactualizada.",
+    "requestFallbackSaved": "No pudimos consultar la carta. Estás viendo la última versión guardada; confirma precios y disponibilidad más tarde.",
     "offlinePrice": "Precio de referencia",
     "offlineDetailMissing": "Este plato no está en la carta guardada. Vuelve a abrirlo con conexión.",
     "offlineNoPhotos": "Este plato no tiene fotos incluidas para consulta sin conexión.",
@@ -436,6 +439,7 @@
     "version": "Versión 1.0.0"
   },
   "auth": {
+    "retrySession": "Reintentar recuperar la sesión",
     "guestSignInTitle": "Accede con Google",
     "guestReminder": "Entra para hacer pedidos y guardar tus preferencias.",
     "guestCartSignIn": "Inicia sesión para añadir platos a tu pedido.",
@@ -452,6 +456,7 @@
     "googleTestSettings": "Configuración de prueba",
     "googlePhoneInvalid": "Ingresa un teléfono de 10 dígitos.",
     "googleLinkRequired": "Este correo ya tiene cuenta en Encanto. Vincula Google desde una sesión anterior o contacta al equipo.",
+    "googleStorageError": "El teléfono no pudo guardar la sesión. Vuelve a intentar con el dispositivo desbloqueado.",
     "googleSecureConnection": "Para entrar con Google usa HTTPS o la conexión local por USB.",
     "googleUnavailable": "El acceso con Google todavía no está configurado en esta instalación.",
     "googleError": "No pudimos iniciar sesión con Google. Inténtalo de nuevo.",
