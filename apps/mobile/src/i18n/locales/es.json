@@ -78,6 +78,12 @@
     "unconfigured": "El restaurante todavía no publicó todos los datos de pago.",
     "whatsappNotPublished": "El restaurante todavía no publicó un número de WhatsApp.",
     "whatsappInquiry": "Hola, ¿me pueden indicar los medios de pago vigentes para una reserva?",
+    "openPaymentApps": "Abrir app para pagar",
+    "openPaymentApp": "Abrir {{name}}",
+    "shareAfterPayment": "Completa el pago en tu app bancaria. Luego comparte la foto del comprobante con El Encanto Campestre para volver a la reserva.",
+    "noPaymentApps": "No encontramos ninguna de las apps sugeridas. Puedes abrir tu app bancaria desde el teléfono y luego compartir el comprobante con El Encanto Campestre.",
+    "paymentAppsLoadError": "No pudimos consultar las apps instaladas. Toca de nuevo para reintentar.",
+    "paymentAppOpenError": "No pudimos abrir {{name}}. Puedes abrirla desde el teléfono o elegir otra app.",
     "currentTitle": "Datos de pago vigentes del restaurante"
   },
   "reservations": {

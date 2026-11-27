@@ -5,6 +5,7 @@ import type { PaymentConfigResult } from '@encanto/shared';
 import { paymentApi } from '../services/payment.service';
 import { useTheme } from '../theme/ThemeContext';
 import { Action, Note, Panel } from './attention/Controls';
+import { PaymentAppOptions } from './PaymentAppOptions';
 
 // Vuelvo a consultar contacto/cuentas al abrir el detalle y antes de salir a WhatsApp.
 export function PaymentInstructions({
@@ -21,6 +22,7 @@ export function PaymentInstructions({
   const [data, setData] = useState<PaymentConfigResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const hasPaymentDetails = Boolean(data?.mediosPago.trim() && data?.instruccionesPago.trim());
   const load = useCallback(async () => {
     setBusy(true);
     setData(null);
@@ -88,13 +90,14 @@ export function PaymentInstructions({
               {data.whatsapp}
             </Text>
           )}
-          {(!data.mediosPago.trim() || !data.instruccionesPago.trim()) && (
+          {!hasPaymentDetails && (
             <Note live tone="warning">
               {t('payments.unconfigured')}
             </Note>
           )}
         </>
       )}
+      {hasPaymentDetails && <PaymentAppOptions />}
       <Action variant="tertiary"
         label={t('payments.reload')}
         disabled={busy}

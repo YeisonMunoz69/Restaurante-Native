@@ -283,6 +283,37 @@ describe('ReservationCreateScreen', () => {
     ReactTestRenderer.act(() => tree.unmount());
   });
 
+  it('vuelve al código de la solicitud y muestra la foto compartida al salir del pago', async () => {
+    await AsyncStorage.clear();
+    let draft!: ReturnType<typeof useReservationDraft>;
+    function DraftForm() {
+      draft = useReservationDraft();
+      return draft.ready ? <ReservationCreateScreen onBack={onBack} onCreated={onCreated} /> : null;
+    }
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(<ThemeProvider>
+        <ReservationDraftProvider scope="qa-return-from-payment" authLoading={false} canOpen onOpen={jest.fn()}>
+          <DraftForm />
+        </ReservationDraftProvider>
+      </ThemeProvider>);
+    });
+    await openReview(tree);
+    await press(tree, 'reservation-submit');
+    await openPayment(tree);
+    expect(tree.root.findAllByType(Action).some(action => action.props.label === 'reservations.sendWhatsApp')).toBe(true);
+
+    await ReactTestRenderer.act(async () => {
+      await draft.saveReceipt({ fileName: 'qa-share.png', uri: 'file:///qa-share.png', type: 'image/png', copied: true });
+    });
+    expect(tree.root.findAllByType(Action).some(action => action.props.label === 'reservations.sendWhatsApp')).toBe(false);
+    expect(tree.root.findAllByProps({ children: response.reserva.codigo }).length).toBeGreaterThan(0);
+    expect(tree.root.findByProps({ testID: 'reservation-send-saved-receipt' })).toBeDefined();
+    expect(api.create).toHaveBeenCalledTimes(1);
+    expect(api.uploadReceipt).not.toHaveBeenCalled();
+    ReactTestRenderer.act(() => tree.unmount());
+  });
+
   it('avisa sobre el día cerrado y retira el mensaje a los tres segundos', async () => {
     jest.useFakeTimers();
     let tree!: ReactTestRenderer.ReactTestRenderer;
