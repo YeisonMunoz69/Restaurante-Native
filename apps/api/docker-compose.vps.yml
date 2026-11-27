@@ -18,6 +18,8 @@ services:
       PORT: '3000'
       SWAGGER_ENABLED: 'false'
       RESTAURANT_WHATSAPP: ${RESTAURANT_WHATSAPP:-}
+      # Uso el dominio de dev aunque una VPS anterior conserve API_URL del equipo.
+      PUBLIC_MENU_ORIGIN: ${PUBLIC_MENU_ORIGIN:-https://encanto-campestre-dev.apolobyte.online}
     ports:
       - '127.0.0.1:${API_HOST_PORT:-3000}:3000'
     healthcheck:

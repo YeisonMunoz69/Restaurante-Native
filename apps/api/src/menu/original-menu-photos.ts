@@ -3,9 +3,10 @@ import { isDemoMenuPhoto, originalMenuPhotoKey, type MenuPhoto } from '@encanto/
 // Devuelvo una URL absoluta del entorno, compatible con los APK que ya leen fotos por HTTPS.
 export function originalMenuPhotoUrl(slug: string, nombre: string): string | null {
   const key = originalMenuPhotoKey(slug, nombre);
-  if (!key || !process.env.API_URL) return null;
+  const origin = process.env.PUBLIC_MENU_ORIGIN || process.env.API_URL;
+  if (!key || !origin) return null;
   try {
-    const publicApi = new URL(process.env.API_URL);
+    const publicApi = new URL(origin);
     if (publicApi.protocol !== 'https:' || publicApi.username || publicApi.password) return null;
     return new URL(`/api/v1/carta-fotos/${key}-01.webp`, publicApi).href;
   } catch {
