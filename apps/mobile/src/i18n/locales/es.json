@@ -439,6 +439,7 @@
     "version": "Versión 1.0.0"
   },
   "auth": {
+    "retrySession": "Reintentar recuperar la sesión",
     "guestSignInTitle": "Accede con Google",
     "guestReminder": "Entra para hacer pedidos y guardar tus preferencias.",
     "guestCartSignIn": "Inicia sesión para añadir platos a tu pedido.",

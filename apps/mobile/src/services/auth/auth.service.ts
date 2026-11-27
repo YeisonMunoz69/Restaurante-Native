@@ -1,12 +1,7 @@
-import axios from 'axios';
 import { apiClient } from '../api/api-client';
 import { API_CONFIG } from '../../config/api.config';
-import {
-  setInMemoryAccessToken,
-  saveRefreshToken,
-  getRefreshToken,
-  clearTokens,
-} from './token-storage';
+import { clearTokens, persistSessionTokens } from './token-storage';
+import { refreshSessionTokens, type SessionResponse } from './session-refresh';
 import type { AccountProfile, GoogleLoginDto, LoginDto, ProfileUpdateDto, RegisterDto } from '@encanto/shared';
 import { BUILD_ENVIRONMENT } from '../../config/build-variant';
 
@@ -24,8 +19,6 @@ export interface AuthSession {
   user: AuthUser;
   accessToken: string;
 }
-
-type SessionResponse = { accessToken: string; refreshToken?: string; perfil?: AccountProfile };
 
 // funcion auxiliar para decodificar el payload del token JWT sin dependencias externas
 const decodeJwtPayload = (token: string): any => {
@@ -65,17 +58,10 @@ const decodeJwtPayload = (token: string): any => {
   }
 };
 
-// inicio de sesion con correo y contrasena
-async function acceptSession({ accessToken, refreshToken, perfil }: SessionResponse, correo = ''): Promise<AuthSession> {
+// Uso el usuario y rol del JWT emitido por nuestra API.
+function sessionFromResponse({ accessToken, perfil }: SessionResponse, correo = ''): AuthSession {
   const payload = decodeJwtPayload(accessToken);
   if (!payload?.sub) throw new Error('INVALID_SESSION');
-  // guardo el access token estrictamente en memoria (RAM)
-  setInMemoryAccessToken(accessToken);
-
-  // guardo el refresh token de forma segura y cifrada en el Keychain/Keystore
-  if (refreshToken) {
-    await saveRefreshToken(refreshToken);
-  }
 
   // decodifico los datos del usuario incluidos en el token
   const user: AuthUser = {
@@ -88,6 +74,13 @@ async function acceptSession({ accessToken, refreshToken, perfil }: SessionRespo
   };
 
   return { user, accessToken };
+}
+
+async function acceptSession(response: SessionResponse, correo = ''): Promise<AuthSession> {
+  const session = sessionFromResponse(response, correo);
+  if (!response.refreshToken) throw new Error('INVALID_SESSION');
+  await persistSessionTokens(session.accessToken, response.refreshToken);
+  return session;
 }
 
 export const login = async (credentials: LoginDto): Promise<AuthSession> => {
@@ -132,33 +125,6 @@ export const logout = async (): Promise<void> => {
 
 // restauracion automatica de sesion al abrir la app
 export const restoreSession = async (): Promise<AuthSession | null> => {
-  try {
-    const storedRefreshToken = await getRefreshToken();
-    if (!storedRefreshToken) {
-      return null;
-    }
-
-    // llamamos al endpoint de refresh para verificar si el token sigue activo y vigente
-    const response = await axios.post(
-      `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.refresh}`,
-      { refreshToken: storedRefreshToken },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: API_CONFIG.timeoutMs,
-      }
-    );
-
-    const { accessToken } = response.data;
-
-    if (!accessToken) {
-      await clearTokens();
-      return null;
-    }
-
-    return await acceptSession(response.data);
-  } catch (error) {
-    const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-    if (status === 401 || status === 403) await clearTokens();
-    return null;
-  }
+  const response = await refreshSessionTokens();
+  return response ? sessionFromResponse(response) : null;
 };

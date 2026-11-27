@@ -246,6 +246,8 @@ export function ReservationCreateScreen({
   const updateSent = async (reserva: CreateReservationResult['reserva'], fileName?: string) => {
     const savedResult = result ? { ...result, reserva } : null;
     if (!savedResult) return;
+    // Quito el aviso del intento anterior cuando la API ya aceptó el comprobante.
+    setError(null);
     setResult(savedResult);
     await saveFields({ step: 'sent', date, people: peopleText, slot, quantities, note, result: savedResult });
     if (fileName) await clearReceipt(fileName);
