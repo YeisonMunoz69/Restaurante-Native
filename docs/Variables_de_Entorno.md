@@ -31,7 +31,7 @@ El script crea una imagen sintética, usa un nombre UUID en `qa/AAAA-MM-DD/`, co
 
 ## WhatsApp para consultar pagos
 
-`RESTAURANT_WHATSAPP` es opcional. Usa el formato internacional con `+`, indicativo y número sin espacios. Configúralo en `apps/api/.env` para desarrollo local. El despliegue automatizado de dev usa la variable de repositorio `RESTAURANT_WHATSAPP` en GitHub Actions. Un despliegue manual lee `apps/api/.env.vps`. Ejecuta el despliegue al cambiar el valor para recrear el contenedor de la API. Si ADMIN ya publicó un número válido, se usa ese número. Para retirar el contacto, vacía el valor publicado y retira también la variable del entorno.
+`RESTAURANT_WHATSAPP` es opcional. Usa el formato internacional con `+`, indicativo y número sin espacios. Configúralo en `apps/api/.env` para desarrollo local. Guarda `RESTAURANT_WHATSAPP` como secreto de repositorio en GitHub Actions para que dev lo reciba con el valor enmascarado en el registro. Un despliegue manual lee `apps/api/.env.vps`. Ejecuta el despliegue al cambiar el valor para recrear el contenedor de la API. Si ADMIN ya publicó un número válido, se usa ese número. Para retirar el contacto, vacía el valor publicado y retira también la variable del entorno.
 
 El contacto permite consultar por WhatsApp desde **Medios de pago**. Los medios y las instrucciones oficiales se publican desde el panel de ADMIN.
 
