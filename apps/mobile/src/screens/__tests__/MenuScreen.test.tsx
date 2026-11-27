@@ -218,6 +218,23 @@ describe('MenuScreen', () => {
     ReactTestRenderer.act(() => tree.unmount());
   });
 
+  it('distingue un fallo de consulta de una desconexión real', async () => {
+    api.categories.mockRejectedValueOnce(Object.assign(new Error('Network Error'), {
+      isAxiosError: true,
+    }));
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    await ReactTestRenderer.act(async () => {
+      tree = ReactTestRenderer.create(<ThemeProvider><MenuScreen /></ThemeProvider>);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(textValues(tree)).toContain('menu.requestFallbackTitle');
+    expect(textValues(tree)).not.toContain('menu.offlineTitle');
+    expect(tree.root.findAllByProps({ testID: 'menu-retry' }).length).toBeGreaterThan(0);
+    ReactTestRenderer.act(() => tree.unmount());
+  });
+
   it('keeps a compact date only after the full header scrolls away', async () => {
     let tree!: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => {
