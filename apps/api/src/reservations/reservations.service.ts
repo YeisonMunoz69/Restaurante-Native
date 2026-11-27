@@ -549,11 +549,12 @@ export class ReservationsService {
         },
         include: reservationInclude,
       });
+      const pago = paymentConfig(restaurant);
       return {
         reserva: serialize(created),
-        whatsapp: restaurant.whatsapp,
-        instruccionesPago: paymentInstructions(paymentConfig(restaurant)),
-        pago: paymentConfig(restaurant),
+        whatsapp: pago.whatsapp,
+        instruccionesPago: paymentInstructions(pago),
+        pago,
       };
     });
   }

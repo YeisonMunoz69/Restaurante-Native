@@ -29,6 +29,12 @@ node --env-file=apps/api/.env scripts/verificar-storage.mjs --allow-test-upload
 
 El script crea una imagen sintética, usa un nombre UUID en `qa/AAAA-MM-DD/`, comprueba lectura pública y elimina solo ese objeto. No crea platos ni reemplaza la aceptación de galería en Android. No lo añadimos al CI: el CI no debe escribir en el Storage compartido.
 
+## WhatsApp para consultar pagos
+
+`RESTAURANT_WHATSAPP` es opcional. Usa el formato internacional con `+`, indicativo y número sin espacios. Configúralo en `apps/api/.env` para desarrollo local. El despliegue automatizado de dev usa la variable de repositorio `RESTAURANT_WHATSAPP` en GitHub Actions. Un despliegue manual lee `apps/api/.env.vps`. Ejecuta el despliegue al cambiar el valor para recrear el contenedor de la API. Si ADMIN ya publicó un número válido, se usa ese número. Para retirar el contacto, vacía el valor publicado y retira también la variable del entorno.
+
+El contacto permite consultar por WhatsApp desde **Medios de pago**. Los medios y las instrucciones oficiales se publican desde el panel de ADMIN.
+
 ## Ambiente local y VPS
 
 El archivo vigente de esta PC declara `NODE_ENV=production` y `APP_ENV=staging`; lo registramos sin cambiarlo. Para trabajar con recarga y Swagger, revisamos el ambiente de desarrollo de forma explícita. No cambiamos conexión ni secretos para arreglar una diferencia de ambiente. La VPS mantiene su archivo privado independiente, puerto de host 8084 y puerto de API 3000 dentro del contenedor; copiar un `.env` entre equipos no es un paso de despliegue.

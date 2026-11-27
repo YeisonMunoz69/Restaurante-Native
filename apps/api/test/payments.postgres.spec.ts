@@ -5,7 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HttpAdapterHost, Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { PaymentConfigSchema } from '@encanto/shared';
 import { PaymentsModule } from '../src/payments/payments.module.js';
@@ -140,6 +140,22 @@ describe.skipIf(!url)(
         version: 0,
       });
     });
+    it('publica el contacto del entorno sin inventar datos de pago', async () => {
+      try {
+        vi.stubEnv('RESTAURANT_WHATSAPP', '+573000000002');
+        expect((await get(diner).expect(200)).body).toMatchObject({
+          whatsapp: '+573000000002',
+          mediosPago: '',
+          instruccionesPago: '',
+          configurada: false,
+          version: 0,
+        });
+        vi.stubEnv('RESTAURANT_WHATSAPP', '+573000000002?text=inválido');
+        expect((await get(diner).expect(200)).body.whatsapp).toBe('');
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
     it('exige JWT y rechaza escrituras de comensal y STAFF', async () => {
       await request(app.getHttpServer())
         .get('/api/v1/reservas/datos-pago')
@@ -177,7 +193,12 @@ describe.skipIf(!url)(
         version: 1,
         configurada: true,
       });
-      expect((await get(diner).expect(200)).body).toEqual(response.body);
+      vi.stubEnv('RESTAURANT_WHATSAPP', '+573000000002');
+      try {
+        expect((await get(diner).expect(200)).body).toEqual(response.body);
+      } finally {
+        vi.unstubAllEnvs();
+      }
       expect(await fixture.client.auditLog.findFirst()).toMatchObject({
         usuarioId: adminId,
         accion: 'CONFIGURAR_PAGOS',

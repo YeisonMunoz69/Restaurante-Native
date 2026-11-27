@@ -38,6 +38,13 @@ if [[ -z "$api_container" ]]; then
     exit 1
 fi
 
+if [[ -n "${RESTAURANT_WHATSAPP:-}" ]]; then
+    if [[ "$(docker exec "$api_container" printenv RESTAURANT_WHATSAPP)" != "$RESTAURANT_WHATSAPP" ]]; then
+        printf '%s\n' 'El contenedor no recibió el contacto WhatsApp del despliegue.' >&2
+        exit 1
+    fi
+fi
+
 # Consulto la etiqueta configurada: compose images puede devolver el ID viejo de un
 # contenedor que sigue vivo aunque ese ID ya no sea inspeccionable tras reconstruir.
 runtime_image="$(docker inspect --format '{{.Config.Image}}' "$api_container")"
