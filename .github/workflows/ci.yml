@@ -164,18 +164,20 @@ jobs:
         env:
           DEPLOY_BRANCH: ${{ secrets.MAIN_BRANCH }}
           DEPLOY_SHA: ${{ github.sha }}
+          RESTAURANT_WHATSAPP: ${{ vars.RESTAURANT_WHATSAPP }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          envs: DEPLOY_BRANCH,DEPLOY_SHA
+          envs: DEPLOY_BRANCH,DEPLOY_SHA,RESTAURANT_WHATSAPP
           command_timeout: 30m
           script_stop: true
           script: |
             set -eu
             test "$DEPLOY_BRANCH" = dev
+            if [ -z "${RESTAURANT_WHATSAPP:-}" ]; then unset RESTAURANT_WHATSAPP; fi
             cd /root/projects/equipo-7
             test -z "$(git status --porcelain)"
             git fetch origin "$DEPLOY_BRANCH"

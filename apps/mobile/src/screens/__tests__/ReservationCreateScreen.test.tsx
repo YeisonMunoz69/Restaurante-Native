@@ -135,6 +135,35 @@ describe('ReservationCreateScreen', () => {
     await ReactTestRenderer.act(async () => { tree.root.findAllByType(Button).find(button => button.props.label === 'reservations.receiptShowPayment')!.props.onPress(); });
   }
 
+  it('permite consultar por WhatsApp desde Medios de pago antes de enviar la solicitud', async () => {
+    payments.current.mockResolvedValue({
+      ...currentPayment, mediosPago: '', instruccionesPago: '', configurada: false,
+    });
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    let tree!: ReactTestRenderer.ReactTestRenderer;
+    try {
+      await ReactTestRenderer.act(async () => {
+        tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>);
+      });
+      await openReview(tree);
+      await ReactTestRenderer.act(async () => {
+        tree.root.findAllByType(Button).find(button => button.props.label === 'reservations.paymentMethods')!.props.onPress();
+      });
+      for (const label of ['payments.reload', 'reservations.sendWhatsApp']) {
+        await ReactTestRenderer.act(async () => {
+          tree.root.findAllByType(Action).find(action => action.props.label === label)!.props.onPress();
+        });
+      }
+      expect(payments.current).toHaveBeenCalledTimes(3);
+      expect(tree.root.findAllByType(Text).filter(node => node.props.children === 'payments.unconfigured')).toHaveLength(1);
+      expect(open).toHaveBeenCalledWith('https://wa.me/573000000000?text=payments.whatsappInquiry');
+      expect(api.create).not.toHaveBeenCalled();
+    } finally {
+      if (tree) ReactTestRenderer.act(() => tree.unmount());
+      open.mockRestore();
+    }
+  });
+
   it('separa el paso anterior de Atrás, que guarda y confirma antes de salir', async () => {
     let back!: () => boolean | null | undefined;
     const subscription = jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_event, handler) => {
@@ -270,8 +299,7 @@ describe('ReservationCreateScreen', () => {
     }
   });
 
-  it.each(['sin-aplicacion', 'error-al-abrir', 'telefono-no-configurado'])('conserva código y ticket cuando WhatsApp falla: %s', async scenario => {
-    const canOpen = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(scenario !== 'sin-aplicacion');
+  it.each(['error-al-abrir', 'telefono-no-configurado'])('conserva código y ticket cuando WhatsApp falla: %s', async scenario => {
     const open = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('No disponible'));
     if (scenario === 'telefono-no-configurado') payments.current.mockResolvedValue({ ...currentPayment, whatsapp: '', configurada: false });
     let tree: ReactTestRenderer.ReactTestRenderer;
@@ -280,17 +308,14 @@ describe('ReservationCreateScreen', () => {
     await ReactTestRenderer.act(async () => { await tree!.root.findByProps({ testID: 'reservation-submit' }).props.onPress(); });
     await openPayment(tree!);
     await ReactTestRenderer.act(async () => { await tree!.root.findAllByType(Action).find(a => a.props.label === 'reservations.sendWhatsApp')!.props.onPress(); });
-    if (scenario === 'telefono-no-configurado') expect(canOpen).not.toHaveBeenCalled();
-    else expect(canOpen).toHaveBeenCalledWith(expect.stringContaining('EC-20310223-ABCD1234'));
     expect(open).toHaveBeenCalledTimes(scenario === 'error-al-abrir' ? 1 : 0);
-    expect(tree!.root.findAllByProps({ children: scenario === 'telefono-no-configurado' ? 'payments.unconfigured' : 'reservations.whatsappUnavailable' }).length).toBeGreaterThan(0);
+    expect(tree!.root.findAllByProps({ children: scenario === 'telefono-no-configurado' ? 'payments.whatsappNotPublished' : 'reservations.whatsappUnavailable' }).length).toBeGreaterThan(0);
     expect(tree!.root.findAllByProps({ children: response.reserva.codigo }).length).toBeGreaterThan(0);
     ReactTestRenderer.act(() => tree!.unmount());
-    canOpen.mockRestore(); open.mockRestore();
+    open.mockRestore();
   });
 
   it('consulta datos vigentes antes de WhatsApp y no reutiliza cuentas antiguas sin red', async () => {
-    const canOpen = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true);
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
     let tree: ReactTestRenderer.ReactTestRenderer;
     await ReactTestRenderer.act(async () => { tree = ReactTestRenderer.create(<ThemeProvider><ReservationCreateScreen onBack={onBack} onCreated={onCreated} /></ThemeProvider>); });
@@ -307,7 +332,7 @@ describe('ReservationCreateScreen', () => {
     expect(open).toHaveBeenCalledTimes(1);
     expect(tree!.root.findAllByProps({ children: 'payments.loadError' }).length).toBeGreaterThan(0);
     expect(tree!.root.findAllByProps({ children: 'Llave nueva de prueba' })).toHaveLength(0);
-    ReactTestRenderer.act(() => tree!.unmount()); canOpen.mockRestore(); open.mockRestore();
+    ReactTestRenderer.act(() => tree!.unmount()); open.mockRestore();
   });
 
   it('consulta franjas y envía una solicitud antes de mostrar la confirmación real', async () => {

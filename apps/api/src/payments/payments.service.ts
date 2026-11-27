@@ -2,21 +2,29 @@ import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import type { PaymentConfig, PaymentConfigResult } from '@encanto/shared';
 import { PrismaService } from '../prisma/prisma.service.js';
 
-// Leo datos para recibir pagos; no guardamos PIN, contraseñas ni comprobantes aquí.
-export function paymentConfig(row: {
-  whatsapp: string;
-  mediosPago: string;
-  instruccionesPago: string;
-  pagoVersion: number;
-}): PaymentConfigResult {
+// El contacto publicado por ADMIN tiene prioridad sobre el contacto del entorno.
+export function paymentConfig(
+  row: {
+    whatsapp: string;
+    mediosPago: string;
+    instruccionesPago: string;
+    pagoVersion: number;
+  },
+  fallbackWhatsapp = process.env.RESTAURANT_WHATSAPP ?? '',
+): PaymentConfigResult {
+  const validNumber = /^\+[1-9]\d{9,14}$/;
+  const whatsapp =
+    [row.whatsapp.trim(), fallbackWhatsapp.trim()].find((value) =>
+      validNumber.test(value),
+    ) ?? '';
   return {
-    whatsapp: row.whatsapp,
+    whatsapp,
     mediosPago: row.mediosPago,
     instruccionesPago: row.instruccionesPago,
     version: row.pagoVersion,
-    configurada:
-      /^\+[1-9]\d{9,14}$/.test(row.whatsapp) &&
-      Boolean(row.mediosPago.trim() && row.instruccionesPago.trim()),
+    configurada: Boolean(
+      whatsapp && row.mediosPago.trim() && row.instruccionesPago.trim(),
+    ),
   };
 }
 
@@ -62,18 +70,18 @@ export class PaymentsService {
         throw new ConflictException(
           'Otro administrador cambió los datos. Recargue antes de guardar',
         );
-      const next = paymentConfig({ ...input, pagoVersion: input.version + 1 });
+      const next = { ...input, pagoVersion: input.version + 1 };
       await db.auditLog.create({
         data: {
           usuarioId: actorId,
           accion: 'CONFIGURAR_PAGOS',
           entidad: 'restaurantes',
           entidadId: previous.id,
-          datosPrevios: { ...paymentConfig(previous) },
-          datosNuevos: { ...next },
+          datosPrevios: { ...paymentConfig(previous, '') },
+          datosNuevos: { ...paymentConfig(next, '') },
         },
       });
-      return next;
+      return paymentConfig(next);
     });
   }
 }

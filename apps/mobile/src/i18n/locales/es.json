@@ -75,7 +75,9 @@
     "discardTitle": "¿Descartar los cambios sin guardar?",
     "discardBody": "Todavía tienes una edición pendiente en este formulario.",
     "discard": "Descartar cambios",
-    "unconfigured": "El restaurante todavía no publicó todos los datos de pago y contacto. Tu solicitud sigue pendiente; consulta más tarde las instrucciones vigentes.",
+    "unconfigured": "El restaurante todavía no publicó todos los datos de pago.",
+    "whatsappNotPublished": "El restaurante todavía no publicó un número de WhatsApp.",
+    "whatsappInquiry": "Hola, ¿me pueden indicar los medios de pago vigentes para una reserva?",
     "currentTitle": "Datos de pago vigentes del restaurante"
   },
   "reservations": {

@@ -51,7 +51,6 @@ it('consulta una cuenta nueva al abrir WhatsApp desde una reserva existente', as
       mediosPago: 'Llave vigente',
       version: 2,
     });
-  jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true);
   const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
   await Renderer.act(async () => {
     await action('reservations.sendWhatsApp').props.onPress();
@@ -76,12 +75,34 @@ it('retira cuentas antiguas si falla la red y no abre un destino de respaldo', a
 it('informa configuración incompleta sin intentar abrir WhatsApp', async () => {
   jest
     .mocked(paymentApi.current)
-    .mockResolvedValue({ ...data, configurada: false, whatsapp: '' });
+    .mockResolvedValue({ ...data, configurada: false, whatsapp: '', mediosPago: '', instruccionesPago: '' });
   await mount();
   const open = jest.spyOn(Linking, 'openURL');
   await Renderer.act(async () => {
     await action('reservations.sendWhatsApp').props.onPress();
   });
   expect(open).not.toHaveBeenCalled();
+  expect(texts().filter(text => text === 'payments.unconfigured')).toHaveLength(1);
+  expect(texts()).toContain('payments.whatsappNotPublished');
+});
+it('recarga el contacto y abre una consulta aunque los datos de pago estén pendientes', async () => {
+  const incomplete = { ...data, configurada: false, mediosPago: '', instruccionesPago: '' };
+  const current = jest.mocked(paymentApi.current);
+  current.mockResolvedValue({ ...incomplete, whatsapp: '' });
+  await mount();
   expect(texts()).toContain('payments.unconfigured');
+
+  current.mockResolvedValue(incomplete);
+  await Renderer.act(async () => {
+    await action('payments.reload').props.onPress();
+  });
+  expect(texts()).toContain(incomplete.whatsapp);
+
+  const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+  await Renderer.act(async () => {
+    await action('reservations.sendWhatsApp').props.onPress();
+  });
+  expect(current).toHaveBeenCalledTimes(3);
+  expect(open).toHaveBeenCalledWith('https://wa.me/573000000001?text=EC-QA%0ATicket%20QA%0Apayments.whatsappInquiry');
+  expect(texts()).not.toContain('payments.whatsappNotPublished');
 });

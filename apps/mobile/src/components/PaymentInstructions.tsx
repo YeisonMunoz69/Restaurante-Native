@@ -43,16 +43,18 @@ export function PaymentInstructions({
     if (busy) return;
     const current = await load();
     if (!current) return;
-    if (!current.configurada || !/^\+[1-9]\d{9,14}$/.test(current.whatsapp)) {
-      setError(t('payments.unconfigured'));
+    if (!/^\+[1-9]\d{9,14}$/.test(current.whatsapp)) {
+      setError(t('payments.whatsappNotPublished'));
       return;
     }
+    const details = current.configurada
+      ? [current.mediosPago, current.instruccionesPago]
+      : [t('payments.whatsappInquiry')];
     const message = encodeURIComponent(
-      `${[codigo, ticket, current.mediosPago, current.instruccionesPago].filter(Boolean).join("\n")}`,
+      [codigo, ticket, ...details].filter(Boolean).join('\n'),
     );
     const url = `https://wa.me/${current.whatsapp.slice(1)}?text=${message}`;
     try {
-      if (!(await Linking.canOpenURL(url))) throw new Error('No disponible');
       await Linking.openURL(url);
     } catch {
       setError(t('reservations.whatsappUnavailable'));
@@ -86,7 +88,7 @@ export function PaymentInstructions({
               {data.whatsapp}
             </Text>
           )}
-          {!data.configurada && (
+          {(!data.mediosPago.trim() || !data.instruccionesPago.trim()) && (
             <Note live tone="warning">
               {t('payments.unconfigured')}
             </Note>
