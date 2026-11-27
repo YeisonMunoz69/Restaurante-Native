@@ -24,21 +24,31 @@ export function publicMenuPhotoUrl(path: string | null | undefined) {
   }
 }
 
-// Uso la galería de ADMIN si está publicada. Las fotos incluidas cubren platos todavía sin galería.
+function isDemoPhoto(uri: string) {
+  const url = new URL(uri);
+  // El seed usa este formato de Unsplash. Las galerías cargadas desde ADMIN usan Storage.
+  return url.hostname === 'images.unsplash.com' && url.pathname.startsWith('/photo-') &&
+    url.search === '?auto=format&fit=crop&w=800&q=80';
+}
+
+// Uso las fotos cargadas desde ADMIN, luego las originales incluidas y por último las del seed.
 export function menuGallery(
-  { slug = '', fotos, nombre }: Pick<MenuDish, 'slug' | 'fotos'> & Partial<Pick<MenuDish, 'nombre'>>,
+  { slug = '', fotos, nombre }: Partial<Pick<MenuDish, 'slug' | 'nombre'>> & {
+    fotos: readonly Pick<MenuDish['fotos'][number], 'id' | 'path' | 'pathOg'>[];
+  },
   bundledOnly = false,
 ) {
   const published: { id: string; source: ImageSourcePropType }[] = bundledOnly ? [] : fotos.flatMap(photo => {
     const uri = publicMenuPhotoUrl(photo.path) ?? publicMenuPhotoUrl(photo.pathOg);
-    return uri ? [{ id: photo.id, source: { uri } }] : [];
+    return uri ? [{ id: photo.id, source: { uri }, demo: isDemoPhoto(uri) }] : [];
   });
-  if (published.length) return published.slice(0, maxPhotos);
 
   // Quito el UUID del importador sin depender del nombre o precio que edite el dueño.
   const key = slug.replace(restaurantPrefix, '');
   const originalSlug = key === 'sancocho-de-gallina-criolla-a-la-lena' ? 'sancocho-de-gallina' : key;
   const localPhotos = originalPhotos.get(originalSlug) ?? originalPhotos.get(menuNameSlug(nombre ?? ''));
+  const gallery = localPhotos ? published.filter(photo => !photo.demo) : published;
+  if (gallery.length) return gallery.slice(0, maxPhotos).map(({ id, source }) => ({ id, source }));
   return (localPhotos ?? []).slice(0, maxPhotos).map((source, index) => ({
     id: originalSlug + '/' + (index + 1),
     source,
