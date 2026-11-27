@@ -82,7 +82,7 @@ El .env de NestJS **no configura un APK automáticamente**. Antes de compilar, n
 $env:ENCANTO_GOOGLE_WEB_CLIENT_ID='ID_WEB_REAL.apps.googleusercontent.com'
 ```
 
-Lo exponemos como `NativeModules.EncantoBuild.googleWebClientId` para la futura selección nativa de cuenta. Cambiarlo exige recompilar/reinstalar. No necesitamos otro .env en la raíz ni google-services.json para esta preparación con Cloud y NestJS. Firebase para notificaciones es independiente.
+Lo exponemos como `NativeModules.EncantoBuild.googleWebClientId` para la selección nativa de cuenta. Gradle acepta `ENCANTO_GOOGLE_WEB_CLIENT_ID` y, como alias, `GOOGLE_WEB_CLIENT_ID`; hay que exportar una de esas variables en la terminal que compila, porque el `.env` de NestJS no se carga automáticamente en Android. Cambiarlo exige recompilar/reinstalar. No necesitamos otro .env en la raíz ni google-services.json para esta integración con Cloud y NestJS. Firebase para notificaciones es independiente.
 
 Cuando termines, avisa «clientes Google creados y guardados en apps/api/.env». No envíes secretos o tokens. Después implementaremos selección/cancelación/errores, validación de firma, audiencia, emisor y caducidad, y sesión propia. Recibir un correo escrito por el teléfono no autentica al usuario. [Validación oficial en backend](https://developers.google.com/identity/sign-in/web/backend-auth).
 

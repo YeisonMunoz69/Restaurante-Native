@@ -47,6 +47,13 @@ export function GoogleAccess({ link = false, entry = 'settings', onClose }: {
     } catch (failure) {
       const apiFailure = isAxiosError(failure);
       const response = apiFailure ? failure.response : undefined;
+      if (__DEV__ && BUILD_ENVIRONMENT === 'dev') {
+        // Registro la etapa y el estado sin copiar el error que devolvió el proveedor.
+        console.warn('[EC-75][google] sign-in failed', {
+          stage: apiFailure ? 'api' : 'credential',
+          status: response?.status,
+        });
+      }
       // Distingo si falló nuestra conexión, la validación o el vínculo de una cuenta previa.
       let errorKey = link ? 'auth.googleLinkError' : 'auth.googleError';
       if (response?.data?.code === 'GOOGLE_LINK_REQUIRED') errorKey = 'auth.googleLinkRequired';
