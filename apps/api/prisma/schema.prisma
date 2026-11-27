@@ -73,7 +73,7 @@ model User {
   id                String   @id @default(uuid())
   nombre            String
   correo            String   @unique
-  telefono          String
+  telefono          String?
   passwordHash      String?  @map("password_hash")
   googleSub         String?  @unique @map("google_sub")
   googleNombre      String?  @map("google_nombre")

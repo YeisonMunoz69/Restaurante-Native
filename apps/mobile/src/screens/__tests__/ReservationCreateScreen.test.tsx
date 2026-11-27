@@ -40,6 +40,10 @@ jest.mock('../../context/ConnectionContext', () => ({
   useConnection: jest.fn(),
 }));
 
+jest.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({ user: { perfil: { telefono: '3001234567' } }, updateProfile: jest.fn() }),
+}));
+
 jest.mock('../../services/menu.service', () => ({ menuApi: { dishes: jest.fn() } }));
 
 jest.mock('../../services/reservations.service', () => ({

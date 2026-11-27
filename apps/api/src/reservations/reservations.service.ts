@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { Prisma, ReservationStatus } from '@prisma/client';
@@ -464,6 +465,23 @@ export class ReservationsService {
   async create(userId: string, input: ReservationCreate) {
     return this.write(async (db) => {
       const restaurant = await this.restaurant(db);
+      const customer = await db.user.findUnique({
+        where: { id: userId },
+        select: { telefono: true },
+      });
+      if (!customer) throw new UnauthorizedException('La sesión ya no está activa');
+      if (!customer.telefono?.trim()) {
+        if (!input.telefono) {
+          throw new BadRequestException({
+            code: 'RESERVATION_PHONE_REQUIRED',
+            message: 'Ingresa tu teléfono para enviar tu primera solicitud',
+          });
+        }
+        await db.user.update({
+          where: { id: userId },
+          data: { telefono: input.telefono },
+        });
+      }
       const slotResult = await this.slotsInTransaction(
         db,
         { fecha: input.fecha, numComensales: input.numComensales },

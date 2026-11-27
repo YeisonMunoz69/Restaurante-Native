@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, ServiceUnavailableException, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'node:crypto';
@@ -205,8 +205,6 @@ export class AuthService {
     // Un correo coincidente nunca transfiere por sí solo una cuenta ni sus privilegios.
     const existing = await this.prisma.user.findUnique({ where: { correo: identity.correo } });
     if (existing) throw new ConflictException({ code: 'GOOGLE_LINK_REQUIRED', message: 'Esta cuenta de Encanto requiere un vínculo previo' });
-    if (!input.telefono) throw new UnprocessableEntityException({ code: 'GOOGLE_PHONE_REQUIRED', message: 'Completa tu teléfono para crear la cuenta' });
-
     try {
       const data = {
         googleSub: identity.sub,
@@ -214,7 +212,7 @@ export class AuthService {
         googleNombre,
         googleFotoUrl,
         correo: identity.correo,
-        telefono: input.telefono,
+        telefono: input.telefono ?? null,
         correoVerificado: true,
       };
       const user = protectedAdmin ? await this.prisma.$transaction(async db => {
