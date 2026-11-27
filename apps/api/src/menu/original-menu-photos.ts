@@ -19,5 +19,5 @@ export function publicDishPhotos(dish: { id: string; nombre: string; slug: strin
   // Respeto la foto que cargó ADMIN y retiro solo las muestras del seed para estos platos.
   const published = dish.photos.filter(photo => !isDemoMenuPhoto(photo.path));
   if (published.length) return published;
-  return [{ id: `original-${dish.id}`, path: original, pathOg: null, principal: true, orden: 0 }];
+  return [{ id: dish.photos[0]?.id ?? dish.id, path: original, pathOg: null, principal: true, orden: 0 }];
 }

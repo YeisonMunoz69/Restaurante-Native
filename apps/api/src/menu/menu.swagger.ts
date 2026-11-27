@@ -34,7 +34,7 @@ const photo: SchemaObject = {
     path: {
       type: 'string',
       description:
-        'Ruta persistida de la imagen; no fabricamos URLs ni credenciales de Storage',
+        'Ruta pública de la imagen guardada o incluida en el servidor',
     },
     pathOg: { type: 'string', nullable: true },
     orden: { type: 'integer' },
