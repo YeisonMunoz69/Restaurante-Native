@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Clipboard from '@react-native-clipboard/clipboard';
-import { Share, StyleSheet, Text, View } from 'react-native';
-import { CalendarDays, ClipboardCheck, FileCheck2 } from 'lucide-react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { CalendarDays, ChevronRight, ClipboardCheck, FileCheck2 } from 'lucide-react-native';
 import { CalendarDateSchema } from '@encanto/shared';
 import { Feedback as Alert } from '../components/feedback/Feedback';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +14,7 @@ import { reservationsApi, type ReceiptPreview, type ReservationWithCustomer } fr
 import { formatCivilDate, todayInBogota } from '../utils/formatters';
 import { BackButton } from '../components/navigation/BackButton';
 import { ReservationImagePreview } from '../components/reservations/ReservationReceipt';
+import { AgendaReservationDetail } from '../components/reservations/AgendaReservationDetail';
 import { ContextHelp, LoadingOverlay } from '../components/feedback/ContextOverlay';
 
 type Tab = 'requests' | 'agenda';
@@ -33,7 +33,7 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
   const isAdmin = user?.rol === 'ADMIN';
   const isStaff = user?.rol === 'STAFF';
   const [tab, setTab] = useState<Tab>(isAdmin ? 'requests' : 'agenda');
-  const [date, setDate] = useState(todayInBogota());
+  const [date, setDate] = useState<string | null>(null);
   const [draftDate, setDraftDate] = useState<string | null>(null);
   const [requests, setRequests] = useState<ReservationWithCustomer[]>([]);
   const [agenda, setAgenda] = useState<ReservationWithCustomer[]>([]);
@@ -47,7 +47,8 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now);
-  const agendaDate = tab === 'agenda' ? date : null;
+  const showingAgenda = tab === 'agenda';
+  const agendaDate = showingAgenda ? date : null;
   const loadSequence = useRef(0);
   const activeLoader = useRef<(() => Promise<void>) | null>(null);
   const readingRef = useRef(false);
@@ -61,8 +62,8 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
     try {
       const [nextRequests, nextAgenda] = await Promise.all([
         // Reviso las solicitudes de cualquier fecha. El filtro solo aplica a la agenda.
-        isAdmin && !agendaDate ? reservationsApi.requests() : Promise.resolve([]),
-        agendaDate ? reservationsApi.agenda(agendaDate) : Promise.resolve([]),
+        isAdmin && !showingAgenda ? reservationsApi.requests() : Promise.resolve([]),
+        showingAgenda ? reservationsApi.agenda(agendaDate ?? undefined) : Promise.resolve([]),
       ]);
       // Descarto una respuesta anterior si ya se cambió de vista o fecha.
       if (sequence !== loadSequence.current) return;
@@ -75,7 +76,7 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
     } finally {
       if (sequence === loadSequence.current) setLoading(false);
     }
-  }, [agendaDate, isAdmin, isStaff, t]);
+  }, [agendaDate, isAdmin, isStaff, showingAgenda, t]);
 
   useEffect(() => {
     activeLoader.current = load;
@@ -136,8 +137,8 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
     }
   };
 
-  const changeAgendaDate = (value: string) => {
-    if (!CalendarDateSchema.safeParse(value).success) {
+  const changeAgendaDate = (value: string | null) => {
+    if (value !== null && !CalendarDateSchema.safeParse(value).success) {
       setError(t('reservations.invalidAgendaDate'));
       return;
     }
@@ -148,6 +149,7 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
   };
 
   if (!isAdmin && !isStaff) return <Note>{t('menuAdmin.forbidden')}</Note>;
+  const detail = showingAgenda ? agenda.find(item => item.id === selectedAgendaItem) : undefined;
   const today = todayInBogota();
   const tomorrow = new Date(Date.parse(`${today}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
   const EntryIcon = isAdmin ? ClipboardCheck : CalendarDays;
@@ -166,17 +168,18 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
         </View>
         {isAdmin && (
           <View style={styles.row}>
-            <View style={styles.flex}><Action label={t('reservations.requests')} selected={tab === 'requests'} onPress={() => setTab('requests')} /></View>
+            <View style={styles.flex}><Action label={t('reservations.requests')} selected={tab === 'requests'} onPress={() => { setSelectedAgendaItem(null); setTab('requests'); }} /></View>
             <View style={styles.flex}><Action label={t('reservations.agenda')} selected={tab === 'agenda'} onPress={() => setTab('agenda')} /></View>
           </View>
         )}
         {tab === 'agenda' && (
           <View style={styles.section}>
-            <Text style={[typography.etiqueta, { color: colors.texto.secundario }]}>{formatCivilDate(date)}</Text>
+            {date && <Text style={[typography.etiqueta, { color: colors.texto.secundario }]}>{formatCivilDate(date)}</Text>}
             <View style={styles.wrap}>
+              <Action label={t('reservations.upcomingAgenda')} selected={date === null} onPress={() => changeAgendaDate(null)} />
               <Action label={t('reservations.todayAgenda')} selected={date === today} onPress={() => changeAgendaDate(today)} />
               <Action label={t('reservations.tomorrowAgenda')} selected={date === tomorrow} onPress={() => changeAgendaDate(tomorrow)} />
-              <Action variant="tertiary" label={t('reservations.changeAgendaDate')} onPress={() => setDraftDate(date)} />
+              <Action variant="tertiary" label={t('reservations.changeAgendaDate')} onPress={() => setDraftDate(date ?? today)} />
             </View>
             {draftDate !== null && <>
               <Field label={t('reservations.agendaDate')} value={draftDate} onChangeText={setDraftDate} placeholder={t('reservations.datePlaceholder')} />
@@ -186,7 +189,9 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
         )}
         {error && <Note live tone="error">{error}</Note>}
         {!loading && tab === 'requests' && isAdmin && requests.length === 0 && <Note>{t('reservations.noRequests')}</Note>}
-        {!loading && tab === 'agenda' && agenda.length === 0 && <Note>{t('reservations.noAgenda')}</Note>}
+        {!loading && !error && showingAgenda && agenda.length === 0 && (
+          <Note>{t(date ? 'reservations.noAgenda' : 'reservations.noUpcomingAgenda')}</Note>
+        )}
 
         {isAdmin && tab === 'requests' && requests.map(reservation => {
           const remaining = reservation.expiraEn ? Date.parse(reservation.expiraEn) - now : Infinity;
@@ -233,31 +238,57 @@ export function AdminReservationsScreen({ onBack }: { onBack?: () => void }) {
           );
         })}
 
-        {tab === 'agenda' && agenda.map(reservation => (
-          <View key={reservation.id} style={[styles.entry, { backgroundColor: colors.superficie.elevada }]}>
-            <Text style={[typography.codigo, { color: colors.marca.primario }]}>{reservation.horaInicio} · {reservation.codigo}</Text>
-            <Text style={[typography.tituloM, { color: colors.texto.primario }]}>{reservation.cliente.nombre}</Text>
-            <Note>{t('reservations.people', { count: reservation.numComensales })} · {t(`reservations.status.${reservation.estado}`)}</Note>
-            {reservation.estado === 'CONFIRMADA' && <Action variant="primary" label={t('reservations.markArrival')} disabled={!!busyId} onPress={() => act(reservation.id, () => reservationsApi.markArrival(reservation.id), t('reservations.markArrival'))} />}
-            {reservation.estado === 'CONFIRMADA' && reservation.puedeMarcarInasistencia && <Action variant="tertiary" tone="danger" label={t('reservations.markNoShow')} disabled={!!busyId} onPress={() => act(reservation.id, () => reservationsApi.markNoShow(reservation.id), t('reservations.markNoShow'))} />}
-            {reservation.estado === 'EN_CURSO' && <Action variant="primary" label={t('reservations.complete')} disabled={!!busyId} onPress={() => act(reservation.id, () => reservationsApi.complete(reservation.id), t('reservations.complete'))} />}
-            <Action variant="tertiary" label={t(selectedAgendaItem === reservation.id ? 'reservations.hideDetails' : 'reservations.viewDetails')}
-              onPress={() => setSelectedAgendaItem(current => current === reservation.id ? null : reservation.id)} />
-            {selectedAgendaItem === reservation.id && <>
-              {!!reservation.cliente.telefono && <Note>{reservation.cliente.telefono}</Note>}
-              {(reservation.cliente.cancelaciones > 0 || reservation.cliente.inasistencias > 0) && <Note>{t('reservations.previousRecords', { cancellations: reservation.cliente.cancelaciones, noShows: reservation.cliente.inasistencias })}</Note>}
-              <Text selectable style={[typography.pie, { color: colors.texto.secundario }]}>{reservation.ticket}</Text>
-            <Action variant="tertiary" label={t('reservations.copyTicket')} onPress={() => {
-              Clipboard.setString(reservation.ticket);
-              Alert.alert(t('reservations.ticketCopied'), undefined, [], { kind: 'success' });
-            }} />
-            <Action label={t('reservations.shareTicket')} onPress={() => Share.share({ message: reservation.ticket })} />
-            </>}
-          </View>
+        {showingAgenda && agenda.map((reservation, index) => (
+          <React.Fragment key={reservation.id}>
+            {!date && agenda[index - 1]?.fecha !== reservation.fecha && (
+              <Text accessibilityRole="header" style={[typography.etiqueta, { color: colors.texto.secundario }]}>
+                {formatCivilDate(reservation.fecha)}
+              </Text>
+            )}
+            <Pressable testID={`agenda-card-${reservation.id}`} accessibilityRole="button"
+              accessibilityHint={t('reservations.viewDetails')} onPress={() => setSelectedAgendaItem(reservation.id)}
+              style={({ pressed }) => [styles.agendaEntry, {
+                backgroundColor: pressed ? colors.marca.primarioSuave : colors.superficie.elevada,
+              }]}>
+              <View style={styles.agendaTime}>
+                <Text style={[typography.tituloM, { color: colors.marca.primario }]}>{reservation.horaInicio}</Text>
+              </View>
+              <View style={styles.agendaCopy}>
+                <Text style={[typography.cuerpoL, { color: colors.texto.primario }]}>{reservation.cliente.nombre}</Text>
+                <Text style={[typography.pie, { color: colors.texto.secundario }]}>
+                  {t('reservations.people', { count: reservation.numComensales })} · {t(`reservations.status.${reservation.estado}`)}
+                </Text>
+              </View>
+              <ChevronRight size={20} color={colors.texto.secundario} />
+            </Pressable>
+          </React.Fragment>
         ))}
-        <Action label={t('common.retry')} disabled={loading} onPress={() => void load()} />
+        <Action label={t(error ? 'common.retry' : 'reservations.reloadAgenda')} variant="tertiary" disabled={loading} onPress={() => void load()} />
       </KeyboardAwareScrollView>
       <LoadingOverlay visible={(loading || reading || !!busyId) && !preview} />
+      {!!detail && (
+        <AgendaReservationDetail key={detail.id} reservation={detail} onClose={() => setSelectedAgendaItem(null)}>
+          {detail.estado === 'CONFIRMADA' && (
+            <Action label={t('reservations.markArrival')} disabled={!!busyId} onPress={() => {
+              setSelectedAgendaItem(null);
+              act(detail.id, () => reservationsApi.markArrival(detail.id), t('reservations.markArrival'));
+            }} />
+          )}
+          {detail.estado === 'CONFIRMADA' && detail.puedeMarcarInasistencia && (
+            <Action variant="tertiary" tone="danger" label={t('reservations.markNoShow')} disabled={!!busyId}
+              onPress={() => {
+                setSelectedAgendaItem(null);
+                act(detail.id, () => reservationsApi.markNoShow(detail.id), t('reservations.markNoShow'));
+              }} />
+          )}
+          {detail.estado === 'EN_CURSO' && (
+            <Action label={t('reservations.complete')} disabled={!!busyId} onPress={() => {
+              setSelectedAgendaItem(null);
+              act(detail.id, () => reservationsApi.complete(detail.id), t('reservations.complete'));
+            }} />
+          )}
+        </AgendaReservationDetail>
+      )}
       {isAdmin && !!preview && <ReservationImagePreview image={preview.image} title={t('reservations.receiptReview')}
         onViewed={() => setReviewed(current => ({ ...current, [preview.id]: preview.image.id }))}
         onClose={() => setPreview(null)} />}
@@ -270,6 +301,9 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center', gap: 12 },
   hero: { borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
   entry: { padding: 16, borderRadius: 18, gap: 5 },
+  agendaEntry: { padding: 14, borderRadius: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  agendaTime: { gap: 3, minWidth: 52 },
+  agendaCopy: { flex: 1, gap: 2 },
   status: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   section: { gap: 6 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },

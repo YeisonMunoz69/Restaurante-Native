@@ -80,8 +80,12 @@ export const reservationsApi = {
   reject: async (id: string, body: ReservationReject) =>
     (await apiClient.patch<ReservationResult>(`/admin/reservas/${id}/rechazar`, body)).data,
 
-  agenda: async (fecha: string) =>
-    (await apiClient.get<ReservationWithCustomer[]>('/admin/reservas/agenda', { params: { fecha } })).data,
+  agenda: async (fecha?: string) => {
+    const response = fecha
+      ? await apiClient.get<ReservationWithCustomer[]>('/admin/reservas/agenda', { params: { fecha } })
+      : await apiClient.get<ReservationWithCustomer[]>('/admin/reservas/agenda/proximas');
+    return response.data;
+  },
 
   markArrival: async (id: string) =>
     (await apiClient.patch<ReservationResult>(`/admin/reservas/${id}/llegada`)).data,

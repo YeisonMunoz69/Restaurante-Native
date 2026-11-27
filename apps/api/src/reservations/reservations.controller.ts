@@ -23,6 +23,7 @@ import {
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -187,11 +188,19 @@ export class AdminReservationsController {
 
   @Get('agenda')
   @Roles(Role.ADMIN, Role.STAFF)
-  @ApiOperation({ summary: 'Consultar agenda confirmada y en curso para una fecha' })
+  @ApiOperation({ summary: 'Consultar la agenda de un día' })
+  @ApiQuery({ name: 'fecha', required: true, description: 'Fecha en formato AAAA-MM-DD' })
   agenda(@Query() query: unknown) {
-    const parsed = parseMenu(ReservationListQuerySchema, query);
-    if (!parsed.fecha) throw new BadRequestException('La fecha es obligatoria');
-    return this.reservations.agenda(parsed.fecha);
+    const { fecha } = parseMenu(ReservationListQuerySchema, query);
+    if (!fecha) throw new BadRequestException('La fecha es obligatoria');
+    return this.reservations.agenda(fecha);
+  }
+
+  @Get('agenda/proximas')
+  @Roles(Role.ADMIN, Role.STAFF)
+  @ApiOperation({ summary: 'Consultar reservas confirmadas y en curso desde hoy' })
+  upcomingAgenda() {
+    return this.reservations.agenda();
   }
 
   @Patch(':id/llegada')
