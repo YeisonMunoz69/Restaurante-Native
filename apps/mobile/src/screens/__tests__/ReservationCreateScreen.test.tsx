@@ -247,10 +247,14 @@ describe('ReservationCreateScreen', () => {
     await press(tree, 'reservation-submit');
     expect(api.create).toHaveBeenCalledTimes(1);
     expect(api.uploadReceipt).toHaveBeenCalledWith('reservation-id', expect.objectContaining({ uri }));
+    const uploadErrorVisible = () => tree.root.findAllByType(Text)
+      .some(node => node.props.children === 'reservations.receiptQueuedRetry');
+    expect(uploadErrorVisible()).toBe(true);
     await press(tree, 'reservation-send-saved-receipt');
     expect(api.uploadReceipt).toHaveBeenCalledTimes(2);
     expect(api.create).toHaveBeenCalledTimes(1);
     expect(tree.root.findAllByProps({ testID: 'reservation-send-saved-receipt' })).toHaveLength(0);
+    expect(uploadErrorVisible()).toBe(false);
     ReactTestRenderer.act(() => tree.unmount());
   });
 
